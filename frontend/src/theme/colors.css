@@ -1,0 +1,91 @@
+/* ============================================================
+   Goeazymart Unified Color Tokens (CSS Variables)
+   Imported at root so every stylesheet and component has access.
+   ============================================================ */
+
+:root {
+  /* Primary Green */
+  --gem-primary: #1f8a4c;
+  --gem-primary-hover: #166a39;
+  --gem-primary-dark: #0e4a25;
+  --gem-primary-light: #4ade80;
+  --gem-primary-soft: #dcfce7;
+  --gem-primary-subtle: #f0fdf4;
+  --gem-primary-border: #86efac;
+
+  /* Dark Navy / Blue */
+  --gem-dark-blue: #122032;
+  --gem-dark-blue-darker: #0a1526;
+  --gem-dark-blue-light: #1f2937;
+  --gem-dark-blue-muted: #334155;
+  --gem-dark-blue-subtle: #e2e8f0;
+
+  /* Surfaces & Backgrounds */
+  --gem-light-bg: #f8f9fa;
+  --gem-surface-bg: #f0f4f8;
+  --gem-white: #ffffff;
+  --gem-black: #000000;
+  --gem-border: #e2e8f0;
+  --gem-border-light: #f1f5f9;
+  --gem-border-dark: #cbd5e1;
+
+  /* Typography */
+  --gem-text-dark: #1e293b;
+  --gem-text-body: #334155;
+  --gem-text-light: #64748b;
+  --gem-text-muted: #94a3b8;
+  --gem-text-white: #ffffff;
+
+  /* Status Accents */
+  --gem-orange: #f59e0b;
+  --gem-orange-light: #fed7aa;
+  --gem-orange-dark: #b45309;
+
+  --gem-success: #16a34a;
+  --gem-success-light: #dcfce7;
+  --gem-success-text: #15803d;
+
+  --gem-danger: #dc2626;
+  --gem-danger-light: #fee2e2;
+  --gem-danger-text: #b91c1c;
+
+  --gem-warning: #eab308;
+  --gem-warning-light: #fef08a;
+  --gem-warning-text: #a16207;
+
+  --gem-info: #2563eb;
+  --gem-info-light: #dbeafe;
+  --gem-info-text: #1d4ed8;
+
+  --gem-purple: #9333ea;
+  --gem-purple-light: #e9d5ff;
+  --gem-purple-text: #7e22ce;
+
+  --gem-teal: #0d9488;
+  --gem-teal-light: #ccfbf1;
+  --gem-teal-text: #0f766e;
+
+  --gem-pink: #db2777;
+  --gem-pink-light: #fce7f3;
+  --gem-pink-text: #be185d;
+
+  /* Role Badges */
+  --gem-buyer-badge: #2563eb;
+  --gem-buyer-badge-bg: #dbeafe;
+  --gem-seller-badge: #16a34a;
+  --gem-seller-badge-bg: #dcfce7;
+  --gem-admin-badge: #dc2626;
+  --gem-admin-badge-bg: #fee2e2;
+
+  /* Shadows */
+  --gem-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --gem-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --gem-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --gem-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --gem-shadow-primary: 0 4px 14px rgba(31, 138, 76, 0.35);
+
+  /* Gradients */
+  --gem-hero-gradient: linear-gradient(135deg, #122032 0%, #1a324d 50%, #1f8a4c 100%);
+  --gem-auth-gradient: linear-gradient(135deg, #122032 0%, #164e33 60%, #1f8a4c 100%);
+  --gem-primary-gradient: linear-gradient(135deg, #1f8a4c 0%, #16a34a 100%);
+}

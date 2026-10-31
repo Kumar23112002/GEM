@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Dashboard - Goeazymart</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    /* Seller-specific styles */
+    .chart-container {
+      padding: 20px 25px;
+      height: 280px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      gap: 15px;
+    }
+    .bar {
+      flex: 1;
+      background: linear-gradient(to top, var(--primary-green), #4ade80);
+      border-radius: 6px 6px 0 0;
+      position: relative;
+      transition: all 0.3s;
+      min-width: 30px;
+    }
+    .bar:hover { opacity: 0.85; transform: scaleY(1.02); }
+    .bar::after {
+      content: attr(data-value);
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary-green);
+      white-space: nowrap;
+    }
+    .bar-labels {
+      display: flex;
+      justify-content: space-around;
+      padding: 0 25px 20px;
+      gap: 15px;
+    }
+    .bar-labels span {
+      flex: 1;
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text-light);
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 25px;
+      margin-bottom: 25px;
+    }
+
+    /* PRODUCT ROW (list-style) */
+    .product-row {
+      display: grid;
+      grid-template-columns: 60px 2fr 1fr 1fr 1fr 1fr auto;
+      gap: 15px;
+      align-items: center;
+      padding: 15px 25px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .product-row:hover { background: #fafafa; }
+    .product-row img {
+      width: 50px; height: 50px;
+      object-fit: contain;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      padding: 4px;
+      background: white;
+    }
+    .product-row .name { font-size: 13.5px; font-weight: 500; }
+    .product-row .sku { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+    .product-row .col { font-size: 13px; color: var(--text-dark); }
+    .product-row .col strong { font-weight: 600; }
+    .stock-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .stock-badge.high { background: #dcfce7; color: #16a34a; }
+    .stock-badge.medium { background: #fef3c7; color: #d97706; }
+    .stock-badge.low { background: #fee2e2; color: #dc2626; }
+
+    /* ADD PRODUCT MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .modal h3 {
+      font-size: 20px; color: var(--dark-blue);
+      margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal h3 button {
+      background: none; border: none; font-size: 24px;
+      cursor: pointer; color: #94a3b8; line-height: 1;
+    }
+    .modal .form-group { margin-bottom: 18px; }
+    .modal .form-group label {
+      display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px;
+    }
+    .modal .form-group input,
+    .modal .form-group select,
+    .modal .form-group textarea {
+      width: 100%; padding: 11px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px; outline: none; font-size: 14px;
+      font-family: inherit;
+    }
+    .modal .form-group input:focus,
+    .modal .form-group select:focus,
+    .modal .form-group textarea:focus { border-color: var(--primary-green); }
+    .modal .form-group textarea { min-height: 90px; resize: vertical; }
+    .modal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .modal-actions {
+      display: flex; gap: 10px; justify-content: flex-end;
+      margin-top: 25px; padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* PRODUCT TOOLBAR */
+    .toolbar {
+      display: flex; gap: 10px; align-items: center;
+      padding: 15px 25px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+    .toolbar input, .toolbar select {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 13px; outline: none;
+      font-family: inherit;
+    }
+    .toolbar input:focus, .toolbar select:focus { border-color: var(--primary-green); }
+    .toolbar input[type="text"] { flex: 1; min-width: 200px; }
+
+    /* EMPTY STATE */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-light);
+    }
+    .empty-state i {
+      font-size: 50px;
+      color: #cbd5e1;
+      margin-bottom: 15px;
+    }
+    .empty-state h3 {
+      font-size: 18px;
+      color: var(--dark-blue);
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 1024px) {
+      .two-col { grid-template-columns: 1fr; }
+      .product-row { grid-template-columns: 60px 1fr auto; }
+      .product-row .col { display: none; }
+      .product-row .col.name { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="container">
+    <div class="top-header">
+      <a href="index.html" class="logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</a>
+      <form class="search-bar" action="search.html">
+        <input type="text" placeholder="Search...">
+        <button><i class="fas fa-search"></i></button>
+      </form>
+      <div class="header-actions">
+        <div class="icon-text"><i class="fas fa-bell"></i></div>
+        <a href="#" onclick="logoutUser(); return false;" class="icon-text"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- DASHBOARD LAYOUT -->
+<div class="dashboard-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="dash-sidebar">
+    <div class="dash-user">
+      <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Seller" id="sidebarAvatar">
+      <div class="info">
+        <h4 id="sidebarName">Punjab Agro Mills</h4>
+        <p id="sidebarEmail">seller@goeazymart.com</p>
+        <span class="role">Seller</span>
+      </div>
+    </div>
+
+    <nav class="dash-nav">
+      <h5>Main</h5>
+      <a href="#overview" data-route="overview" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="#products" data-route="products"><i class="fas fa-box"></i> My Products</a>
+      <a href="#orders" data-route="orders"><i class="fas fa-shopping-bag"></i> Orders <span class="badge">5</span></a>
+      <a href="#rfqs" data-route="rfqs"><i class="fas fa-file-invoice"></i> RFQ Requests <span class="badge" id="rfqBadge">3</span></a>
+
+      <h5>Manage</h5>
+      <a href="#inventory" data-route="inventory"><i class="fas fa-warehouse"></i> Inventory</a>
+      <a href="#messages" data-route="messages"><i class="fas fa-comments"></i> Messages</a>
+      <a href="#analytics" data-route="analytics"><i class="fas fa-chart-line"></i> Analytics</a>
+      <a href="#payouts" data-route="payouts"><i class="fas fa-wallet"></i> Payouts</a>
+
+      <h5>Account</h5>
+      <a href="#profile" data-route="profile"><i class="fas fa-user-cog"></i> Profile Settings</a>
+      <a href="#" onclick="showToast('Help center coming soon'); return false;"><i class="fas fa-question-circle"></i> Help Center</a>
+      <a href="#" onclick="logoutUser(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT (swapped by router) -->
+  <main class="dash-main" id="dashContent">
+    <!-- Rendered by JS -->
+  </main>
+</div>
+
+<!-- ADD/EDIT PRODUCT MODAL -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <h3 id="modalTitle">Add New Product <button onclick="closeProductModal()">×</button></h3>
+    <form id="productForm" onsubmit="handleProductSubmit(event)">
+      <input type="hidden" id="productIdField">
+      <div class="form-group">
+        <label>Product Title *</label>
+        <input type="text" id="pTitle" placeholder="e.g. Premium Basmati Rice 25kg" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="pCategory" required>
+            <option value="">Select category</option>
+            <option>Retail Products</option>
+            <option>Soft Commodities</option>
+            <option>Hard Commodities</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>SKU</label>
+          <input type="text" id="pSku" placeholder="Auto-generated if blank">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Price (₹) *</label>
+          <input type="number" id="pPrice" placeholder="0.00" min="0" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>Stock Quantity *</label>
+          <input type="number" id="pStock" placeholder="0" min="0" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Unit</label>
+          <select id="pUnit">
+            <option>kg</option>
+            <option selected>piece</option>
+            <option>MT</option>
+            <option>bag</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="pStatus">
+            <option value="active">Active</option>
+            <option value="draft">Draft</option>
+            <option value="out-of-stock">Out of Stock</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="pDesc" placeholder="Describe your product..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Product Image URL</label>
+        <input type="url" id="pImage" placeholder="https://...">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeProductModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> <span id="submitBtnText">Add Product</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+// ============= AUTH GUARD =============
+const currentUser = requireAuth('seller');
+if (currentUser) {
+  document.getElementById('sidebarAvatar').src = currentUser.avatar;
+  document.getElementById('sidebarName').textContent = currentUser.name;
+  document.getElementById('sidebarEmail').textContent = currentUser.email;
+}
+
+// ============= ROUTER =============
+const ROUTES = {
+  overview: renderOverview,
+  products: renderProducts,
+  orders: renderOrders,
+  rfqs: renderRFQs,
+  inventory: renderInventory,
+  messages: renderMessages,
+  analytics: renderAnalytics,
+  payouts: renderPayouts,
+  profile: renderProfile,
+};
+
+function navigate() {
+  const hash = (window.location.hash || '#overview').substring(1);
+  const routeFn = ROUTES[hash] || renderOverview;
+  
+  // Update active nav
+  document.querySelectorAll('.dash-nav a').forEach(a => {
+    a.classList.toggle('active', a.dataset.route === hash);
+  });
+
+  // Update page
+  const content = document.getElementById('dashContent');
+  content.innerHTML = routeFn();
+  
+  // Post-render hooks
+  if (hash === 'overview') renderOverviewChart?.();
+  if (hash === 'products') updateRfqBadge();
+  window.scrollTo(0, 0);
+}
+
+window.addEventListener('hashchange', navigate);
+window.addEventListener('DOMContentLoaded', () => {
+  navigate();
+  updateRfqBadge();
+});
+
+function updateRfqBadge() {
+  const badge = document.getElementById('rfqBadge');
+  if (badge) badge.textContent = getSellerStats().pendingRFQs;
+}
+
+// ============= OVERVIEW =============
+function renderOverview() {
+  const s = getSellerStats();
+  const orders = getSellerOrders().slice(0, 5);
+  const products = getSellerProducts().slice(0, 5);
+
+  return `
+    <div class="dash-header">
+      <div>
+        <h1>Welcome back, ${currentUser?.name?.split(' ')[0] || 'Seller'} 👋</h1>
+        <p>Here's what's happening with your business today</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="openAddProduct()"><i class="fas fa-plus"></i> Add Product</button>
+        <button class="btn btn-primary" onclick="showToast('Export coming soon')"><i class="fas fa-download"></i> Export</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      ${statCard('green', 'fa-rupee-sign', '₹' + s.revenue.toLocaleString(), 'Total Revenue', '+12.5%', 'up')}
+      ${statCard('blue', 'fa-shopping-bag', s.totalOrders, 'Total Orders', '+8.2%', 'up')}
+      ${statCard('orange', 'fa-box', s.activeProducts, 'Active Products', '+' + s.activeProducts, 'up')}
+      ${statCard('purple', 'fa-file-invoice', s.pendingRFQs, 'Pending RFQs', 'Action needed', 'up')}
+    </div>
+
+    <div class="two-col">
+      <div class="data-card" style="margin-bottom:0;">
+        <div class="data-card-header">
+          <h3>Sales Overview (Last 7 Days)</h3>
+          <select style="padding:6px 10px;border:1px solid var(--border-color);border-radius:5px;font-size:12px;">
+            <option>Last 7 days</option>
+            <option>Last 30 days</option>
+          </select>
+        </div>
+        <div class="chart-container">
+          ${[45, 65, 40, 80, 55, 90, 70].map((h, i) => 
+            `<div class="bar" style="height:${h}%;" data-value="₹${[45,65,40,80,55,90,70][i]}K"></div>`
+          ).join('')}
+        </div>
+        <div class="bar-labels">
+          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+        </div>
+      </div>
+
+      <div class="data-card" style="margin-bottom:0;">
+        <div class="data-card-header">
+          <h3>Top Selling Products</h3>
+          <a href="#products">View All</a>
+        </div>
+        <div style="padding: 20px 25px;">
+          ${products.slice(0, 4).map((p, i) => {
+            const pct = [85, 65, 48, 35][i];
+            return `
+              <div class="progress-item">
+                <div class="label-row"><span>${p.title}</span><span>₹${(p.sold * p.price / 1000).toFixed(0)}K</span></div>
+                <div class="progress-bar"><div class="fill" style="width:${pct}%;"></div></div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-header">
+        <h3>Recent Orders</h3>
+        <a href="#orders">View All Orders →</a>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Product</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orders.map(o => `
+              <tr>
+                <td><strong>#${o.id}</strong></td>
+                <td>${o.customer}<br><span style="font-size:11px;color:var(--text-light);">${o.country}</span></td>
+                <td>${o.product} × ${o.qty}</td>
+                <td><strong>₹${o.amount.toLocaleString()}</strong></td>
+                <td><span class="status ${o.status}">${o.status}</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="icon-btn" onclick="viewOrder('${o.id}')" title="View"><i class="fas fa-eye"></i></button>
+                    <button class="icon-btn" onclick="showToast('Invoice print coming soon')" title="Print"><i class="fas fa-print"></i></button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-header"><h3>Recent Activity</h3></div>
+      <div class="activity-feed">
+        ${activityItem('green', 'fa-shopping-bag', `New order <strong>#ORD-2841</strong> received from Ahmed Ali`, '2 minutes ago')}
+        ${activityItem('blue', 'fa-file-invoice', `New RFQ request for 1000 MT Basmati Rice from UAE importer`, '1 hour ago')}
+        ${activityItem('orange', 'fa-exclamation-triangle', `Low stock alert: Organic Brown Rice 5kg - only 12 units left`, '3 hours ago')}
+        ${activityItem('purple', 'fa-star', `You received a 5-star review from Priya Sharma`, 'Yesterday')}
+      </div>
+    </div>
+  `;
+}
+
+function statCard(color, icon, value, label, trend, dir) {
+  return `
+    <div class="stat-card">
+      <div class="top">
+        <div class="icon ${color}"><i class="fas ${icon}"></i></div>
+        ${trend ? `<span class="trend ${dir}">${trend}</span>` : ''}
+      </div>
+      <h3>${value}</h3>
+      <p>${label}</p>
+    </div>`;
+}
+
+function activityItem(color, icon, text, time) {
+  return `
+    <div class="activity-item">
+      <div class="activity-icon ${color}"><i class="fas ${icon}"></i></div>
+      <div class="text">
+        <p>${text}</p>
+        <span>${time}</span>
+      </div>
+    </div>`;
+}
+
+// ============= PRODUCTS =============
+function renderProducts() {
+  const products = getSellerProducts();
+  return `
+    <div class="dash-header">
+      <div>
+        <h1>My Products</h1>
+        <p>Manage your inventory — ${products.length} products total</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="openAddProduct()"><i class="fas fa-plus"></i> Add Product</button>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="toolbar">
+        <input type="text" id="productSearch" placeholder="🔍 Search by name or SKU..." oninput="filterProducts()">
+        <select id="productCategoryFilter" onchange="filterProducts()">
+          <option value="">All Categories</option>
+          <option>Retail Products</option>
+          <option>Soft Commodities</option>
+          <option>Hard Commodities</option>
+        </select>
+        <select id="productStatusFilter" onchange="filterProducts()">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="draft">Draft</option>
+          <option value="out-of-stock">Out of Stock</option>
+        </select>
+      </div>
+
+      <div class="table-scroll">
+        <table class="data-table" style="width:100%;">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Sold</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsTableBody">
+            ${products.map(renderProductRow).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderProductRow(p) {
+  const stockClass = p.stock === 0 ? 'low' : p.stock < 20 ? 'medium' : 'high';
+  const stockText = p.stock === 0 ? 'Out of Stock' : `${p.stock} units`;
+  return `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <img src="${p.img}" style="width:44px;height:44px;object-fit:contain;border:1px solid var(--border-color);border-radius:6px;padding:3px;background:white;">
+          <div>
+            <div style="font-weight:500;font-size:13.5px;">${p.title}</div>
+            <div style="font-size:11px;color:var(--text-light);">${p.sku}</div>
+          </div>
+        </div>
+      </td>
+      <td style="font-size:13px;">${p.category}</td>
+      <td><strong>₹${p.price.toLocaleString()}</strong></td>
+      <td><span class="stock-badge ${stockClass}">${stockText}</span></td>
+      <td>${p.sold}</td>
+      <td><span class="status ${p.status}">${p.status}</span></td>
+      <td>
+        <div class="action-btns">
+          <button class="icon-btn" title="Edit" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
+          <button class="icon-btn" title="View" onclick="showToast('Preview: ${p.title}')"><i class="fas fa-eye"></i></button>
+          <button class="icon-btn danger" title="Delete" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function filterProducts() {
+  const search = document.getElementById('productSearch').value.toLowerCase();
+  const cat = document.getElementById('productCategoryFilter').value;
+  const status = document.getElementById('productStatusFilter').value;
+  
+  const filtered = getSellerProducts().filter(p => {
+    if (search && !p.title.toLowerCase().includes(search) && !p.sku.toLowerCase().includes(search)) return false;
+    if (cat && p.category !== cat) return false;
+    if (status && p.status !== status) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('productsTableBody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-light);">No products found matching your filters.</td></tr>`;
+  } else {
+    tbody.innerHTML = filtered.map(renderProductRow).join('');
+  }
+}
+
+// ============= ADD/EDIT PRODUCT MODAL =============
+function openAddProduct() {
+  document.getElementById('modalTitle').innerHTML = 'Add New Product <button onclick="closeProductModal()">×</button>';
+  document.getElementById('submitBtnText').textContent = 'Add Product';
+  document.getElementById('productForm').reset();
+  document.getElementById('productIdField').value = '';
+  document.getElementById('productModal').classList.add('active');
+}
+
+function editProduct(id) {
+  const p = getSellerProducts().find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modalTitle').innerHTML = 'Edit Product <button onclick="closeProductModal()">×</button>';
+  document.getElementById('submitBtnText').textContent = 'Save Changes';
+  document.getElementById('productIdField').value = p.id;
+  document.getElementById('pTitle').value = p.title;
+  document.getElementById('pCategory').value = p.category;
+  document.getElementById('pSku').value = p.sku;
+  document.getElementById('pPrice').value = p.price;
+  document.getElementById('pStock').value = p.stock;
+  document.getElementById('pStatus').value = p.status;
+  document.getElementById('pImage').value = p.img;
+  document.getElementById('productModal').classList.add('active');
+}
+
+function closeProductModal() {
+  document.getElementById('productModal').classList.remove('active');
+}
+
+function handleProductSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('productIdField').value;
+  const products = getSellerProducts();
+  
+  const data = {
+    title: document.getElementById('pTitle').value.trim(),
+    category: document.getElementById('pCategory').value,
+    sku: document.getElementById('pSku').value.trim() || 'SKU-' + Math.floor(Math.random() * 9000 + 1000),
+    price: parseFloat(document.getElementById('pPrice').value),
+    stock: parseInt(document.getElementById('pStock').value),
+    status: document.getElementById('pStatus').value,
+    img: document.getElementById('pImage').value || 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=300&q=80',
+  };
+
+  if (id) {
+    const idx = products.findIndex(p => p.id === parseInt(id));
+    products[idx] = { ...products[idx], ...data };
+    showToast('✅ Product updated successfully!');
+  } else {
+    const newId = Math.max(...products.map(p => p.id), 100) + 1;
+    products.unshift({ id: newId, ...data, sold: 0 });
+    showToast('✅ Product added successfully!');
+  }
+
+  saveSellerProducts(products);
+  closeProductModal();
+  navigate();
+}
+
+function deleteProduct(id) {
+  if (!confirm('Delete this product? This action cannot be undone.')) return;
+  const products = getSellerProducts().filter(p => p.id !== id);
+  saveSellerProducts(products);
+  showToast('🗑️ Product deleted');
+  navigate();
+}
+
+// ============= ORDERS =============
+let currentOrderFilter = 'all';
+let currentOrderSearch = '';
+
+function renderOrders() {
+  const orders = getOrdersFromStorage();
+  const counts = {
+    all: orders.length,
+    pending: orders.filter(o => o.status === 'pending').length,
+    processing: orders.filter(o => o.status === 'processing').length,
+    shipped: orders.filter(o => o.status === 'shipped').length,
+    delivered: orders.filter(o => o.status === 'delivered').length,
+    cancelled: orders.filter(o => o.status === 'cancelled').length,
+  };
+
+  return `
+    <div class="dash-header">
+      <div>
+        <h1>Orders</h1>
+        <p>Track and manage all your incoming orders</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="showToast('Export coming soon')"><i class="fas fa-download"></i> Export CSV</button>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div style="padding: 5px 25px 0; border-bottom: 1px solid var(--border-color); overflow-x: auto;">
+        <div style="display: flex; gap: 5px; min-width: max-content;">
+          ${orderTab('all', 'All Orders', counts.all)}
+          ${orderTab('pending', 'Pending', counts.pending)}
+          ${orderTab('processing', 'Processing', counts.processing)}
+          ${orderTab('shipped', 'Shipped', counts.shipped)}
+          ${orderTab('delivered', 'Delivered', counts.delivered)}
+          ${orderTab('cancelled', 'Cancelled', counts.cancelled)}
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" placeholder="🔍 Search by order ID, customer, or product..." id="orderSearch" oninput="currentOrderSearch = this.value; renderOrderRows();" value="${currentOrderSearch}">
+        <button class="btn btn-outline" onclick="showToast('Advanced filters coming soon')">
+          <i class="fas fa-filter"></i> More Filters
+        </button>
+      </div>
+
+      <div class="table-scroll">
+        <table class="data-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th style="width: 40px;"><input type="checkbox" onclick="toggleAllOrders(this)"></th>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Product</th>
+              <th>Amount</th>
+              <th>Payment</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            ${renderOrderRows()}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="padding: 15px 25px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-light);">
+        <div>Showing <strong id="ordersVisibleCount">0</strong> of <strong>${orders.length}</strong> orders</div>
+        <div class="action-btns">
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">Previous</button>
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; background: var(--primary-green); color: white; border-color: var(--primary-green);">1</button>
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">Next</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function orderTab(key, label, count) {
+  const active = currentOrderFilter === key;
+  return `
+    <button onclick="filterOrders('${key}')" style="
+      padding: 14px 18px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid ${active ? 'var(--primary-green)' : 'transparent'};
+      color: ${active ? 'var(--primary-green)' : 'var(--text-light)'};
+      font-weight: ${active ? '600' : '500'};
+      font-size: 13.5px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    ">
+      ${label} <span style="background: ${active ? '#dcfce7' : '#f1f5f9'}; color: ${active ? '#16a34a' : '#64748b'}; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 5px;">${count}</span>
+    </button>`;
+}
+
+function filterOrders(key) {
+  currentOrderFilter = key;
+  document.getElementById('dashContent').innerHTML = renderOrders();
+  renderOrderRows();
+}
+
+function renderOrderRows() {
+  let orders = getOrdersFromStorage();
+  
+  if (currentOrderFilter !== 'all') {
+    orders = orders.filter(o => o.status === currentOrderFilter);
+  }
+  
+  if (currentOrderSearch) {
+    const q = currentOrderSearch.toLowerCase();
+    orders = orders.filter(o => 
+      o.id.toLowerCase().includes(q) ||
+      o.customer.toLowerCase().includes(q) ||
+      o.product.toLowerCase().includes(q)
+    );
+  }
+  
+  const countEl = document.getElementById('ordersVisibleCount');
+  if (countEl) countEl.textContent = orders.length;
+  
+  if (orders.length === 0) {
+    return `<tr><td colspan="9" style="text-align:center; padding:50px; color:var(--text-light);">
+      <i class="fas fa-inbox" style="font-size:40px; color:#cbd5e1; display:block; margin-bottom:12px;"></i>
+      No orders found.
+    </td></tr>`;
+  }
+  
+  return orders.map(o => {
+    const canShip = o.status === 'processing' || o.status === 'pending';
+    const canDeliver = o.status === 'shipped';
+    return `
+      <tr>
+        <td><input type="checkbox" class="order-checkbox" value="${o.id}"></td>
+        <td><strong style="cursor:pointer;color:var(--primary-green);" onclick="viewOrderDetail('${o.id}')">#${o.id}</strong></td>
+        <td>
+          <div style="font-weight:500;">${o.customer}</div>
+          <div style="font-size:11px;color:var(--text-light);">${o.country}</div>
+        </td>
+        <td style="font-size:12.5px;">${o.product} <strong>×${o.qty}</strong></td>
+        <td><strong>₹${o.amount.toLocaleString()}</strong></td>
+        <td><span style="font-size:11.5px; ${o.payment === 'Paid' ? 'color:#16a34a;' : o.payment === 'Pending' ? 'color:#d97706;' : 'color:#dc2626;'}">● ${o.payment}</span></td>
+        <td><span class="status ${o.status}">${o.status}</span></td>
+        <td style="font-size:12.5px;">${formatDate(o.date)}</td>
+        <td>
+          <div class="action-btns">
+            <button class="icon-btn" onclick="viewOrderDetail('${o.id}')" title="View Details"><i class="fas fa-eye"></i></button>
+            ${canShip ? `<button class="icon-btn" onclick="quickStatusUpdate('${o.id}', 'shipped')" title="Mark Shipped"><i class="fas fa-truck"></i></button>` : ''}
+            ${canDeliver ? `<button class="icon-btn" onclick="quickStatusUpdate('${o.id}', 'delivered')" title="Mark Delivered"><i class="fas fa-check"></i></button>` : ''}
+            <button class="icon-btn" onclick="showToast('Invoice download coming soon')" title="Invoice"><i class="fas fa-file-invoice"></i></button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function toggleAllOrders(cb) {
+  document.querySelectorAll('.order-checkbox').forEach(c => c.checked = cb.checked);
+}
+
+function quickStatusUpdate(orderId, status) {
+  updateOrderStatus(orderId, status);
+  showToast(`✅ Order ${orderId} marked as ${status}`);
+  filterOrders(currentOrderFilter);
+}
+
+// ============= ORDER DETAIL =============
+function viewOrderDetail(orderId) {
+  const order = getOrderById(orderId);
+  if (!order) return;
+  
+  const content = document.getElementById('dashContent');
+  content.innerHTML = renderOrderDetail(order);
+  window.scrollTo(0, 0);
+}
+
+function renderOrderDetail(order) {
+  const timeline = [
+    { label: 'Order Placed', icon: 'fa-shopping-cart', date: order.date, done: true },
+    { label: 'Payment Confirmed', icon: 'fa-credit-card', date: order.payment === 'Paid' ? order.date : 'Pending', done: order.payment === 'Paid' },
+    { label: 'Processing', icon: 'fa-box', date: ['processing', 'shipped', 'delivered'].includes(order.status) ? order.date : '', done: ['processing', 'shipped', 'delivered'].includes(order.status) },
+    { label: 'Shipped', icon: 'fa-truck', date: ['shipped', 'delivered'].includes(order.status) ? order.date : '', done: ['shipped', 'delivered'].includes(order.status) },
+    { label: 'Delivered', icon: 'fa-check-circle', date: order.status === 'delivered' ? order.date : '', done: order.status === 'delivered' },
+  ];
+  
+  const product = getSellerProducts().find(p => order.product.includes(p.title.split(' ').slice(0, 3).join(' ')));
+
+  return `
+    <div class="dash-header">
+      <div>
+        <a href="#orders" style="font-size:13px; color:var(--primary-green); font-weight:500;"><i class="fas fa-arrow-left"></i> Back to Orders</a>
+        <h1 style="margin-top:8px;">Order #${order.id}</h1>
+        <p>Placed on ${formatDate(order.date)} • <span class="status ${order.status}" style="vertical-align:middle;">${order.status}</span></p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="showToast('Invoice download coming soon')"><i class="fas fa-file-invoice"></i> Download Invoice</button>
+        <button class="btn btn-outline" onclick="showToast('Print coming soon')"><i class="fas fa-print"></i> Print</button>
+        <select onchange="changeOrderStatus('${order.id}', this.value)" style="padding:10px 15px;border:1px solid var(--border-color);border-radius:6px;font-size:13.5px;font-family:inherit;cursor:pointer;">
+          <option value="">Change Status...</option>
+          <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+          <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+          <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+          <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+          <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 340px; gap: 25px; margin-bottom: 25px;" class="two-col">
+      <div>
+        <div class="data-card">
+          <div class="data-card-header"><h3>Order Items</h3></div>
+          <div style="padding: 20px 25px;">
+            <div style="display:flex; align-items:center; gap:15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">
+              <img src="${product?.img || 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=300&q=80'}" style="width:70px;height:70px;object-fit:contain;border:1px solid var(--border-color);border-radius:8px;padding:5px;background:white;">
+              <div style="flex:1;">
+                <div style="font-weight:600; font-size:14.5px; margin-bottom:4px;">${order.product}</div>
+                <div style="font-size:12.5px; color:var(--text-light);">SKU: ${product?.sku || 'N/A'} • Unit Price: ₹${Math.round(order.amount / order.qty).toLocaleString()}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px; color:var(--text-light);">Qty × ${order.qty}</div>
+                <div style="font-weight:700; font-size:16px;">₹${order.amount.toLocaleString()}</div>
+              </div>
+            </div>
+
+            <div style="padding-top: 20px; margin-left: auto; max-width: 320px;">
+              <div style="display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:10px; color:var(--text-light);"><span>Subtotal</span><span>₹${order.amount.toLocaleString()}</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:10px; color:var(--text-light);"><span>Shipping</span><span>₹${order.amount > 500 ? 0 : 50}</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:10px; color:var(--text-light);"><span>Tax (5%)</span><span>₹${Math.round(order.amount * 0.05).toLocaleString()}</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:700; padding-top:12px; border-top:1px solid var(--border-color);"><span>Total</span><span>₹${(order.amount + Math.round(order.amount * 0.05)).toLocaleString()}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-card-header"><h3>Order Timeline</h3></div>
+          <div style="padding: 25px;">
+            <div style="position: relative; padding-left: 30px;">
+              ${timeline.map((t, i) => `
+                <div style="position: relative; padding-bottom: ${i < timeline.length - 1 ? '30px' : '0'};">
+                  ${i < timeline.length - 1 ? `<div style="position: absolute; left: -21px; top: 28px; bottom: 0; width: 2px; background: ${t.done ? 'var(--primary-green)' : '#e0e0e0'};"></div>` : ''}
+                  <div style="position: absolute; left: -30px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: ${t.done ? 'var(--primary-green)' : '#e0e0e0'}; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">
+                    ${t.done ? '<i class="fas fa-check"></i>' : ''}
+                  </div>
+                  <div style="font-weight:600; font-size:13.5px; color: ${t.done ? 'var(--text-dark)' : 'var(--text-light)'};">${t.label}</div>
+                  <div style="font-size:12px; color: var(--text-light); margin-top: 3px;">${t.date ? formatDate(t.date) : 'Pending'}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="data-card">
+          <div class="data-card-header"><h3>Customer</h3></div>
+          <div style="padding: 20px 25px;">
+            <div style="display:flex; gap:12px; align-items:center; margin-bottom: 20px;">
+              <img src="https://randomuser.me/api/portraits/${order.customer.includes('Priya') || order.customer.includes('Sara') || order.customer.includes('Fatima') ? 'women' : 'men'}/${order.customer.length * 7 % 90 + 10}.jpg" style="width:50px;height:50px;border-radius:50%;object-fit:cover;">
+              <div>
+                <div style="font-weight:600; font-size:14px;">${order.customer}</div>
+                <div style="font-size:12px; color:var(--text-light);">${order.country}</div>
+              </div>
+            </div>
+            <div style="font-size:13px; margin-bottom:10px;">
+              <i class="fas fa-envelope" style="width:18px; color:var(--text-light);"></i> ${order.customer.toLowerCase().replace(' ', '.')}@example.com
+            </div>
+            <div style="font-size:13px; margin-bottom:10px;">
+              <i class="fas fa-phone" style="width:18px; color:var(--text-light);"></i> +91 ${Math.floor(Math.random() * 9000000000 + 1000000000)}
+            </div>
+            <div style="font-size:13px; margin-bottom: 20px;">
+              <i class="fas fa-map-marker-alt" style="width:18px; color:var(--text-light);"></i> 
+              ${Math.floor(Math.random() * 900) + 100}, Business Park<br>
+              <span style="margin-left: 18px;">${order.country}</span>
+            </div>
+            <button class="btn btn-outline btn-block" onclick="showToast('Opening chat with ${order.customer}...')"><i class="fas fa-comments"></i> Message Customer</button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-card-header"><h3>Shipping</h3></div>
+          <div style="padding: 20px 25px; font-size: 13px;">
+            <div style="margin-bottom: 15px;">
+              <div style="font-size: 11.5px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Carrier</div>
+              <div style="font-weight: 500;">DHL Express</div>
+            </div>
+            <div style="margin-bottom: 15px;">
+              <div style="font-size: 11.5px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Tracking Number</div>
+              <div style="font-weight: 500; font-family: monospace;">DHL${Math.floor(Math.random() * 900000000 + 100000000)}</div>
+            </div>
+            <div>
+              <div style="font-size: 11.5px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Est. Delivery</div>
+              <div style="font-weight: 500;">${formatDate(new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0])}</div>
+            </div>
+            <button class="btn btn-outline btn-block" style="margin-top: 20px;" onclick="showToast('Tracking coming soon')"><i class="fas fa-map-marked-alt"></i> Track Package</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function changeOrderStatus(orderId, newStatus) {
+  if (!newStatus) return;
+  updateOrderStatus(orderId, newStatus);
+  showToast(`✅ Order ${orderId} updated to ${newStatus}`);
+  viewOrderDetail(orderId);
+}
+
+// ============= RFQ REQUESTS =============
+let currentRFQFilter = 'all';
+
+function renderRFQs() {
+  const rfqs = getRFQsFromStorage();
+  const counts = {
+    all: rfqs.length,
+    pending: rfqs.filter(r => r.status === 'pending').length,
+    negotiating: rfqs.filter(r => r.status === 'negotiating').length,
+    accepted: rfqs.filter(r => r.status === 'accepted').length,
+    rejected: rfqs.filter(r => r.status === 'rejected').length,
+  };
+
+  return `
+    <div class="dash-header">
+      <div>
+        <h1>RFQ Requests</h1>
+        <p>Respond to bulk quote requests from verified buyers</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="showToast('Bulk actions coming soon')"><i class="fas fa-tasks"></i> Bulk Actions</button>
+      </div>
+    </div>
+
+    <div class="stat-grid" style="grid-template-columns: repeat(4, 1fr);">
+      ${statCard('orange', 'fa-clock', counts.pending, 'Pending Response', '', '')}
+      ${statCard('blue', 'fa-comments-dollar', counts.negotiating, 'In Negotiation', '', '')}
+      ${statCard('green', 'fa-check-circle', counts.accepted, 'Accepted', '', '')}
+      ${statCard('red', 'fa-times-circle', counts.rejected, 'Rejected', '', '')}
+    </div>
+
+    <div class="data-card">
+      <div style="padding: 5px 25px 0; border-bottom: 1px solid var(--border-color); overflow-x: auto;">
+        <div style="display: flex; gap: 5px; min-width: max-content;">
+          ${rfqTab('all', 'All', counts.all)}
+          ${rfqTab('pending', 'Pending', counts.pending)}
+          ${rfqTab('negotiating', 'Negotiating', counts.negotiating)}
+          ${rfqTab('accepted', 'Accepted', counts.accepted)}
+          ${rfqTab('rejected', 'Rejected', counts.rejected)}
+        </div>
+      </div>
+
+      <div style="padding: 10px 25px 25px;" id="rfqListContainer">
+        ${renderRFQList()}
+      </div>
+    </div>
+  `;
+}
+
+function rfqTab(key, label, count) {
+  const active = currentRFQFilter === key;
+  return `
+    <button onclick="filterRFQs('${key}')" style="
+      padding: 14px 18px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid ${active ? 'var(--primary-green)' : 'transparent'};
+      color: ${active ? 'var(--primary-green)' : 'var(--text-light)'};
+      font-weight: ${active ? '600' : '500'};
+      font-size: 13.5px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    ">
+      ${label} <span style="background: ${active ? '#dcfce7' : '#f1f5f9'}; color: ${active ? '#16a34a' : '#64748b'}; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 5px;">${count}</span>
+    </button>`;
+}
+
+function filterRFQs(key) {
+  currentRFQFilter = key;
+  document.getElementById('dashContent').innerHTML = renderRFQs();
+}
+
+function renderRFQList() {
+  let rfqs = getRFQsFromStorage();
+  if (currentRFQFilter !== 'all') {
+    rfqs = rfqs.filter(r => r.status === currentRFQFilter);
+  }
+  
+  if (rfqs.length === 0) {
+    return `<div class="empty-state">
+      <i class="fas fa-file-invoice"></i>
+      <h3>No RFQ requests</h3>
+      <p>You don't have any requests in this category yet.</p>
+    </div>`;
+  }
+
+  return rfqs.map(r => {
+    const statusIcon = {
+      pending: 'fa-clock',
+      negotiating: 'fa-comments-dollar',
+      accepted: 'fa-check-circle',
+      rejected: 'fa-times-circle',
+    }[r.status] || 'fa-circle';
+    
+    const statusColor = {
+      pending: 'orange',
+      negotiating: 'blue',
+      accepted: 'green',
+      rejected: 'red',
+    }[r.status] || 'orange';
+
+    return `
+      <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 15px; background: white; transition: box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+          <div style="display: flex; gap: 15px; align-items: center;">
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: #${statusColor === 'orange' ? 'fed7aa' : statusColor === 'blue' ? 'dbeafe' : statusColor === 'green' ? 'dcfce7' : 'fee2e2'}; display: flex; align-items: center; justify-content: center; color: #${statusColor === 'orange' ? 'ea580c' : statusColor === 'blue' ? '2563eb' : statusColor === 'green' ? '16a34a' : 'dc2626'}; font-size: 18px;">
+              <i class="fas ${statusIcon}"></i>
+            </div>
+            <div>
+              <div style="font-weight: 600; font-size: 15px; color: var(--dark-blue);">${r.product}</div>
+              <div style="font-size: 12px; color: var(--text-light); margin-top: 2px;">RFQ ID: ${r.id} • Received ${r.received}</div>
+            </div>
+          </div>
+          <span class="status ${r.status}" style="text-transform: capitalize; font-size: 12px;">${r.status}</span>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 15px 0; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; margin-bottom: 15px;">
+          <div>
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; margin-bottom: 5px;">Buyer</div>
+            <div style="font-size: 13px; font-weight: 500;">${r.buyer}</div>
+            <div style="font-size: 11.5px; color: var(--text-light);">${r.company}</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; margin-bottom: 5px;">Country</div>
+            <div style="font-size: 13px; font-weight: 500;"><i class="fas fa-globe" style="color: var(--primary-green);"></i> ${r.country}</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; margin-bottom: 5px;">Quantity</div>
+            <div style="font-size: 13px; font-weight: 500;">${r.qty}</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; margin-bottom: 5px;">Target Price</div>
+            <div style="font-size: 13px; font-weight: 500; color: var(--primary-green);">${r.targetPrice}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div style="font-size: 12.5px; color: var(--text-light);">
+            <i class="fas fa-hourglass-half"></i> Deadline: <strong style="color: var(--text-dark);">${formatDate(r.deadline)}</strong>
+          </div>
+          <div class="action-btns">
+            <button class="btn btn-outline" onclick="viewRFQDetail('${r.id}')" style="padding: 8px 14px; font-size: 12.5px;"><i class="fas fa-eye"></i> View Details</button>
+            ${r.status === 'pending' ? `
+              <button class="btn btn-outline" onclick="rejectRFQ('${r.id}')" style="padding: 8px 14px; font-size: 12.5px; color: #dc2626; border-color: #dc2626;"><i class="fas fa-times"></i> Reject</button>
+              <button class="btn btn-primary" onclick="acceptRFQ('${r.id}')" style="padding: 8px 14px; font-size: 12.5px;"><i class="fas fa-check"></i> Accept & Quote</button>
+            ` : ''}
+            ${r.status === 'negotiating' ? `
+              <button class="btn btn-primary" onclick="viewRFQDetail('${r.id}')" style="padding: 8px 14px; font-size: 12.5px;"><i class="fas fa-comments"></i> Open Negotiation</button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function viewRFQDetail(rfqId) {
+  const rfq = getRFQById(rfqId);
+  if (!rfq) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay active';
+  modal.id = 'rfqDetailModal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width: 720px;">
+      <h3>RFQ Details - ${rfq.id} <button onclick="document.getElementById('rfqDetailModal').remove()">×</button></h3>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; padding: 20px; background: #f8fafc; border-radius: 10px;">
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-light); margin-bottom: 5px;">Buyer Name</div>
+          <div style="font-weight: 600;">${rfq.buyer}</div>
+        </div>
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-light); margin-bottom: 5px;">Company</div>
+          <div style="font-weight: 600;">${rfq.company}</div>
+        </div>
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-light); margin-bottom: 5px;">Country</div>
+          <div style="font-weight: 600;"><i class="fas fa-globe" style="color: var(--primary-green);"></i> ${rfq.country}</div>
+        </div>
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-light); margin-bottom: 5px;">Status</div>
+          <span class="status ${rfq.status}">${rfq.status}</span>
+        </div>
+      </div>
+
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+        <div style="font-size: 13px; font-weight: 600; color: var(--primary-green); margin-bottom: 12px;"><i class="fas fa-boxes"></i> Request Details</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div>
+            <div style="font-size: 11px; color: var(--text-light); margin-bottom: 3px;">Product</div>
+            <div style="font-weight: 600; font-size: 14px;">${rfq.product}</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-light); margin-bottom: 3px;">Quantity Required</div>
+            <div style="font-weight: 600; font-size: 14px;">${rfq.qty}</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-light); margin-bottom: 3px;">Target Price</div>
+            <div style="font-weight: 600; font-size: 14px; color: var(--primary-green);">${rfq.targetPrice}</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-light); margin-bottom: 3px;">Response Deadline</div>
+            <div style="font-weight: 600; font-size: 14px;">${formatDate(rfq.deadline)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+        <div style="font-size: 13px; font-weight: 600; color: var(--dark-blue); margin-bottom: 12px;"><i class="fas fa-comment-dots"></i> Buyer's Message</div>
+        <p style="font-size: 13.5px; color: var(--text-light); line-height: 1.6; font-style: italic;">
+          "We are looking to source ${rfq.qty} of ${rfq.product} for our upcoming season. Target price is ${rfq.targetPrice}. We need delivery to ${rfq.country} within 30 days of order confirmation. Please share your best quote along with quality certifications."
+        </p>
+      </div>
+
+      ${rfq.status === 'pending' ? `
+        <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+          <div style="font-size: 13px; font-weight: 600; color: var(--dark-blue); margin-bottom: 12px;"><i class="fas fa-reply"></i> Submit Your Quote</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <div>
+              <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;">Your Price (per unit)</label>
+              <input type="text" placeholder="e.g. ₹1,700/MT" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; font-size: 13.5px;">
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;">Delivery Time</label>
+              <select style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; font-size: 13.5px;">
+                <option>15 days</option>
+                <option>30 days</option>
+                <option>45 days</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px;">Notes to Buyer</label>
+            <textarea placeholder="Mention quality, certifications, packaging details..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; font-size: 13.5px; min-height: 70px; resize: vertical;"></textarea>
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="document.getElementById('rfqDetailModal').remove()">Close</button>
+        ${rfq.status === 'pending' ? `
+          <button class="btn btn-outline" style="color: #dc2626; border-color: #dc2626;" onclick="rejectRFQ('${rfq.id}'); document.getElementById('rfqDetailModal').remove();">Reject</button>
+          <button class="btn btn-primary" onclick="acceptRFQ('${rfq.id}'); document.getElementById('rfqDetailModal').remove();"><i class="fas fa-paper-plane"></i> Send Quote</button>
+        ` : rfq.status === 'negotiating' ? `
+          <button class="btn btn-primary" onclick="showToast('Opening chat...'); document.getElementById('rfqDetailModal').remove();"><i class="fas fa-comments"></i> Open Chat</button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  modal.addEventListener('click', e => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+function acceptRFQ(rfqId) {
+  updateRFQStatus(rfqId, 'accepted');
+  updateRfqBadge();
+  showToast('✅ Quote sent to buyer!');
+  if (window.location.hash === '#rfqs' || window.location.hash === '') {
+    document.getElementById('dashContent').innerHTML = renderRFQs();
+  }
+}
+
+function rejectRFQ(rfqId) {
+  if (!confirm('Reject this RFQ request? The buyer will be notified.')) return;
+  updateRFQStatus(rfqId, 'rejected');
+  updateRfqBadge();
+  showToast('❌ RFQ rejected');
+  if (window.location.hash === '#rfqs' || window.location.hash === '') {
+    document.getElementById('dashContent').innerHTML = renderRFQs();
+  }
+}
+
+// ============= PLACEHOLDER ROUTES (Part 3) =============
+function renderInventory() { return placeholder('Inventory', 'fa-warehouse', 'Coming in Part 3'); }
+function renderMessages() { return placeholder('Messages', 'fa-comments', 'Coming in Part 3'); }
+function renderAnalytics() { return placeholder('Analytics', 'fa-chart-line', 'Coming in Part 3'); }
+function renderPayouts() { return placeholder('Payouts', 'fa-wallet', 'Coming in Part 3'); }
+function renderProfile() { return placeholder('Profile Settings', 'fa-user-cog', 'Coming in Part 3'); }
+
+function placeholder(title, icon, subtitle) {
+  return `
+    <div class="dash-header">
+      <div><h1>${title}</h1><p>${subtitle}</p></div>
+    </div>
+    <div class="data-card">
+      <div class="empty-state">
+        <i class="fas ${icon}"></i>
+        <h3>${title}</h3>
+        <p>This section is being built in the next part.</p>
+      </div>
+    </div>`;
+}
+
+function viewOrder(id) {
+  window.location.hash = '#orders';
+  showToast('Opening order ' + id);
+}
+
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:30px;right:30px;background:#1f8a4c;color:white;padding:14px 22px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.3);z-index:9999;font-size:14px;transform:translateY(100px);opacity:0;transition:all 0.3s;max-width:340px;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  setTimeout(() => { t.style.transform = 'translateY(0)'; t.style.opacity = '1'; }, 10);
+  setTimeout(() => { t.style.transform = 'translateY(100px)'; t.style.opacity = '0'; }, 2500);
+}
+
+// ============= INVENTORY =============
+function renderInventory() {
+  const products = getSellerProducts();
+  const lowStock = products.filter(p => p.stock > 0 && p.stock < 20);
+  const outOfStock = products.filter(p => p.stock === 0);
+  const totalValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+
+  return `
+    <div class="dash-header">
+      <div>
+        <h1>Inventory</h1>
+        <p>Monitor stock levels and restock alerts</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="showToast('CSV export coming soon')"><i class="fas fa-download"></i> Export CSV</button>
+        <button class="btn btn-primary" onclick="openAddProduct()"><i class="fas fa-plus"></i> Add Product</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      ${statCard('blue', 'fa-boxes', products.length, 'Total SKUs', '', '')}
+      ${statCard('orange', 'fa-exclamation-triangle', lowStock.length, 'Low Stock', '', '')}
+      ${statCard('red', 'fa-times-circle', outOfStock.length, 'Out of Stock', '', '')}
+      ${statCard('green', 'fa-rupee-sign', '₹' + (totalValue / 100000).toFixed(1) + 'L', 'Inventory Value', '', '')}
+    </div>
+
+    ${lowStock.length > 0 || outOfStock.length > 0 ? `
+      <div class="data-card" style="border-left: 4px solid #f59e0b;">
+        <div class="data-card-header">
+          <h3 style="color: #d97706;"><i class="fas fa-bell"></i> Restock Alerts (${lowStock.length + outOfStock.length})</h3>
+        </div>
+        <div style="padding: 15px 25px;">
+          ${[...outOfStock, ...lowStock].map(p => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <img src="${p.img}" style="width: 40px; height: 40px; object-fit: contain; border: 1px solid var(--border-color); border-radius: 6px; padding: 3px;">
+                <div>
+                  <div style="font-weight: 500; font-size: 13.5px;">${p.title}</div>
+                  <div style="font-size: 11.5px; color: var(--text-light);">SKU: ${p.sku}</div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 15px; align-items: center;">
+                <span class="stock-badge ${p.stock === 0 ? 'low' : 'medium'}">${p.stock === 0 ? 'Out of Stock' : p.stock + ' units left'}</span>
+                <button class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;" onclick="openRestock(${p.id})">
+                  <i class="fas fa-plus"></i> Restock
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="data-card">
+      <div class="data-card-header">
+        <h3>All Products Stock</h3>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>SKU</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>In Stock</th>
+              <th>Stock Value</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${products.map(p => {
+              const stockClass = p.stock === 0 ? 'low' : p.stock < 20 ? 'medium' : 'high';
+              return `
+                <tr>
+                  <td>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                      <img src="${p.img}" style="width: 36px; height: 36px; object-fit: contain; border: 1px solid var(--border-color); border-radius: 6px; padding: 2px;">
+                      <div style="font-size: 13px; font-weight: 500;">${p.title}</div>
+                    </div>
+                  </td>
+                  <td style="font-family: monospace; font-size: 12px;">${p.sku}</td>
+                  <td style="font-size: 12.5px;">${p.category}</td>
+                  <td>₹${p.price.toLocaleString()}</td>
+                  <td><span class="stock-badge ${stockClass}">${p.stock} units</span></td>
+                  <td><strong>₹${(p.price * p.stock).toLocaleString()}</strong></td>
+                  <td>
+                    <div class="action-btns">
+                      <button class="icon-btn" title="Restock" onclick="openRestock(${p.id})"><i class="fas fa-plus"></i></button>
+                      <button class="icon-btn" title="Edit" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function openRestock(productId) {
+  const products = getSellerProducts();
+  const p = products.find(x => x.id === productId);
+  if (!p) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay active';
+  modal.id = 'restockModal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width: 480px;">
+      <h3>Restock Product <button onclick="document.getElementById('restockModal').remove()">×</button></h3>
+      <div style="display: flex; gap: 15px; align-items: center; padding: 15px; background: #f8fafc; border-radius: 8px; margin-bottom: 20px;">
+        <img src="${p.img}" style="width: 50px; height: 50px; object-fit: contain; border-radius: 6px; padding: 3px; background: white; border: 1px solid var(--border-color);">
+        <div>
+          <div style="font-weight: 600; font-size: 14px;">${p.title}</div>
+          <div style="font-size: 12px; color: var(--text-light);">Current stock: ${p.stock} units</div>
+        </div>
+      </div>
+      <form onsubmit="handleRestock(event, ${productId})">
+        <div class="form-group">
+          <label>Add Quantity *</label>
+          <input type="number" id="restockQty" placeholder="e.g. 100" min="1" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('restockModal').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Stock</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function handleRestock(e, productId) {
+  e.preventDefault();
+  const qty = parseInt(document.getElementById('restockQty').value);
+  const products = getSellerProducts();
+  const p = products.find(x => x.id === productId);
+  if (p) {
+    p.stock += qty;
+    if (p.status === 'out-of-stock' && p.stock > 0) p.status = 'active';
+    saveSellerProducts(products);
+    showToast(`✅ Added ${qty} units to ${p.title}`);
+  }
+  document.getElementById('restockModal').remove();
+  document.getElementById('dashContent').innerHTML = renderInventory();
+}
+
+// ============= MESSAGES =============
+let currentChatId = 1;
+
+function renderMessages() {
+  const messages = getSellerMessages();
+  const activeChat = messages.find(m => m.id === currentChatId) || messages[0];
+  if (!activeChat) {
+    return `<div class="empty-state"><i class="fas fa-comments"></i><h3>No messages yet</h3></div>`;
+  }
+
+  return `
+    <div class="dash-header">
+      <div>
+        <h1>Messages</h1>
+        <p>Chat with buyers about orders and RFQs</p>
+      </div>
+    </div>
+
+    <div class="data-card" style="overflow: hidden;">
+      <div style="display: grid; grid-template-columns: 320px 1fr; min-height: 620px;">
+        <!-- Conversation List -->
+        <div style="border-right: 1px solid var(--border-color); background: #fafafa;">
+          <div style="padding: 15px; border-bottom: 1px solid var(--border-color);">
+            <input type="text" placeholder="🔍 Search conversations..." style="width: 100%; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; font-family: inherit; outline: none;">
+          </div>
+          <div style="overflow-y: auto; max-height: 560px;">
+            ${messages.map(m => {
+              const active = m.id === currentChatId;
+              return `
+                <div onclick="openChat(${m.id})" style="padding: 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9; display: flex; gap: 12px; background: ${active ? '#e8f5e9' : 'transparent'}; border-left: 3px solid ${active ? 'var(--primary-green)' : 'transparent'};">
+                  <div style="position: relative;">
+                    <img src="${m.avatar}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover;">
+                    ${m.online ? '<div style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #16a34a; border: 2px solid white; border-radius: 50%;"></div>' : ''}
+                  </div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                      <div style="font-weight: 600; font-size: 13.5px; color: var(--dark-blue);">${m.with}</div>
+                      <div style="font-size: 11px; color: var(--text-light);">${m.time}</div>
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--text-light); margin-bottom: 3px;">${m.company} • ${m.country}</div>
+                    <div style="font-size: 12.5px; color: var(--text-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ${m.unread ? 'font-weight: 600; color: var(--text-dark);' : ''}">
+                      ${m.lastMessage}
+                    </div>
+                  </div>
+                  ${m.unread ? `<div style="background: var(--primary-green); color: white; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; align-self: center; height: fit-content;">${m.unread}</div>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Chat Window -->
+        <div style="display: flex; flex-direction: column;">
+          <div style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px;">
+            <img src="${activeChat.avatar}" style="width: 40px; height: 40px; border-radius: 50%;">
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 14px; color: var(--dark-blue);">${activeChat.with}</div>
+              <div style="font-size: 11.5px; color: ${activeChat.online ? '#16a34a' : 'var(--text-light)'};">
+                ${activeChat.online ? '● Online' : '○ Offline'} • ${activeChat.company}
+              </div>
+            </div>
+            <button class="icon-btn" title="View Profile"><i class="fas fa-user"></i></button>
+            <button class="icon-btn" title="Call"><i class="fas fa-phone"></i></button>
+          </div>
+
+          <div style="flex: 1; padding: 20px; overflow-y: auto; max-height: 480px; background: #fafafa;" id="chatMessages">
+            ${activeChat.thread.map(t => {
+              const mine = t.from === 'me';
+              return `
+                <div style="display: flex; justify-content: ${mine ? 'flex-end' : 'flex-start'}; margin-bottom: 12px;">
+                  <div style="max-width: 70%;">
+                    <div style="padding: 10px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; ${
+                      mine 
+                        ? 'background: var(--primary-green); color: white; border-bottom-right-radius: 4px;' 
+                        : 'background: white; color: var(--text-dark); border: 1px solid var(--border-color); border-bottom-left-radius: 4px;'
+                    }">
+                      ${t.text}
+                    </div>
+                    <div style="font-size: 10.5px; color: var(--text-light); margin-top: 3px; text-align: ${mine ? 'right' : 'left'}; padding: 0 4px;">${t.time}</div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <form onsubmit="sendMessage(event)" style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; background: white;">
+            <button type="button" class="icon-btn" style="width: 42px; height: 42px;" title="Attach file" onclick="showToast('File attachment coming soon')"><i class="fas fa-paperclip"></i></button>
+            <input type="text" id="messageInput" placeholder="Type your message..." style="flex: 1; padding: 11px 15px; border: 1px solid var(--border-color); border-radius: 22px; font-size: 13.5px; font-family: inherit; outline: none;" required>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 22px;"><i class="fas fa-paper-plane"></i></button>
+          </form>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openChat(id) {
+  currentChatId = id;
+  const messages = getSellerMessages();
+  const chat = messages.find(m => m.id === id);
+  if (chat) chat.unread = 0;
+  saveSellerMessages(messages);
+  document.getElementById('dashContent').innerHTML = renderMessages();
+  setTimeout(() => {
+    const el = document.getElementById('chatMessages');
+    if (el) el.scrollTop = el.scrollHeight;
+  }, 50);
+}
+
+function sendMessage(e) {
+  e.preventDefault();
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const messages = getSellerMessages();
+  const chat = messages.find(m => m.id === currentChatId);
+  if (chat) {
+    chat.thread.push({ from: 'me', text, time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) });
+    chat.lastMessage = text;
+    chat.time = 'Just now';
+    saveSellerMessages(messages);
+  }
+  input.value = '';
+  document.getElementById('dashContent').innerHTML = renderMessages();
+  setTimeout(() => {
+    const el = document.getElementById('chatMessages');
+    if (el) el.scrollTop = el.scrollHeight;
+  }, 50);
+  showToast('✅ Message sent');
+}
+
+// ============= ANALYTICS =============
+function renderAnalytics() {
+  const orders = getOrdersFromStorage();
+  const products = getSellerProducts();
+  const totalRevenue = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.amount, 0);
+  const avgOrderValue = Math.round(totalRevenue / Math.max(orders.length, 1));
+  
+  const countryStats = {};
+  orders.forEach(o => {
+    countryStats[o.country] = (countryStats[o.country] || 0) + o.amount;
+  });
+  const topCountries = Object.entries(countryStats).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const maxCountry = topCountries[0]?.[1] || 1;
+
+  return `
+    <div class="dash-header">
+      <div>
+        <h1>Analytics</h1>
+        <p>Deep insights into your sales performance</p>
+      </div>
+      <div class="actions">
+        <select style="padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13.5px; font-family: inherit; cursor: pointer;">
+          <option>Last 30 days</option>
+          <option>Last 90 days</option>
+          <option>This Year</option>
+        </select>
+        <button class="btn btn-outline"><i class="fas fa-download"></i> Export</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      ${statCard('green', 'fa-rupee-sign', '₹' + totalRevenue.toLocaleString(), 'Total Revenue', '+24%', 'up')}
+      ${statCard('blue', 'fa-shopping-bag', orders.length, 'Total Orders', '+12%', 'up')}
+      ${statCard('orange', 'fa-chart-bar', '₹' + avgOrderValue.toLocaleString(), 'Avg Order Value', '+8%', 'up')}
+      ${statCard('purple', 'fa-percent', '4.8%', 'Conversion Rate', '+0.5%', 'up')}
+    </div>
+
+    <div class="two-col">
+      <div class="data-card" style="margin-bottom: 0;">
+        <div class="data-card-header"><h3>Revenue Trend</h3></div>
+        <div class="chart-container" style="height: 250px;">
+          ${[35, 55, 45, 75, 60, 85, 70, 90, 80, 95, 85, 100].map((h, i) => 
+            `<div class="bar" style="height: ${h}%;" data-value="${[35,55,45,75,60,85,70,90,80,95,85,100][i]}K"></div>`
+          ).join('')}
+        </div>
+        <div class="bar-labels" style="gap: 5px;">
+          ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m => `<span style="font-size: 10.5px;">${m}</span>`).join('')}
+        </div>
+      </div>
+
+      <div class="data-card" style="margin-bottom: 0;">
+        <div class="data-card-header"><h3>Orders by Status</h3></div>
+        <div style="padding: 25px;">
+          ${['delivered', 'shipped', 'processing', 'pending', 'cancelled'].map(status => {
+            const count = orders.filter(o => o.status === status).length;
+            const pct = Math.round((count / orders.length) * 100);
+            const colors = {
+              delivered: 'var(--primary-green)',
+              shipped: '#3b82f6',
+              processing: '#8b5cf6',
+              pending: '#f59e0b',
+              cancelled: '#ef4444'
+            };
+            return `
+              <div class="progress-item">
+                <div class="label-row"><span style="text-transform: capitalize;">${status}</span><span>${count} (${pct}%)</span></div>
+                <div class="progress-bar"><div class="fill" style="width: ${pct}%; background: ${colors[status]};"></div></div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="data-card" style="margin-bottom: 0;">
+        <div class="data-card-header"><h3>Top Performing Products</h3></div>
+        <div style="padding: 20px 25px;">
+          ${products.sort((a, b) => b.sold - a.sold).slice(0, 5).map((p, i) => `
+            <div style="display: flex; gap: 12px; align-items: center; padding: 12px 0; ${i < 4 ? 'border-bottom: 1px solid #f1f5f9;' : ''}">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: ${i === 0 ? '#fef3c7' : '#f1f5f9'}; color: ${i === 0 ? '#d97706' : '#64748b'}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">#${i + 1}</div>
+              <img src="${p.img}" style="width: 40px; height: 40px; object-fit: contain; border-radius: 6px; border: 1px solid var(--border-color); padding: 2px; background: white;">
+              <div style="flex: 1;">
+                <div style="font-size: 13px; font-weight: 500;">${p.title}</div>
+                <div style="font-size: 11.5px; color: var(--text-light);">${p.sold} sold</div>
+              </div>
+              <div style="font-weight: 600; font-size: 13.5px; color: var(--primary-green);">₹${(p.sold * p.price / 1000).toFixed(0)}K</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="data-card" style="margin-bottom: 0;">
+        <div class="data-card-header"><h3>Sales by Country</h3></div>
+        <div style="padding: 25px;">
+          ${topCountries.map(([country, amount]) => {
+            const pct = Math.round((amount / maxCountry) * 100);
+            return `
+              <div class="progress-item">
+                <div class="label-row"><span><i class="fas fa-globe" style="color: var(--primary-green); font-size: 11px;"></i> ${country}</span><span>₹${(amount / 1000).toFixed(0)}K</span></div>
+                <div class="progress-bar"><div class="fill" style="width: ${pct}%;"></div></div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============= PAYOUTS =============
+function renderPayouts() {
+  const payouts = getSellerPayouts();
+  const totalEarnings = payouts.filter(p => p.status === 'completed').reduce((s, p) => s + p.amount, 0);
+  const pendingAmount = payouts.filter(p => p.status === 'processing').reduce((s, p) => s + p.amount, 0);
+  const availableBalance = totalEarnings - 45000; // Simulate withdrawn
+
+  return `
+    <div class="dash-header">
+      <div>
+        <h1>Payouts & Earnings</h1>
+        <p>Manage your earnings and withdrawals</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="openWithdrawModal()"><i class="fas fa-money-bill-wave"></i> Withdraw Funds</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      ${statCard('green', 'fa-rupee-sign', '₹' + totalEarnings.toLocaleString(), 'Total Earned', '+18%', 'up')}
+      ${statCard('blue', 'fa-wallet', '₹' + availableBalance.toLocaleString(), 'Available Balance', '', '')}
+      ${statCard('orange', 'fa-clock', '₹' + pendingAmount.toLocaleString(), 'Pending Payout', '', '')}
+      ${statCard('purple', 'fa-calendar', '₹45,000', 'Last Payout', '', '')}
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-header">
+        <h3>Bank Account</h3>
+        <button class="btn btn-outline" style="padding: 6px 14px; font-size: 12.5px;" onclick="showToast('Bank edit coming soon')"><i class="fas fa-edit"></i> Edit</button>
+      </div>
+      <div style="padding: 20px 25px; display: flex; gap: 30px; flex-wrap: wrap;">
+        <div style="display: flex; gap: 15px; align-items: center;">
+          <div style="width: 50px; height: 50px; border-radius: 10px; background: #dbeafe; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+            <i class="fas fa-university"></i>
+          </div>
+          <div>
+            <div style="font-weight: 600; font-size: 14px;">HDFC Bank</div>
+            <div style="font-size: 12.5px; color: var(--text-light);">Account: ****4521 • IFSC: HDFC0000123</div>
+          </div>
+        </div>
+        <div style="margin-left: auto; align-self: center;">
+          <span class="status approved"><i class="fas fa-check-circle"></i> Verified</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-header">
+        <h3>Transaction History</h3>
+        <button class="btn btn-outline" style="padding: 6px 14px; font-size: 12.5px;" onclick="showToast('Statement download coming soon')"><i class="fas fa-download"></i> Download Statement</button>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Reference</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${payouts.map(p => `
+              <tr>
+                <td><strong>#${p.id}</strong></td>
+                <td>${formatDate(p.date)}</td>
+                <td><strong>₹${p.amount.toLocaleString()}</strong></td>
+                <td>${p.method}</td>
+                <td style="font-family: monospace; font-size: 12.5px;">${p.reference}</td>
+                <td><span class="status ${p.status}">${p.status}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function openWithdrawModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay active';
+  modal.id = 'withdrawModal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width: 480px;">
+      <h3>Withdraw Funds <button onclick="document.getElementById('withdrawModal').remove()">×</button></h3>
+      <div style="padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; margin-bottom: 20px;">
+        <div style="font-size: 12px; color: var(--text-light);">Available Balance</div>
+        <div style="font-size: 24px; font-weight: 700; color: var(--primary-green); margin-top: 3px;">₹32,000</div>
+      </div>
+      <form onsubmit="handleWithdraw(event)">
+        <div class="form-group">
+          <label>Withdrawal Amount (₹) *</label>
+          <input type="number" id="withdrawAmount" placeholder="0.00" min="100" max="32000" required>
+          <div style="font-size: 11.5px; color: var(--text-light); margin-top: 5px;">Minimum withdrawal: ₹100</div>
+        </div>
+        <div class="form-group">
+          <label>Withdraw To</label>
+          <select>
+            <option>HDFC Bank ****4521</option>
+            <option>Add new account...</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('withdrawModal').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Request Withdrawal</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function handleWithdraw(e) {
+  e.preventDefault();
+  const amount = parseInt(document.getElementById('withdrawAmount').value);
+  if (amount < 100) { showToast('Minimum withdrawal is ₹100'); return; }
+  
+  const payouts = getSellerPayouts();
+  const newPayout = {
+    id: 'PAY-' + String(payouts.length + 1).padStart(3, '0'),
+    date: new Date().toISOString().split('T')[0],
+    amount,
+    method: 'Bank Transfer',
+    status: 'processing',
+    reference: 'HDFC****4521'
+  };
+  payouts.unshift(newPayout);
+  saveSellerPayouts(payouts);
+  document.getElementById('withdrawModal').remove();
+  showToast(`✅ Withdrawal request of ₹${amount.toLocaleString()} submitted`);
+  document.getElementById('dashContent').innerHTML = renderPayouts();
+}
+
+// ============= PROFILE =============
+function renderProfile() {
+  const p = getSellerProfile();
+
+  return `
+    <div class="dash-header">
+      <div>
+        <h1>Profile Settings</h1>
+        <p>Manage your business information and preferences</p>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-header">
+        <h3>Business Information</h3>
+        ${p.kycVerified ? `<span class="status approved"><i class="fas fa-check-circle"></i> KYC Verified</span>` : ''}
+      </div>
+      <form onsubmit="handleProfileSave(event)" style="padding: 25px;">
+        <div class="form-row">
+          <div class="form-group"><label>Business Name *</label><input type="text" id="pfBizName" value="${p.businessName}" required></div>
+          <div class="form-group"><label>Owner Name *</label><input type="text" id="pfOwnerName" value="${p.ownerName}" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Email *</label><input type="email" id="pfEmail" value="${p.email}" required></div>
+          <div class="form-group"><label>Phone *</label><input type="tel" id="pfPhone" value="${p.phone}" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>GST Number</label><input type="text" id="pfGst" value="${p.gst}"></div>
+          <div class="form-group"><label>PAN Number</label><input type="text" id="pfPan" value="${p.pan}"></div>
+        </div>
+        <div class="form-group"><label>Address</label><input type="text" id="pfAddress" value="${p.address}"></div>
+        <div class="form-row">
+          <div class="form-group"><label>City</label><input type="text" id="pfCity" value="${p.city}"></div>
+          <div class="form-group"><label>State</label><input type="text" id="pfState" value="${p.state}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Country</label><input type="text" id="pfCountry" value="${p.country}"></div>
+          <div class="form-group"><label>ZIP Code</label><input type="text" id="pfZip" value="${p.zip}"></div>
+        </div>
+        <div class="modal-actions" style="justify-content: flex-start; padding-top: 0; border-top: none;">
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+          <button type="button" class="btn btn-outline" onclick="showToast('No changes to reset')">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-header"><h3>Bank Details</h3></div>
+      <div style="padding: 25px;">
+        <div class="form-row">
+          <div class="form-group"><label>Bank Name</label><input type="text" value="${p.bankName}" readonly style="background: #f8fafc;"></div>
+          <div class="form-group"><label>Account Number</label><input type="text" value="${p.accountNumber}" readonly style="background: #f8fafc;"></div>
+        </div>
+        <div class="form-group"><label>IFSC Code</label><input type="text" value="${p.ifsc}" readonly style="background: #f8fafc;"></div>
+        <button class="btn btn-outline" onclick="showToast('Bank update requires support ticket')"><i class="fas fa-edit"></i> Request Bank Change</button>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-header"><h3>KYC Documents</h3></div>
+      <div style="padding: 25px;">
+        ${['GST Certificate', 'PAN Card', 'Business Registration'].map(doc => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9;">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <i class="fas fa-file-pdf" style="color: #dc2626; font-size: 20px;"></i>
+              <div>
+                <div style="font-weight: 500; font-size: 13.5px;">${doc}</div>
+                <div style="font-size: 11.5px; color: var(--text-light);">Uploaded • Verified</div>
+              </div>
+            </div>
+            <span class="status approved"><i class="fas fa-check-circle"></i> Verified</span>
+          </div>
+        `).join('')}
+        <button class="btn btn-outline" style="margin-top: 15px;" onclick="showToast('Upload coming soon')"><i class="fas fa-upload"></i> Upload New Document</button>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-header"><h3>Security</h3></div>
+      <div style="padding: 25px;">
+        <button class="btn btn-outline" style="margin-right: 10px;" onclick="showToast('Password change coming soon')"><i class="fas fa-key"></i> Change Password</button>
+        <button class="btn btn-outline" onclick="showToast('2FA setup coming soon')"><i class="fas fa-shield-alt"></i> Enable 2FA</button>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="data-card-header"><h3>Notification Preferences</h3></div>
+      <div style="padding: 25px;">
+        ${[
+          { key: 'newOrders', label: 'New order notifications', desc: 'Get notified when a buyer places an order', checked: true },
+          { key: 'newRFQs', label: 'New RFQ requests', desc: 'Alerts when a buyer requests a quote', checked: true },
+          { key: 'lowStock', label: 'Low stock alerts', desc: 'When product stock is below 20 units', checked: true },
+          { key: 'payouts', label: 'Payout updates', desc: 'When a payout is processed', checked: true },
+          { key: 'marketing', label: 'Marketing & tips', desc: 'Occasional emails about new features', checked: false },
+        ].map(n => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9;">
+            <div>
+              <div style="font-weight: 500; font-size: 13.5px;">${n.label}</div>
+              <div style="font-size: 12px; color: var(--text-light); margin-top: 2px;">${n.desc}</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+              <input type="checkbox" ${n.checked ? 'checked' : ''} onchange="showToast('Preference updated')" style="opacity: 0; width: 0; height: 0;">
+              <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: ${n.checked ? 'var(--primary-green)' : '#cbd5e1'}; border-radius: 24px; transition: 0.3s;"></span>
+              <span style="position: absolute; content: ''; height: 18px; width: 18px; left: ${n.checked ? '23px' : '3px'}; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s;"></span>
+            </label>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function handleProfileSave(e) {
+  e.preventDefault();
+  const profile = getSellerProfile();
+  profile.businessName = document.getElementById('pfBizName').value;
+  profile.ownerName = document.getElementById('pfOwnerName').value;
+  profile.email = document.getElementById('pfEmail').value;
+  profile.phone = document.getElementById('pfPhone').value;
+  profile.gst = document.getElementById('pfGst').value;
+  profile.pan = document.getElementById('pfPan').value;
+  profile.address = document.getElementById('pfAddress').value;
+  profile.city = document.getElementById('pfCity').value;
+  profile.state = document.getElementById('pfState').value;
+  profile.country = document.getElementById('pfCountry').value;
+  profile.zip = document.getElementById('pfZip').value;
+  saveSellerProfile(profile);
+  showToast('✅ Profile updated successfully!');
+}
+
+// Close modal on overlay click
+document.getElementById('productModal')?.addEventListener('click', e => {
+  if (e.target.id === 'productModal') closeProductModal();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Results - Goeazymart</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .search-layout { display: grid; grid-template-columns: 260px 1fr; gap: 30px; margin-bottom: 60px; }
+    .sidebar { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); align-self: start; }
+    .filter-section { border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 20px; }
+    .filter-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .filter-section h3 { font-size: 14px; margin-bottom: 15px; color: var(--dark-blue); }
+    .filter-list { display: flex; flex-direction: column; gap: 10px; }
+    .filter-list label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-light); cursor: pointer; }
+    .filter-list input { accent-color: var(--primary-green); width: 16px; height: 16px; }
+    .search-results-header { background: var(--white); padding: 15px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .results-count { font-size: 14px; color: var(--text-light); }
+    .results-count span { font-weight: 600; color: var(--text-dark); }
+    .sort-by { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .sort-by select { padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; outline: none; background: var(--white); }
+    .search-product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    @media (max-width: 1024px) { .search-layout { grid-template-columns: 1fr; } .sidebar { display: none; } .search-product-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) { .search-product-grid { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="top-header">
+      <a href="index.html" class="logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</a>
+      <form class="search-bar" action="search.html">
+        <input type="text" placeholder="Search products..." id="searchInput">
+        <button type="submit"><i class="fas fa-search"></i></button>
+      </form>
+      <div class="header-actions">
+        <a href="login.html">Login</a>
+        <a href="register.html" class="btn btn-primary">Register</a>
+        <a href="cart.html" class="icon-text"><i class="fas fa-shopping-cart"></i> <span id="cart-count" style="background:var(--primary-green); color:white; border-radius:50%; padding:2px 6px; font-size:10px;">0</span></a>
+      </div>
+    </div>
+    <div class="bottom-header">
+      <div class="all-categories"><i class="fas fa-bars"></i> All Categories</div>
+      <nav class="nav-links">
+        <a href="search.html">Retail Products</a>
+        <a href="search.html">Soft Commodities</a>
+        <a href="search.html">Hard Commodities</a>
+        <a href="#">How It Works</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="breadcrumbs">
+    <a href="index.html">Home</a><span>›</span>
+    <a href="search.html">Soft Commodities</a><span>›</span>
+    <span style="color:var(--text-dark);">Rice</span>
+  </div>
+</div>
+
+<main class="container search-layout">
+  <aside class="sidebar">
+    <div class="filter-section">
+      <h3>Category</h3>
+      <div class="filter-list">
+        <label><input type="checkbox"> Retail (5)</label>
+        <label><input type="checkbox" checked> Soft Commodities (5)</label>
+        <label><input type="checkbox"> Hard Commodities (0)</label>
+      </div>
+    </div>
+    <div class="filter-section">
+      <h3>Price Range</h3>
+      <div style="display:flex; gap:10px;">
+        <input type="number" placeholder="Min" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:4px;">
+        <input type="number" placeholder="Max" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:4px;">
+      </div>
+    </div>
+    <div class="filter-section">
+      <h3>Rating</h3>
+      <div class="filter-list">
+        <label><input type="checkbox"> ★★★★★ (4)</label>
+        <label><input type="checkbox"> ★★★★ & Up (10)</label>
+        <label><input type="checkbox"> ★★★ & Up (10)</label>
+      </div>
+    </div>
+  </aside>
+
+  <section>
+    <div class="search-results-header">
+      <div class="results-count">Showing <span>1–10</span> of <span>10</span> results</div>
+      <div class="sort-by">
+        <label>Sort by:</label>
+        <select>
+          <option>Relevance</option>
+          <option>Price: Low to High</option>
+          <option>Price: High to Low</option>
+          <option>Rating</option>
+        </select>
+      </div>
+    </div>
+    <div class="search-product-grid" id="searchProducts"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><div class="footer-logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</div><p>A global marketplace for commodities.</p></div>
+      <div class="footer-col"><h4>Marketplace</h4><ul><li><a href="search.html">Retail</a></li><li><a href="search.html">Soft Commodities</a></li><li><a href="search.html">Hard Commodities</a></li></ul></div>
+      <div class="footer-col"><h4>Business</h4><ul><li><a href="#">Become a Seller</a></li><li><a href="register.html">Register</a></li></ul></div>
+      <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Contact</a></li></ul></div>
+      <div class="footer-col"><h4>Support</h4><ul><li><a href="#">Help</a></li><li><a href="#">FAQs</a></li></ul></div>
+      <div class="footer-col"><h4>Newsletter</h4><form class="newsletter-form"><input type="email" placeholder="Email"><button>Subscribe</button></form></div>
+    </div>
+    <div class="footer-bottom"><div>© 2026 Goeazymart.</div><div class="footer-bottom-links"><a href="#">Privacy</a><a href="#">Terms</a></div></div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+  // Get search query from URL
+  const params = new URLSearchParams(window.location.search);
+  const query = params.get('q') || '';
+  if (query) document.getElementById('searchInput').value = query;
+  
+  // Filter products
+  let filtered = PRODUCTS;
+  if (query) {
+    filtered = PRODUCTS.filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
+  }
+  
+  renderSearchProducts('searchProducts', filtered);
+</script>
+</body>
+</html>

@@ -142,7 +142,7 @@ export default function DashboardLayout({ title, subtitle, navItems, activeTab, 
           <div
             className="position-absolute top-0 start-0 h-100 p-3 d-flex flex-column text-white"
             style={{
-              width: '280px',
+              width: 'min(280px, 85vw)',
               backgroundColor: colors.darkBlue,
               overflowY: 'auto',
             }}
@@ -220,10 +220,10 @@ export default function DashboardLayout({ title, subtitle, navItems, activeTab, 
       )}
 
       {/* Main Content Pane */}
-      <main className="flex-grow-1 p-3 p-md-4 p-xl-5 overflow-auto">
+      <main className="flex-grow-1 p-2 p-sm-3 p-md-4 p-xl-5 overflow-auto" style={{ minWidth: 0 }}>
         {/* Top Header / Bar */}
-        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
-          <div className="d-flex align-items-center gap-3">
+        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 gap-sm-3 mb-3 mb-md-4">
+          <div className="d-flex align-items-center gap-2 gap-sm-3">
             {/* Mobile Sidebar Toggle Button */}
             <button
               type="button"
@@ -235,7 +235,7 @@ export default function DashboardLayout({ title, subtitle, navItems, activeTab, 
               <i className="fas fa-bars"></i>
             </button>
             <div>
-              <h1 className="fw-bold mb-1" style={{ color: colors.darkBlue, fontSize: '24px' }}>
+              <h1 className="fw-bold mb-1" style={{ color: colors.darkBlue, fontSize: 'clamp(18px, 4vw, 24px)' }}>
                 {title}
               </h1>
               {subtitle && <p className="mb-0 text-muted small">{subtitle}</p>}

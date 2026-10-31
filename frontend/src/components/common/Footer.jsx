@@ -107,10 +107,10 @@ export default function Footer() {
 
         {/* Footer Bottom */}
         <div className="pt-4 border-top border-secondary border-opacity-25 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 small">
-          <div>
+          <div className="text-center text-md-start">
             {cmsContent?.footer?.copyright || '© 2026 Goeazymart Global Marketplace. All rights reserved.'}
           </div>
-          <div className="d-flex gap-3">
+          <div className="d-flex flex-wrap justify-content-center justify-content-md-end gap-2 gap-md-3">
             <Link to="/about" className="text-decoration-none text-secondary text-hover-white">Privacy Policy</Link>
             <Link to="/about" className="text-decoration-none text-secondary text-hover-white">Terms of Trade</Link>
             <Link to="/about" className="text-decoration-none text-secondary text-hover-white">Compliance & KYC</Link>

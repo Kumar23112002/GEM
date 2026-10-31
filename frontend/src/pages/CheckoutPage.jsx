@@ -261,7 +261,7 @@ export default function CheckoutPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="btn text-white w-100 py-3 fw-bold rounded-3 shadow-sm fs-5 mt-2"
+                  className="btn text-white w-100 py-2 py-sm-3 fw-bold rounded-3 shadow-sm fs-6 fs-sm-5 mt-2"
                   style={{ backgroundColor: colors.primary }}
                 >
                   {submitting ? (

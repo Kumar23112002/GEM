@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import Modal from '../components/common/Modal';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
 
 export default function ProductPage() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { addToCart, showToast } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,12 @@ export default function ProductPage() {
     }
     loadProduct();
   }, [id]);
+
+  useEffect(() => {
+    if (location.search.includes('action=rfq') && product) {
+      setRfqModalOpen(true);
+    }
+  }, [location.search, product]);
 
   if (loading) {
     return (
@@ -69,7 +78,8 @@ export default function ProductPage() {
     );
   }
 
-  const discount = Math.round((1 - product.price / product.oldPrice) * 100);
+  const discount = product?.oldPrice ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
+  const isCommodity = product?.category === 'soft' || product?.category === 'hard';
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
@@ -94,6 +104,7 @@ export default function ProductPage() {
     });
     setRfqModalOpen(false);
     showToast(`Bulk RFQ for ${rfqQty} ${rfqUnit} submitted successfully!`);
+    navigate('/buyer-dashboard');
   };
 
   return (
@@ -123,18 +134,18 @@ export default function ProductPage() {
             <div className="col-12 col-md-5">
               <div
                 className="d-flex align-items-center justify-content-center p-3 rounded-4 mb-3"
-                style={{ backgroundColor: '#f8fafc', height: '360px', border: `1px solid ${colors.border}` }}
+                style={{ backgroundColor: '#f8fafc', height: 'clamp(260px, 45vw, 360px)', border: `1px solid ${colors.border}` }}
               >
                 <img
                   src={selectedImg || product.img}
                   alt={product.title}
                   className="img-fluid"
-                  style={{ maxHeight: '300px', objectFit: 'contain' }}
+                  style={{ maxHeight: '100%', objectFit: 'contain' }}
                 />
               </div>
 
               {/* Thumbnails */}
-              <div className="d-flex gap-2">
+              <div className="d-flex gap-2 overflow-auto pb-1">
                 {[product.img, product.img, product.img].map((img, idx) => (
                   <button
                     key={idx}
@@ -186,110 +197,179 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Price Row */}
-              <div className="d-flex align-items-baseline gap-3 mb-3">
-                <span className="fw-bold" style={{ fontSize: '32px', color: colors.primary }}>
-                  ₹{product.price.toLocaleString()}
-                </span>
-                {product.oldPrice && (
-                  <span className="text-decoration-line-through text-muted" style={{ fontSize: '18px' }}>
-                    ₹{product.oldPrice.toLocaleString()}
+              {/* Price or RFQ Information */}
+              {isCommodity ? (
+                <div className="p-3 p-sm-4 rounded-4 mb-4 border border-success-subtle bg-light">
+                  <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                    <div>
+                      <span className="badge bg-success text-white mb-2 px-2 py-1" style={{ fontSize: '11px' }}>
+                        <i className="fas fa-boxes me-1"></i> B2B Wholesale Commodity
+                      </span>
+                      <h2 className="fw-bold mb-1 text-success" style={{ fontSize: 'clamp(22px, 4vw, 30px)' }}>
+                        Price on Request (RFQ)
+                      </h2>
+                    </div>
+                    <span className="badge bg-white text-dark border px-3 py-2 fw-semibold shadow-sm align-self-start">
+                      Minimum Order (MOQ): {product.moq || '1 MT'}
+                    </span>
+                  </div>
+                  <p className="small text-muted mb-0" style={{ lineHeight: '1.6' }}>
+                    Commodities are quoted on a bulk tender basis. Final contract pricing depends on tonnage, delivery port (CIF/FOB), packaging specifications, and lab inspection requirements.
+                  </p>
+                </div>
+              ) : (
+                <div className="d-flex align-items-baseline gap-3 mb-3">
+                  <span className="fw-bold" style={{ fontSize: '32px', color: colors.primary }}>
+                    ₹{product.price.toLocaleString()}
                   </span>
-                )}
-                {discount > 0 && (
-                  <span
-                    className="badge py-2 px-3 fw-bold"
-                    style={{ backgroundColor: colors.dangerLight, color: colors.danger, fontSize: '13px' }}
-                  >
-                    {discount}% OFF
-                  </span>
-                )}
-              </div>
+                  {product.oldPrice && (
+                    <span className="text-decoration-line-through text-muted" style={{ fontSize: '18px' }}>
+                      ₹{product.oldPrice.toLocaleString()}
+                    </span>
+                  )}
+                  {discount > 0 && (
+                    <span
+                      className="badge py-2 px-3 fw-bold"
+                      style={{ backgroundColor: colors.dangerLight, color: colors.danger, fontSize: '13px' }}
+                    >
+                      {discount}% OFF
+                    </span>
+                  )}
+                </div>
+              )}
 
               <p className="text-muted small mb-4" style={{ lineHeight: '1.6' }}>
                 {product.description || 'Premium quality export-grade product sourced directly from verified mills and authorized stockists. Fully compliant with international quality standards.'}
               </p>
 
-              {/* Bulk RFQ Box */}
-              <div
-                className="p-3 rounded-3 mb-4"
-                style={{
-                  backgroundColor: colors.primarySubtle,
-                  border: `1px solid ${colors.primaryBorder}`,
-                }}
-              >
-                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                  <h6 className="fw-bold mb-0 text-success d-flex align-items-center gap-2">
-                    <i className="fas fa-boxes"></i> Bulk Wholesale / Tender Inquiries
-                  </h6>
-                  <span className="badge bg-white text-success border border-success-subtle small">
-                    MOQ: {product.moq || '1 Unit'}
-                  </span>
-                </div>
-                <p className="small text-muted mb-3">
-                  Need volume pricing for 50 MT to 5,000 MT? Submit a custom RFQ and receive verified mill quotes within 24 hours.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setRfqModalOpen(true)}
-                  className="btn btn-sm text-white fw-semibold px-3 py-2"
-                  style={{ backgroundColor: colors.primary }}
-                >
-                  <i className="fas fa-file-invoice me-1"></i> Request Bulk Quote (RFQ)
-                </button>
-              </div>
-
-              {/* Purchase Actions */}
-              <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
-                {/* Quantity Input */}
-                <div className="input-group" style={{ width: '130px' }}>
+              {/* Actions: RFQ for commodities, Add to Cart for retail */}
+              {isCommodity ? (
+                <div className="d-flex flex-wrap align-items-center gap-2 gap-sm-3 mb-4">
                   <button
                     type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    onClick={() => setRfqModalOpen(true)}
+                    className="btn text-white px-4 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 flex-grow-1 shadow-sm"
+                    style={{ backgroundColor: colors.primary, fontSize: '15px', borderRadius: '8px' }}
                   >
-                    −
+                    <i className="fas fa-file-invoice fs-5"></i>
+                    <span>Request Bulk Quote (RFQ) / Submit Tender</span>
                   </button>
-                  <input
-                    type="text"
-                    className="form-control text-center shadow-none border-secondary"
-                    value={quantity}
-                    readOnly
-                  />
                   <button
                     type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => setRfqModalOpen(true)}
+                    className="btn btn-outline-success px-4 py-3 fw-semibold d-flex align-items-center justify-content-center gap-2 flex-grow-1 flex-sm-grow-0"
+                    style={{ borderColor: colors.primary, color: colors.primary, borderRadius: '8px' }}
                   >
-                    +
+                    <i className="fas fa-comments-dollar"></i>
+                    <span>Negotiate Terms</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleWishlist(product)}
+                    className={`btn ${isInWishlist(product.id) ? 'btn-danger text-white' : 'btn-outline-danger'} px-3 py-3 fw-semibold d-flex align-items-center justify-content-center gap-2`}
+                    style={{ borderRadius: '8px' }}
+                    title={isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                  >
+                    <i className={isInWishlist(product.id) ? "fas fa-heart text-white" : "far fa-heart"}></i>
+                    <span className="d-none d-sm-inline">{isInWishlist(product.id) ? "Wishlisted" : "Wishlist"}</span>
                   </button>
                 </div>
+              ) : (
+                <>
+                  {/* Retail Wholesale Inquiry Box */}
+                  <div
+                    className="p-3 rounded-3 mb-4"
+                    style={{
+                      backgroundColor: colors.primarySubtle,
+                      border: `1px solid ${colors.primaryBorder}`,
+                    }}
+                  >
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                      <h6 className="fw-bold mb-0 text-success d-flex align-items-center gap-2">
+                        <i className="fas fa-boxes"></i> Wholesale Case Inquiries
+                      </h6>
+                      <span className="badge bg-white text-success border border-success-subtle small">
+                        MOQ: {product.moq || '1 Unit'}
+                      </span>
+                    </div>
+                    <p className="small text-muted mb-3">
+                      Need volume carton pricing for retail distribution? Submit an inquiry for wholesale rates.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setRfqModalOpen(true)}
+                      className="btn btn-sm text-white fw-semibold px-3 py-2"
+                      style={{ backgroundColor: colors.primary }}
+                    >
+                      <i className="fas fa-file-invoice me-1"></i> Request Bulk Quote (RFQ)
+                    </button>
+                  </div>
 
-                {/* Add to Cart */}
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="btn btn-outline-success px-4 py-2 fw-semibold d-flex align-items-center gap-2"
-                  style={{ borderColor: colors.primary, color: colors.primary }}
-                >
-                  <i className="fas fa-shopping-cart"></i>
-                  <span>Add to Cart</span>
-                </button>
+                  {/* Purchase Actions */}
+                  <div className="d-flex flex-wrap align-items-center gap-2 gap-sm-3 mb-4">
+                    {/* Quantity Input */}
+                    <div className="input-group" style={{ width: '120px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      >
+                        −
+                      </button>
+                      <input
+                        type="text"
+                        className="form-control text-center shadow-none border-secondary"
+                        value={quantity}
+                        readOnly
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() => setQuantity(quantity + 1)}
+                      >
+                        +
+                      </button>
+                    </div>
 
-                {/* Buy Now */}
-                <button
-                  type="button"
-                  onClick={handleBuyNow}
-                  className="btn text-white px-4 py-2 fw-semibold d-flex align-items-center gap-2"
-                  style={{ backgroundColor: colors.primary }}
-                >
-                  <i className="fas fa-bolt"></i>
-                  <span>Buy Now</span>
-                </button>
-              </div>
+                    {/* Add to Cart */}
+                    <button
+                      type="button"
+                      onClick={handleAddToCart}
+                      className="btn btn-outline-success px-3 px-sm-4 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 flex-grow-1 flex-sm-grow-0"
+                      style={{ borderColor: colors.primary, color: colors.primary }}
+                    >
+                      <i className="fas fa-shopping-cart"></i>
+                      <span>Add to Cart</span>
+                    </button>
+
+                    {/* Buy Now */}
+                    <button
+                      type="button"
+                      onClick={handleBuyNow}
+                      className="btn text-white px-3 px-sm-4 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 flex-grow-1 flex-sm-grow-0"
+                      style={{ backgroundColor: colors.primary }}
+                    >
+                      <i className="fas fa-bolt"></i>
+                      <span>Buy Now</span>
+                    </button>
+
+                    {/* Wishlist Button */}
+                    <button
+                      type="button"
+                      onClick={() => toggleWishlist(product)}
+                      className={`btn ${isInWishlist(product.id) ? 'btn-danger text-white' : 'btn-outline-danger'} px-3 px-sm-4 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 flex-grow-1 flex-sm-grow-0`}
+                      style={{ borderRadius: '8px' }}
+                      title={isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                    >
+                      <i className={isInWishlist(product.id) ? "fas fa-heart text-white" : "far fa-heart"}></i>
+                      <span>{isInWishlist(product.id) ? "Wishlisted" : "Wishlist"}</span>
+                    </button>
+                  </div>
+                </>
+              )}
 
               {/* Seller Information */}
-              <div className="p-3 rounded-3 border d-flex align-items-center justify-content-between gap-3 bg-light">
+              <div className="p-3 rounded-3 border d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-3 bg-light">
                 <div className="d-flex align-items-center gap-3">
                   <img
                     src="https://randomuser.me/api/portraits/men/32.jpg"
@@ -307,7 +387,7 @@ export default function ProductPage() {
                 </div>
                 <Link
                   to={`/search?seller=${encodeURIComponent(product.seller || 'Punjab Agro Mills')}`}
-                  className="btn btn-sm btn-outline-secondary"
+                  className="btn btn-sm btn-outline-secondary align-self-stretch align-self-sm-auto text-center"
                 >
                   View Store
                 </Link>
@@ -318,10 +398,10 @@ export default function ProductPage() {
 
         {/* Technical Specification Tabs */}
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-5" style={{ backgroundColor: colors.white }}>
-          <div className="d-flex border-bottom px-4 pt-3 gap-2 bg-light">
+          <div className="d-flex border-bottom px-3 px-sm-4 pt-3 gap-2 bg-light nav-tabs-scroll">
             <button
               type="button"
-              className={`btn btn-sm fw-bold px-4 py-2 border-0 rounded-top-3 ${
+              className={`btn btn-sm fw-bold px-3 px-sm-4 py-2 border-0 rounded-top-3 text-nowrap ${
                 activeTab === 'desc' ? 'bg-white text-success border-top border-start border-end' : 'text-muted'
               }`}
               onClick={() => setActiveTab('desc')}
@@ -330,7 +410,7 @@ export default function ProductPage() {
             </button>
             <button
               type="button"
-              className={`btn btn-sm fw-bold px-4 py-2 border-0 rounded-top-3 ${
+              className={`btn btn-sm fw-bold px-3 px-sm-4 py-2 border-0 rounded-top-3 text-nowrap ${
                 activeTab === 'specs' ? 'bg-white text-success border-top border-start border-end' : 'text-muted'
               }`}
               onClick={() => setActiveTab('specs')}
@@ -339,7 +419,7 @@ export default function ProductPage() {
             </button>
             <button
               type="button"
-              className={`btn btn-sm fw-bold px-4 py-2 border-0 rounded-top-3 ${
+              className={`btn btn-sm fw-bold px-3 px-sm-4 py-2 border-0 rounded-top-3 text-nowrap ${
                 activeTab === 'reviews' ? 'bg-white text-success border-top border-start border-end' : 'text-muted'
               }`}
               onClick={() => setActiveTab('reviews')}

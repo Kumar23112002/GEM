@@ -31,6 +31,21 @@ export default function BuyerDashboard() {
   const [newAddress, setNewAddress] = useState({ label: 'Home', name: '', phone: '', address: '', city: '', state: '', zip: '', country: 'India', isDefault: false });
   const [viewQuotesRfq, setViewQuotesRfq] = useState(null);
 
+  // Payment Methods State & Modals
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [paymentForm, setPaymentForm] = useState({
+    type: 'card',
+    brand: 'Visa',
+    name: 'Priya Sharma',
+    cardNumber: '',
+    last4: '',
+    expiry: '',
+    upiId: '',
+    isDefault: false,
+  });
+  const [deleteConfirmPaymentId, setDeleteConfirmPaymentId] = useState(null);
+
   useEffect(() => {
     async function loadData() {
       const [ord, r, neg, w, addr, p] = await Promise.all([
@@ -39,18 +54,14 @@ export default function BuyerDashboard() {
         api.getNegotiations(),
         api.getWishlist(),
         api.getAddresses(),
-        api.getWishlist(), // for mock payments or payments list
+        api.getPayments(),
       ]);
       setOrders(ord);
       setRfqs(r);
       setNegotiations(neg);
       setWishlist(w);
       setAddresses(addr);
-      setPayments([
-        { id: 1, type: 'card', brand: 'Visa', last4: '4242', expiry: '12/27', isDefault: true },
-        { id: 2, type: 'card', brand: 'Mastercard', last4: '8531', expiry: '08/26', isDefault: false },
-        { id: 3, type: 'upi', brand: 'UPI', upiId: 'priya@okhdfc', isDefault: false },
-      ]);
+      setPayments(p);
     }
     loadData();
   }, []);
@@ -108,6 +119,73 @@ export default function BuyerDashboard() {
     const updated = await api.deleteAddress(id);
     setAddresses(updated);
     showToast('Address removed', 'info');
+  };
+
+  // Payment Methods Handlers
+  const handleOpenAddPayment = () => {
+    setEditingPayment(null);
+    setPaymentForm({
+      type: 'card',
+      brand: 'Visa',
+      name: currentUser?.name || 'Priya Sharma',
+      cardNumber: '',
+      last4: '',
+      expiry: '',
+      upiId: '',
+      isDefault: payments.length === 0,
+    });
+    setPaymentModalOpen(true);
+  };
+
+  const handleOpenEditPayment = (pm) => {
+    setEditingPayment(pm);
+    setPaymentForm({
+      type: pm.type || 'card',
+      brand: pm.brand || 'Visa',
+      name: pm.name || currentUser?.name || 'Priya Sharma',
+      cardNumber: pm.last4 ? `•••• •••• •••• ${pm.last4}` : '',
+      last4: pm.last4 || '',
+      expiry: pm.expiry || '',
+      upiId: pm.upiId || '',
+      isDefault: Boolean(pm.isDefault),
+    });
+    setPaymentModalOpen(true);
+  };
+
+  const handleSavePayment = async (e) => {
+    e.preventDefault();
+    const cleanDigits = paymentForm.cardNumber.replace(/\D/g, '');
+    const calculatedLast4 = cleanDigits.length >= 4 ? cleanDigits.slice(-4) : (paymentForm.last4 || '4242');
+
+    const payload = {
+      id: editingPayment ? editingPayment.id : Date.now(),
+      type: paymentForm.type,
+      brand: paymentForm.type === 'upi' ? 'UPI' : (paymentForm.brand || 'Visa'),
+      name: paymentForm.name?.trim() || currentUser?.name || 'Priya Sharma',
+      last4: paymentForm.type === 'card' ? calculatedLast4 : '',
+      expiry: paymentForm.type === 'card' ? (paymentForm.expiry?.trim() || '12/28') : '',
+      upiId: paymentForm.type === 'upi' ? (paymentForm.upiId?.trim() || 'buyer@upi') : '',
+      isDefault: Boolean(paymentForm.isDefault),
+    };
+
+    const updated = await api.savePayment(payload);
+    setPayments(updated);
+    setPaymentModalOpen(false);
+    showToast(editingPayment ? 'Payment method updated successfully!' : 'New payment method added successfully!');
+  };
+
+  const handleConfirmDeletePayment = async () => {
+    if (!deleteConfirmPaymentId) return;
+    const updated = await api.deletePayment(deleteConfirmPaymentId);
+    setPayments(updated);
+    setDeleteConfirmPaymentId(null);
+    showToast('Payment method removed successfully', 'info');
+  };
+
+  const handleSetDefaultPayment = async (id) => {
+    const updated = await api.setDefaultPayment(id);
+    setPayments(updated);
+    showToast('Default payment method updated!');
   };
 
   const handleAcceptQuote = async (rfqId) => {
@@ -423,10 +501,10 @@ export default function BuyerDashboard() {
 
       {/* NEGOTIATIONS CHAT TAB */}
       {activeTab === 'negotiations' && (
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden" style={{ backgroundColor: colors.white, height: '700px' }}>
+        <div className="card border-0 shadow-sm rounded-4 overflow-hidden chat-window-container" style={{ backgroundColor: colors.white }}>
           <div className="row g-0 h-100">
             {/* Conversation list sidebar */}
-            <div className="col-12 col-md-4 border-end h-100 d-flex flex-column">
+            <div className="col-12 col-md-4 border-end chat-sidebar-mobile h-100 d-flex flex-column">
               <div className="p-3 border-bottom bg-light">
                 <h6 className="fw-bold mb-0 text-dark">Supplier Negotiations</h6>
                 <div className="small text-muted">Direct trade chat with mill representatives</div>
@@ -457,7 +535,7 @@ export default function BuyerDashboard() {
             </div>
 
             {/* Chat Thread */}
-            <div className="col-12 col-md-8 h-100 d-flex flex-column">
+            <div className="col-12 col-md-8 chat-thread-mobile h-100 d-flex flex-column">
               {/* Header */}
               <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
                 <div className="d-flex align-items-center gap-2">
@@ -573,14 +651,26 @@ export default function BuyerDashboard() {
                   />
                   <h6 className="fw-semibold text-truncate small mb-1">{item.title}</h6>
                   <div className="small text-muted mb-2">{item.seller}</div>
-                  <div className="fw-bold mb-3" style={{ color: colors.primary }}>₹{item.price.toLocaleString()}</div>
-                  <button
-                    type="button"
-                    onClick={() => addToCart(item)}
-                    className="btn btn-sm btn-outline-success w-100"
-                  >
-                    Add to Cart
-                  </button>
+                  <div className="fw-bold mb-3" style={{ color: colors.primary, fontSize: '14.5px' }}>
+                    {item.category === 'retail' ? `₹${item.price.toLocaleString()}` : 'Price on RFQ'}
+                  </div>
+                  {item.category === 'retail' ? (
+                    <button
+                      type="button"
+                      onClick={() => addToCart(item)}
+                      className="btn btn-sm btn-outline-success w-100"
+                    >
+                      <i className="fas fa-shopping-cart me-1"></i> Add to Cart
+                    </button>
+                  ) : (
+                    <Link
+                      to={`/product/${item.productId || item.id}?action=rfq`}
+                      className="btn btn-sm text-white w-100"
+                      style={{ backgroundColor: colors.primary }}
+                    >
+                      <i className="fas fa-file-invoice me-1"></i> Request RFQ
+                    </Link>
+                  )}
                 </div>
               </div>
             ))}
@@ -630,24 +720,145 @@ export default function BuyerDashboard() {
       {/* PAYMENTS TAB */}
       {activeTab === 'payments' && (
         <div className="card border-0 shadow-sm rounded-4 p-4" style={{ backgroundColor: colors.white }}>
-          <h4 className="fw-bold mb-4 text-dark">Saved Payment Methods & Trade Facilities</h4>
-          <div className="row g-3">
-            {payments.map((p) => (
-              <div key={p.id} className="col-12 col-md-4">
-                <div className="p-4 border rounded-4 text-white" style={{ background: colors.authGradient }}>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <span className="fw-bold text-uppercase">{p.brand}</span>
-                    <i className="fas fa-credit-card fs-4"></i>
-                  </div>
-                  <h5 className="font-monospace mb-3">•••• •••• •••• {p.last4 || '4242'}</h5>
-                  <div className="d-flex justify-content-between small text-light">
-                    <span>EXPIRES: {p.expiry || '12/28'}</span>
-                    {p.isDefault && <span className="badge bg-success">DEFAULT</span>}
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-2 border-bottom">
+            <div>
+              <h4 className="fw-bold mb-1 text-dark">Saved Payment Methods & Trade Facilities</h4>
+              <p className="text-muted small mb-0">Manage credit/debit cards, UPI VPA handles, and commercial checkout accounts</p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-sm text-white fw-semibold d-flex align-items-center gap-2 px-3 py-2 shadow-sm"
+              style={{ backgroundColor: colors.primary, borderRadius: '6px' }}
+              onClick={handleOpenAddPayment}
+            >
+              <i className="fas fa-plus"></i>
+              <span>Add Payment Method</span>
+            </button>
+          </div>
+
+          {payments.length === 0 ? (
+            <div className="text-center py-5 border rounded-4 bg-light">
+              <i className="fas fa-credit-card text-muted mb-3" style={{ fontSize: '36px' }}></i>
+              <h5 className="fw-bold mb-1 text-dark">No Payment Methods Saved</h5>
+              <p className="text-muted small mb-3">Add a card or UPI ID for seamless one-click order settlements.</p>
+              <button
+                type="button"
+                className="btn btn-sm text-white fw-semibold px-3 py-2"
+                style={{ backgroundColor: colors.primary }}
+                onClick={handleOpenAddPayment}
+              >
+                + Add Payment Method
+              </button>
+            </div>
+          ) : (
+            <div className="row g-4">
+              {payments.map((p) => (
+                <div key={p.id} className="col-12 col-md-6 col-lg-4">
+                  <div
+                    className="p-4 border rounded-4 text-white position-relative shadow-sm d-flex flex-column justify-content-between"
+                    style={{
+                      background: colors.authGradient,
+                      minHeight: '220px',
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    }}
+                  >
+                    <div>
+                      {/* Top Row: Brand & Quick Action Icons */}
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div className="d-flex align-items-center gap-2">
+                          <span className="fw-bold text-uppercase fs-6">{p.brand}</span>
+                          {p.isDefault && (
+                            <span className="badge bg-white text-success fw-bold shadow-sm" style={{ fontSize: '10px' }}>
+                              DEFAULT
+                            </span>
+                          )}
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-link text-white p-0 opacity-75 hover-opacity-100"
+                            onClick={() => handleOpenEditPayment(p)}
+                            title="Edit Payment Method"
+                          >
+                            <i className="fas fa-pencil-alt fs-6"></i>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-link text-white p-0 opacity-75 hover-opacity-100"
+                            onClick={() => setDeleteConfirmPaymentId(p.id)}
+                            title="Delete Payment Method"
+                          >
+                            <i className="fas fa-trash-alt fs-6"></i>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Middle Row: Card Number or UPI ID */}
+                      {p.type === 'upi' ? (
+                        <div className="mb-3">
+                          <div className="text-white-50 small mb-1" style={{ fontSize: '11px' }}>VIRTUAL PAYMENT ADDRESS (VPA)</div>
+                          <h6 className="font-monospace text-white fw-bold mb-0 text-truncate">
+                            {p.upiId || 'buyer@upi'}
+                          </h6>
+                        </div>
+                      ) : (
+                        <h5 className="font-monospace mb-3 text-white letter-spacing-1">
+                          •••• •••• •••• {p.last4 || '4242'}
+                        </h5>
+                      )}
+                    </div>
+
+                    {/* Bottom Row: Expiry / Cardholder & Action Footer */}
+                    <div>
+                      <div className="d-flex justify-content-between align-items-end text-light small mb-2">
+                        <div>
+                          {p.type === 'card' && <div>EXPIRES: {p.expiry || '12/28'}</div>}
+                          <div className="text-white-50" style={{ fontSize: '11px' }}>
+                            {p.name || currentUser?.name || 'Verified Cardholder'}
+                          </div>
+                        </div>
+                        <i className={`fas ${p.type === 'upi' ? 'fa-mobile-alt' : 'fa-credit-card'} fs-4 opacity-75`}></i>
+                      </div>
+
+                      {/* Action Bar */}
+                      <div className="border-top border-white border-opacity-25 pt-2 d-flex justify-content-between align-items-center">
+                        <button
+                          type="button"
+                          className="btn btn-sm text-white p-0 d-inline-flex align-items-center gap-1 opacity-75 hover-opacity-100"
+                          style={{ fontSize: '12px' }}
+                          onClick={() => handleOpenEditPayment(p)}
+                        >
+                          <i className="fas fa-edit"></i> Edit
+                        </button>
+
+                        <div className="d-flex align-items-center gap-2">
+                          <button
+                            type="button"
+                            className="btn btn-sm text-white p-0 d-inline-flex align-items-center gap-1 opacity-75 hover-opacity-100"
+                            style={{ fontSize: '12px' }}
+                            onClick={() => setDeleteConfirmPaymentId(p.id)}
+                          >
+                            <i className="fas fa-trash-alt"></i> Delete
+                          </button>
+
+                          {!p.isDefault && (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-light py-0 px-2 fw-medium ms-1"
+                              style={{ fontSize: '11px', borderRadius: '4px' }}
+                              onClick={() => handleSetDefaultPayment(p.id)}
+                            >
+                              Make Default
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -826,6 +1037,209 @@ export default function BuyerDashboard() {
               onClick={() => handleAcceptQuote(viewQuotesRfq?.id)}
             >
               Accept Quote
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Add / Edit Payment Method Modal */}
+      <Modal
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        title={editingPayment ? 'Edit Payment Method' : 'Add New Payment Method'}
+        maxWidth="500px"
+      >
+        <form onSubmit={handleSavePayment}>
+          {/* Method Type Selector */}
+          <div className="mb-3">
+            <label className="form-label small fw-semibold">Payment Instrument *</label>
+            <div className="btn-group w-100">
+              <button
+                type="button"
+                className={`btn btn-sm ${paymentForm.type === 'card' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                onClick={() => setPaymentForm({ ...paymentForm, type: 'card', brand: 'Visa' })}
+              >
+                <i className="fas fa-credit-card me-1"></i> Credit / Debit Card
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${paymentForm.type === 'upi' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                onClick={() => setPaymentForm({ ...paymentForm, type: 'upi', brand: 'UPI' })}
+              >
+                <i className="fas fa-mobile-alt me-1"></i> UPI Virtual ID
+              </button>
+            </div>
+          </div>
+
+          {paymentForm.type === 'card' ? (
+            <>
+              <div className="row g-2 mb-2">
+                <div className="col-12 col-sm-8">
+                  <label className="form-label small fw-semibold">Cardholder Full Name *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. Priya Sharma"
+                    value={paymentForm.name}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="col-12 col-sm-4">
+                  <label className="form-label small fw-semibold">Card Network *</label>
+                  <select
+                    className="form-select"
+                    value={paymentForm.brand}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, brand: e.target.value })}
+                  >
+                    <option value="Visa">Visa</option>
+                    <option value="Mastercard">Mastercard</option>
+                    <option value="RuPay">RuPay</option>
+                    <option value="Amex">Amex</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mb-2">
+                <label className="form-label small fw-semibold">Card Number *</label>
+                <div className="input-group">
+                  <span className="input-group-text bg-light text-muted">
+                    <i className="fas fa-credit-card"></i>
+                  </span>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="4242 •••• •••• 4242"
+                    value={paymentForm.cardNumber}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, cardNumber: e.target.value })}
+                    maxLength="19"
+                    required={!editingPayment}
+                  />
+                </div>
+                {editingPayment && (
+                  <div className="form-text small">Leave as-is to preserve existing card ending in {paymentForm.last4}</div>
+                )}
+              </div>
+
+              <div className="row g-2 mb-3">
+                <div className="col-6">
+                  <label className="form-label small fw-semibold">Expiry Date (MM/YY) *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="12/28"
+                    value={paymentForm.expiry}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, expiry: e.target.value })}
+                    maxLength="5"
+                    required
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label small fw-semibold">CVV / CVC Security Code</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="•••"
+                    maxLength="4"
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mb-2">
+                <label className="form-label small fw-semibold">UPI ID / Virtual Payment Address (VPA) *</label>
+                <div className="input-group">
+                  <span className="input-group-text bg-light text-muted">@</span>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. priya.sharma@okhdfc or 9876543210@paytm"
+                    value={paymentForm.upiId}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, upiId: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label small fw-semibold">Account Holder Name *</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g. Priya Sharma"
+                  value={paymentForm.name}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, name: e.target.value })}
+                  required
+                />
+              </div>
+            </>
+          )}
+
+          <div className="form-check mb-4">
+            <input
+              type="checkbox"
+              className="form-check-input"
+              id="isDefaultCheck"
+              checked={paymentForm.isDefault}
+              onChange={(e) => setPaymentForm({ ...paymentForm, isDefault: e.target.checked })}
+            />
+            <label className="form-check-label small text-dark fw-medium" htmlFor="isDefaultCheck">
+              Set as primary default payment method for all checkout orders
+            </label>
+          </div>
+
+          <div className="d-flex justify-content-end gap-2 pt-2 border-top">
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={() => setPaymentModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn text-white fw-semibold px-4"
+              style={{ backgroundColor: colors.primary }}
+            >
+              {editingPayment ? 'Update Payment Method' : 'Save Payment Method'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Payment Confirmation Modal */}
+      <Modal
+        isOpen={Boolean(deleteConfirmPaymentId)}
+        onClose={() => setDeleteConfirmPaymentId(null)}
+        title="Remove Payment Method"
+        maxWidth="440px"
+      >
+        <div className="p-4 text-center">
+          <div
+            className="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+            style={{ width: '60px', height: '60px', backgroundColor: '#fee2e2', color: '#dc2626', fontSize: '26px' }}
+          >
+            <i className="fas fa-trash-alt"></i>
+          </div>
+          <h5 className="fw-bold mb-2" style={{ color: colors.darkBlue }}>Remove Payment Method?</h5>
+          <p className="text-muted small mb-4">
+            Are you sure you want to remove this saved payment method from your account? You can always add it again later.
+          </p>
+          <div className="d-flex justify-content-center gap-2">
+            <button
+              type="button"
+              className="btn btn-light px-4 py-2 fw-medium border"
+              onClick={() => setDeleteConfirmPaymentId(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger px-4 py-2 fw-semibold shadow-sm"
+              onClick={handleConfirmDeletePayment}
+            >
+              Remove Method
             </button>
           </div>
         </div>

@@ -80,7 +80,7 @@ export default function HomePage() {
                 style={{ maxWidth: '620px' }}
               >
                 <div className="input-group">
-                  <span className="input-group-text bg-white border-0 text-muted">
+                  <span className="input-group-text bg-white border-0 text-muted ps-2 ps-sm-3">
                     <i className="fas fa-search"></i>
                   </span>
                   <input
@@ -89,11 +89,11 @@ export default function HomePage() {
                     placeholder={cmsContent?.hero?.searchPlaceholder || 'Search wheat, basmati rice, aluminum, cooking oil...'}
                     value={heroSearch}
                     onChange={(e) => setHeroSearch(e.target.value)}
-                    style={{ fontSize: '15px' }}
+                    style={{ fontSize: '14.5px' }}
                   />
                   <button
                     type="submit"
-                    className="btn px-4 fw-semibold text-white"
+                    className="btn px-3 px-sm-4 fw-semibold text-white text-nowrap"
                     style={{ backgroundColor: colors.primary, borderRadius: '6px' }}
                   >
                     Find Deals
@@ -102,7 +102,7 @@ export default function HomePage() {
               </form>
 
               {/* Trust Badges */}
-              <div className="d-flex flex-wrap align-items-center gap-4 small text-light">
+              <div className="d-flex flex-wrap align-items-center gap-3 gap-sm-4 small text-light">
                 <span className="d-flex align-items-center gap-2">
                   <i className="fas fa-check-circle text-success fs-6"></i>
                   <span>100% Verified Suppliers</span>
@@ -289,7 +289,7 @@ export default function HomePage() {
                 Primary aluminium 99.7% ingots, structural steel TMT rebars, electrolytic copper cathodes, and raw alloys.
               </p>
               <span className="fw-semibold mt-auto" style={{ color: colors.darkBlue, fontSize: '14px' }}>
-                View Metal Rates →
+                Request Metal Quotes (RFQ) →
               </span>
             </Link>
           </div>
@@ -301,7 +301,7 @@ export default function HomePage() {
         <div className="d-flex justify-content-between align-items-end mb-4">
           <div>
             <span className="badge mb-1" style={{ backgroundColor: colors.infoLight, color: colors.info }}>
-              Everyday Essentials
+              Everyday Essentials • Fixed Retail Prices
             </span>
             <h3 className="fw-bold mb-0" style={{ color: colors.darkBlue, fontSize: '22px' }}>
               Featured Retail Goods
@@ -321,7 +321,7 @@ export default function HomePage() {
             <div className="spinner-border text-success" role="status"></div>
           </div>
         ) : (
-          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3">
+          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
             {retailProducts.map((p) => (
               <div key={p.id} className="col">
                 <ProductCard product={p} />
@@ -336,7 +336,7 @@ export default function HomePage() {
         <div className="d-flex justify-content-between align-items-end mb-4">
           <div>
             <span className="badge mb-1" style={{ backgroundColor: colors.primarySoft, color: colors.primary }}>
-              Agricultural Wholesale
+              Agricultural Wholesale • Bulk RFQ
             </span>
             <h3 className="fw-bold mb-0" style={{ color: colors.darkBlue, fontSize: '22px' }}>
               Top Soft Commodities & Grains
@@ -356,7 +356,7 @@ export default function HomePage() {
             <div className="spinner-border text-success" role="status"></div>
           </div>
         ) : (
-          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3">
+          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
             {softCommodities.map((p) => (
               <div key={p.id} className="col">
                 <ProductCard product={p} />
@@ -371,7 +371,7 @@ export default function HomePage() {
         <div className="d-flex justify-content-between align-items-end mb-4">
           <div>
             <span className="badge mb-1" style={{ backgroundColor: colors.surfaceBg, color: colors.darkBlue }}>
-              Industrial Grade
+              Industrial Raw Materials • Bulk RFQ
             </span>
             <h3 className="fw-bold mb-0" style={{ color: colors.darkBlue, fontSize: '22px' }}>
               Hard Commodities & Raw Metals
@@ -391,7 +391,7 @@ export default function HomePage() {
             <div className="spinner-border text-success" role="status"></div>
           </div>
         ) : (
-          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3">
+          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
             {hardCommodities.map((p) => (
               <div key={p.id} className="col">
                 <ProductCard product={p} />

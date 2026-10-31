@@ -21,10 +21,10 @@ export default function HowItWorksPage() {
             A transparent, safe, and automated workflow for international commodities and local wholesale procurement.
           </p>
 
-          <div className="d-inline-flex bg-white p-1 rounded-pill mt-3 shadow">
+          <div className="d-inline-flex flex-column flex-sm-row bg-white p-1 rounded-4 rounded-sm-pill mt-3 shadow" style={{ maxWidth: '100%' }}>
             <button
               type="button"
-              className={`btn btn-sm rounded-pill px-4 py-2 fw-semibold border-0 ${activeTab === 'buyer' ? 'text-white' : 'text-muted'}`}
+              className={`btn btn-sm rounded-pill px-3 px-sm-4 py-2 fw-semibold border-0 ${activeTab === 'buyer' ? 'text-white' : 'text-muted'}`}
               style={{ backgroundColor: activeTab === 'buyer' ? colors.primary : 'transparent' }}
               onClick={() => setActiveTab('buyer')}
             >
@@ -32,7 +32,7 @@ export default function HowItWorksPage() {
             </button>
             <button
               type="button"
-              className={`btn btn-sm rounded-pill px-4 py-2 fw-semibold border-0 ${activeTab === 'seller' ? 'text-white' : 'text-muted'}`}
+              className={`btn btn-sm rounded-pill px-3 px-sm-4 py-2 fw-semibold border-0 ${activeTab === 'seller' ? 'text-white' : 'text-muted'}`}
               style={{ backgroundColor: activeTab === 'seller' ? colors.primary : 'transparent' }}
               onClick={() => setActiveTab('seller')}
             >

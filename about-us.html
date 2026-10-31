@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us - Goeazymart</title>
+  <meta name="description" content="Learn about Goeazymart's mission to connect global buyers and sellers of commodities. Meet our team and read our story.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ===== HERO ===== */
+    .about-hero {
+      background: linear-gradient(135deg, #122032 0%, #1f8a4c 100%);
+      color: white;
+      padding: 90px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .about-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+      opacity: 0.1;
+    }
+    .about-hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .about-hero .tag {
+      display: inline-block;
+      padding: 6px 16px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .about-hero h1 {
+      font-size: 42px;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    .about-hero p {
+      font-size: 16.5px;
+      color: #d1d5db;
+      line-height: 1.7;
+      margin-bottom: 30px;
+      max-width: 520px;
+    }
+    .about-hero-stats {
+      display: flex;
+      gap: 35px;
+      flex-wrap: wrap;
+    }
+    .about-hero-stat h3 {
+      font-size: 32px;
+      color: white;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+    .about-hero-stat p {
+      font-size: 12.5px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+    .about-hero-img {
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+    }
+    .about-hero-img img {
+      width: 100%;
+      height: 380px;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ===== COMMON SECTION ===== */
+    .section {
+      padding: 90px 0;
+    }
+    .section-header-center {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 60px;
+    }
+    .section-tag {
+      display: inline-block;
+      color: var(--primary-green);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+    .section-header-center h2 {
+      font-size: 36px;
+      color: var(--dark-blue);
+      margin-bottom: 18px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .section-header-center p {
+      font-size: 16px;
+      color: var(--text-light);
+      line-height: 1.75;
+    }
+
+    /* ===== STORY ===== */
+    .story-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .story-content h2 {
+      font-size: 32px;
+      color: var(--dark-blue);
+      margin-bottom: 20px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+    .story-content p {
+      font-size: 15px;
+      color: var(--text-light);
+      line-height: 1.85;
+      margin-bottom: 20px;
+    }
+    .story-content .signature {
+      margin-top: 30px;
+      padding-top: 25px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .story-content .signature img {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .story-content .signature h4 {
+      font-size: 14.5px;
+      color: var(--dark-blue);
+      margin-bottom: 3px;
+    }
+    .story-content .signature p {
+      font-size: 12.5px;
+      color: var(--text-light);
+      margin: 0;
+    }
+    .story-image {
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+    }
+    .story-image img {
+      width: 100%;
+      height: 480px;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ===== MISSION/VISION ===== */
+    .mission-section {
+      background: #f8fafc;
+    }
+    .mission-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    .mission-card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px 35px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      position: relative;
+      overflow: hidden;
+    }
+    .mission-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: var(--primary-green);
+    }
+    .mission-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      background: #f0fdf4;
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 25px;
+    }
+    .mission-card h3 {
+      font-size: 22px;
+      color: var(--dark-blue);
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+    .mission-card p {
+      font-size: 14.5px;
+      color: var(--text-light);
+      line-height: 1.8;
+    }
+
+    /* ===== VALUES ===== */
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+    }
+    .value-card {
+      text-align: center;
+      padding: 35px 25px;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      background: white;
+      transition: all 0.25s;
+    }
+    .value-card:hover {
+      border-color: var(--primary-green);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 40px rgba(31,138,76,0.08);
+    }
+    .value-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #f0fdf4;
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin: 0 auto 22px;
+    }
+    .value-card h4 {
+      font-size: 17px;
+      color: var(--dark-blue);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+    .value-card p {
+      font-size: 13.5px;
+      color: var(--text-light);
+      line-height: 1.65;
+    }
+
+    /* ===== TEAM ===== */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 30px;
+    }
+    .team-card {
+      text-align: center;
+      padding: 25px 15px;
+      border-radius: 16px;
+      transition: all 0.25s;
+      background: white;
+      border: 1px solid var(--border-color);
+    }
+    .team-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+      border-color: var(--primary-green);
+    }
+    .team-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 20px;
+      border: 4px solid #f0fdf4;
+      padding: 3px;
+      background: white;
+      transition: all 0.25s;
+    }
+    .team-card:hover .team-img {
+      border-color: var(--primary-green);
+    }
+    .team-card h4 {
+      font-size: 15.5px;
+      color: var(--dark-blue);
+      margin-bottom: 5px;
+      font-weight: 700;
+    }
+    .team-card .role {
+      font-size: 12.5px;
+      color: var(--primary-green);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    .team-card .bio {
+      font-size: 12.5px;
+      color: var(--text-light);
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    .team-social {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .team-social a {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .team-social a:hover {
+      background: var(--primary-green);
+      color: white;
+    }
+
+    /* ===== TIMELINE ===== */
+    .timeline-section {
+      background: #f8fafc;
+    }
+    .timeline {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+      padding-left: 40px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 10px;
+      bottom: 10px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary-green), #bbf7d0);
+    }
+    .timeline-item {
+      position: relative;
+      padding-bottom: 40px;
+    }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -32px;
+      top: 5px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary-green);
+      border: 3px solid white;
+      box-shadow: 0 0 0 3px #f0fdf4;
+    }
+    .timeline-item .year {
+      font-size: 13px;
+      color: var(--primary-green);
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .timeline-item h4 {
+      font-size: 18px;
+      color: var(--dark-blue);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .timeline-item p {
+      font-size: 14px;
+      color: var(--text-light);
+      line-height: 1.7;
+    }
+
+    /* ===== CTA ===== */
+    .about-cta {
+      background: linear-gradient(135deg, #122032 0%, #1f8a4c 100%);
+      color: white;
+      padding: 80px 0;
+      text-align: center;
+    }
+    .about-cta h2 {
+      font-size: 34px;
+      margin-bottom: 15px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .about-cta p {
+      font-size: 16px;
+      color: #d1d5db;
+      margin-bottom: 35px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.7;
+    }
+    .about-cta .buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .about-cta .btn-white {
+      background: white;
+      color: var(--dark-blue);
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14.5px;
+    }
+    .about-cta .btn-white:hover { background: #f0f0f0; transform: translateY(-2px); }
+    .about-cta .btn-ghost {
+      background: transparent;
+      color: white;
+      padding: 14px 32px;
+      border: 2px solid white;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14.5px;
+    }
+    .about-cta .btn-ghost:hover { background: white; color: var(--dark-blue); transform: translateY(-2px); }
+
+    @media (max-width: 900px) {
+      .about-hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .about-hero h1 { font-size: 30px; }
+      .story-grid { grid-template-columns: 1fr; gap: 40px; }
+      .story-image img { height: 300px; }
+      .mission-grid { grid-template-columns: 1fr; }
+      .values-grid { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: 1fr 1fr; }
+      .section-header-center h2 { font-size: 26px; }
+    }
+    @media (max-width: 500px) {
+      .team-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="container">
+    <div class="top-header">
+      <a href="index.html" class="logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</a>
+      <form class="search-bar" action="search.html">
+        <input type="text" placeholder="Search for products, commodities, suppliers...">
+        <button type="submit"><i class="fas fa-search"></i></button>
+      </form>
+      <div class="header-actions">
+        <div class="icon-text"><i class="fas fa-globe"></i> EN</div>
+        <a href="login.html">Login</a>
+        <a href="register.html" class="btn btn-primary">Register</a>
+        <a href="cart.html" class="icon-text"><i class="fas fa-shopping-cart"></i> <span id="cart-count" style="background:var(--primary-green); color:white; border-radius:50%; padding:2px 6px; font-size:10px;">0</span></a>
+      </div>
+    </div>
+    <div class="bottom-header">
+      <div class="all-categories"><i class="fas fa-bars"></i> All Categories</div>
+      <nav class="nav-links">
+        <a href="search.html">Retail Products</a>
+        <a href="search.html">Soft Commodities</a>
+        <a href="search.html">Hard Commodities</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="about-us.html">About Us</a>
+        <a href="contact-us.html">Contact Us</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="about-hero">
+  <div class="container about-hero-inner">
+    <div>
+      <span class="tag">About Goeazymart</span>
+      <h1>Building the Future of Global Commodity Trade</h1>
+      <p>We started with a simple belief: that every business, no matter its size, should have access to global markets. Today, we connect thousands of buyers and sellers across 50+ countries on one trusted platform.</p>
+      <div class="about-hero-stats">
+        <div class="about-hero-stat">
+          <h3>50+</h3>
+          <p>Countries</p>
+        </div>
+        <div class="about-hero-stat">
+          <h3>15K+</h3>
+          <p>Active Users</p>
+        </div>
+        <div class="about-hero-stat">
+          <h3>500+</h3>
+          <p>Commodities</p>
+        </div>
+        <div class="about-hero-stat">
+          <h3>₹240Cr</h3>
+          <p>GMV Traded</p>
+        </div>
+      </div>
+    </div>
+    <div class="about-hero-img">
+      <img src="https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=800&q=80" alt="Team working">
+    </div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="section">
+  <div class="container">
+    <div class="story-grid">
+      <div class="story-image">
+        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80" alt="Founder">
+      </div>
+      <div class="story-content">
+        <span class="section-tag">Our Story</span>
+        <h2>Solving a Problem We Lived Through</h2>
+        <p>In 2023, our founding team was running a small agri-export business from Ludhiana. We spent months navigating unreliable brokers, opaque pricing, and constant payment disputes. Deals that should've taken days took weeks.</p>
+        <p>We knew there had to be a better way. So we built Goeazymart — a platform where verified buyers and sellers meet directly, negotiate transparently, and transact securely. No middlemen taking 15-20% cuts. No hidden pricing. Just a clean, transparent marketplace.</p>
+        <p>Today, we serve 15,000+ businesses across 50 countries — but our mission hasn't changed: make global trade simple, fair, and accessible to everyone.</p>
+        <div class="signature">
+          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Founder">
+          <div>
+            <h4>Gurpreet Singh</h4>
+            <p>Co-Founder & CEO</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION / VISION -->
+<section class="section mission-section">
+  <div class="container">
+    <div class="section-header-center">
+      <span class="section-tag">What Drives Us</span>
+      <h2>Our Mission & Vision</h2>
+      <p>Everything we build is guided by a clear purpose and a bold vision for the future of trade.</p>
+    </div>
+    <div class="mission-grid">
+      <div class="mission-card">
+        <div class="mission-icon"><i class="fas fa-bullseye"></i></div>
+        <h3>Our Mission</h3>
+        <p>To empower businesses of every size with direct access to global commodity markets — removing intermediaries, eliminating information asymmetry, and building trust through technology and transparency.</p>
+      </div>
+      <div class="mission-card">
+        <div class="mission-icon"><i class="fas fa-eye"></i></div>
+        <h3>Our Vision</h3>
+        <p>To become the world's most trusted B2B marketplace for commodities — where any business, from a small farmer in Punjab to a large retailer in Dubai, can trade with confidence and grow without limits.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VALUES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header-center">
+      <span class="section-tag">Our Values</span>
+      <h2>The Principles We Stand By</h2>
+      <p>These aren't just words on a wall — they shape every decision we make and every feature we build.</p>
+    </div>
+    <div class="values-grid">
+      <div class="value-card">
+        <div class="value-icon"><i class="fas fa-shield-alt"></i></div>
+        <h4>Trust First</h4>
+        <p>Every user is verified. Every payment is secure. Every transaction is protected. Trust is our most valuable asset.</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon"><i class="fas fa-handshake"></i></div>
+        <h4>Radical Transparency</h4>
+        <p>No hidden fees. No opaque pricing. No middlemen. Everything on Goeazymart is designed to be seen and understood.</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon"><i class="fas fa-globe"></i></div>
+        <h4>Global by Default</h4>
+        <p>Borders shouldn't limit business. We build for a world where any buyer can find any seller, anywhere.</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon"><i class="fas fa-bolt"></i></div>
+        <h4>Speed Matters</h4>
+        <p>Deals that take weeks should take days. We obsess over removing friction from every step of the trade journey.</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon"><i class="fas fa-users"></i></div>
+        <h4>Customer Obsession</h4>
+        <p>We don't just respond to customer requests — we anticipate them. Every feature starts with a user story.</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon"><i class="fas fa-seedling"></i></div>
+        <h4>Sustainable Growth</h4>
+        <p>We partner with ethical sellers and prioritize sustainable commodities. Growth that damages the planet isn't growth at all.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="section timeline-section">
+  <div class="container">
+    <div class="section-header-center">
+      <span class="section-tag">Our Journey</span>
+      <h2>From Idea to Impact</h2>
+      <p>A look at how far we've come since we started building in 2023.</p>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="year">2023 · Q1</div>
+        <h4>The Spark</h4>
+        <p>Our founders, frustrated by archaic trade processes, sketch the initial concept for Goeazymart on a whiteboard in Ludhiana.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="year">2023 · Q3</div>
+        <h4>First 100 Users</h4>
+        <p>After 6 months of building, we launch our MVP with 100 early-adopter buyers and sellers. First transaction: ₹45,000 of Basmati Rice.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="year">2024 · Q1</div>
+        <h4>Seed Funding</h4>
+        <p>Raised our seed round to expand the platform, hire our team, and build advanced RFQ + negotiation tools.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="year">2024 · Q3</div>
+        <h4>Going Global</h4>
+        <p>Expanded to 25 countries with localized payments, currencies, and 24/7 multilingual support.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="year">2025 · Q2</div>
+        <h4>10,000 Users Milestone</h4>
+        <p>Crossed 10,000 verified buyers and sellers. Launched mobile apps and added hard commodities (metals, minerals).</p>
+      </div>
+      <div class="timeline-item">
+        <div class="year">2025 · Q4</div>
+        <h4>Today — and Beyond</h4>
+        <p>Now serving 15,000+ businesses across 50+ countries with ₹240 Cr+ in annual GMV. And we're just getting started.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section class="section">
+  <div class="container">
+    <div class="section-header-center">
+      <span class="section-tag">Our Team</span>
+      <h2>Meet the People Behind Goeazymart</h2>
+      <p>A team of builders, traders, and technologists working to transform global commodity trade.</p>
+    </div>
+    <div class="team-grid">
+      <div class="team-card">
+        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Gurpreet Singh" class="team-img">
+        <h4>Gurpreet Singh</h4>
+        <div class="role">Co-Founder & CEO</div>
+        <div class="bio">Former agri-exporter with 12 years of commodity trading experience.</div>
+        <div class="team-social">
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+      <div class="team-card">
+        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Priya Sharma" class="team-img">
+        <h4>Priya Sharma</h4>
+        <div class="role">Co-Founder & CTO</div>
+        <div class="bio">Ex-Google engineer. Built scalable platforms for 8+ years.</div>
+        <div class="team-social">
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+      <div class="team-card">
+        <img src="https://randomuser.me/api/portraits/men/52.jpg" alt="Rahul Verma" class="team-img">
+        <h4>Rahul Verma</h4>
+        <div class="role">COO</div>
+        <div class="bio">Logistics and operations expert. Scaled supply chains across 3 continents.</div>
+        <div class="team-social">
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+      <div class="team-card">
+        <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Anjali Mehta" class="team-img">
+        <h4>Anjali Mehta</h4>
+        <div class="role">Head of Design</div>
+        <div class="bio">Leads product design and user experience for our entire platform.</div>
+        <div class="team-social">
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="about-cta">
+  <div class="container">
+    <h2>Join Our Growing Community</h2>
+    <p>Whether you're looking to source commodities or expand your customer base globally, we'd love to have you on board.</p>
+    <div class="buttons">
+      <a href="register.html" class="btn-white"><i class="fas fa-user-plus"></i> Create Free Account</a>
+      <a href="contact-us.html" class="btn-ghost"><i class="fas fa-headset"></i> Get in Touch</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</div>
+        <p>A global marketplace connecting buyers and sellers with trust and technology.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Marketplace</h4>
+        <ul>
+          <li><a href="search.html">Retail</a></li>
+          <li><a href="search.html">Soft Commodities</a></li>
+          <li><a href="search.html">Hard Commodities</a></li>
+          <li><a href="search.html">All Categories</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Business</h4>
+        <ul>
+          <li><a href="register.html">Become a Seller</a></li>
+          <li><a href="register.html">Buyer Registration</a></li>
+          <li><a href="how-it-works.html">How It Works</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="about-us.html">About Us</a></li>
+          <li><a href="contact-us.html">Contact Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Market Insights</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="contact-us.html">Help Center</a></li>
+          <li><a href="how-it-works.html">FAQs</a></li>
+          <li><a href="#">Terms & Conditions</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Newsletter</h4>
+        <p>Get the latest commodity opportunities.</p>
+        <form class="newsletter-form"><input type="email" placeholder="Enter your email"><button>Subscribe</button></form>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 Goeazymart. All rights reserved.</div>
+      <div class="footer-bottom-links">
+        <a href="#">Sitemap</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -48,8 +48,8 @@ export default function RegisterPage() {
       lastName: 'Kumar',
       email: `rajesh.trader${randomSuffix}@gemtrading.in`,
       phone: '+91 98765 12345',
-      password: 'password123',
-      confirmPassword: 'password123',
+      password: 'Goeazy#Trade2026',
+      confirmPassword: 'Goeazy#Trade2026',
       companyName: 'Bharat Agro Enterprises Pvt Ltd',
       shopName: 'Bharat Grain Hub',
       gstin: '27AABCB1234F1Z1',
@@ -118,26 +118,26 @@ export default function RegisterPage() {
         </div>
 
         {/* Wizard Steps indicator */}
-        <div className="card border-0 shadow-sm rounded-4 p-4 mb-4" style={{ backgroundColor: colors.white }}>
+        <div className="card border-0 shadow-sm rounded-4 p-3 p-sm-4 mb-4" style={{ backgroundColor: colors.white }}>
           <div className="d-flex justify-content-between align-items-center position-relative">
             {[
-              { num: 1, title: 'Choose Role' },
-              { num: 2, title: 'Account Info' },
-              { num: 3, title: 'Business & KYC' },
-              { num: 4, title: 'Review & Finish' },
+              { num: 1, title: 'Role' },
+              { num: 2, title: 'Account' },
+              { num: 3, title: 'KYC' },
+              { num: 4, title: 'Review' },
             ].map((s) => {
               const isPast = currentStep > s.num;
               const isCurrent = currentStep === s.num;
               return (
                 <div key={s.num} className="d-flex flex-column align-items-center text-center flex-1">
                   <div
-                    className="rounded-circle d-flex align-items-center justify-content-center fw-bold mb-2 shadow-sm"
+                    className="rounded-circle d-flex align-items-center justify-content-center fw-bold mb-1 mb-sm-2 shadow-sm"
                     style={{
-                      width: '38px',
-                      height: '38px',
+                      width: '36px',
+                      height: '36px',
                       backgroundColor: isPast || isCurrent ? colors.primary : colors.surfaceBg,
                       color: isPast || isCurrent ? colors.white : colors.textMuted,
-                      fontSize: '14px',
+                      fontSize: '13px',
                       transition: 'all 0.3s',
                     }}
                   >
@@ -145,7 +145,7 @@ export default function RegisterPage() {
                   </div>
                   <span
                     className={`small ${isCurrent ? 'fw-bold text-dark' : 'text-muted'}`}
-                    style={{ fontSize: '12px' }}
+                    style={{ fontSize: '11.5px' }}
                   >
                     {s.title}
                   </span>
@@ -156,9 +156,9 @@ export default function RegisterPage() {
         </div>
 
         {/* Form Container */}
-        <div className="card border-0 shadow-sm rounded-4 p-4 p-md-5" style={{ backgroundColor: colors.white }}>
+        <div className="card border-0 shadow-sm rounded-4 p-3 p-sm-4 p-md-5" style={{ backgroundColor: colors.white }}>
           {/* Quick Demo Fill Banner */}
-          <div className="d-flex justify-content-between align-items-center p-3 rounded-3 mb-4 bg-light border small">
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 p-3 rounded-3 mb-4 bg-light border small">
             <div>
               <i className="fas fa-magic text-warning me-2"></i>
               <span>Save time with auto-filled sample trade credentials.</span>
@@ -166,7 +166,7 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={handleQuickDemoFill}
-              className="btn btn-sm btn-outline-success fw-semibold"
+              className="btn btn-sm btn-outline-success fw-semibold text-nowrap align-self-end align-self-sm-auto"
             >
               1-Click Demo Fill
             </button>
@@ -327,6 +327,8 @@ export default function RegisterPage() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
+                    autoComplete="new-password"
+                    data-lpignore="true"
                     required
                   />
                 </div>
@@ -338,6 +340,8 @@ export default function RegisterPage() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
+                    autoComplete="new-password"
+                    data-lpignore="true"
                     required
                   />
                 </div>
@@ -485,12 +489,12 @@ export default function RegisterPage() {
 
               <div className="p-3 rounded-3 bg-light border mb-4 small">
                 <div className="row g-2">
-                  <div className="col-6"><strong>Trading Role:</strong> <span className="text-uppercase text-success">{selectedRole}</span></div>
-                  <div className="col-6"><strong>Contact Name:</strong> {formData.firstName} {formData.lastName}</div>
-                  <div className="col-6"><strong>Email:</strong> {formData.email}</div>
-                  <div className="col-6"><strong>Phone:</strong> {formData.phone}</div>
-                  <div className="col-6"><strong>Company:</strong> {formData.companyName || 'Independent'}</div>
-                  <div className="col-6"><strong>GSTIN / Tax ID:</strong> {formData.gstin || 'Pending'}</div>
+                  <div className="col-12 col-sm-6"><strong>Trading Role:</strong> <span className="text-uppercase text-success">{selectedRole}</span></div>
+                  <div className="col-12 col-sm-6"><strong>Contact Name:</strong> {formData.firstName} {formData.lastName}</div>
+                  <div className="col-12 col-sm-6"><strong>Email:</strong> {formData.email}</div>
+                  <div className="col-12 col-sm-6"><strong>Phone:</strong> {formData.phone}</div>
+                  <div className="col-12 col-sm-6"><strong>Company:</strong> {formData.companyName || 'Independent'}</div>
+                  <div className="col-12 col-sm-6"><strong>GSTIN / Tax ID:</strong> {formData.gstin || 'Pending'}</div>
                   <div className="col-12"><strong>Address:</strong> {formData.address}, {formData.city}, {formData.country}</div>
                 </div>
               </div>

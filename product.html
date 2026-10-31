@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details - Goeazymart</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .pdp-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 40px; }
+    .main-image { width: 100%; height: 400px; object-fit: contain; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; }
+    .thumbnails { display: flex; gap: 10px; margin-top: 15px; }
+    .thumbnails img { width: 70px; height: 70px; object-fit: contain; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; padding: 5px; }
+    .thumbnails img.active { border-color: var(--primary-green); }
+    .pdp-info h1 { font-size: 26px; color: var(--dark-blue); margin-bottom: 10px; }
+    .pdp-meta { display: flex; gap: 20px; font-size: 13px; color: var(--text-light); margin-bottom: 15px; }
+    .pdp-meta .rating { color: var(--orange); }
+    .pdp-price { display: flex; align-items: baseline; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+    .pdp-price .current { font-size: 28px; font-weight: 700; color: var(--primary-green); }
+    .pdp-price .old { font-size: 16px; color: #999; text-decoration: line-through; }
+    .pdp-desc { font-size: 14px; color: var(--text-light); margin-bottom: 25px; }
+    .rfq-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin-bottom: 25px; }
+    .rfq-box h3 { font-size: 15px; color: var(--primary-green); margin-bottom: 15px; }
+    .rfq-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .rfq-form input, .rfq-form select { padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; outline: none; }
+    .rfq-form button { grid-column: span 2; }
+    .pdp-actions { display: flex; gap: 15px; margin-bottom: 25px; }
+    .qty-selector { display: flex; align-items: center; border: 1px solid var(--border-color); border-radius: 4px; }
+    .qty-selector button { background: #f8f9fa; border: none; padding: 12px 15px; cursor: pointer; }
+    .qty-selector input { width: 50px; text-align: center; border: none; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 12px 0; outline: none; }
+    .seller-card { display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background: #f8f9fa; }
+    .seller-card img { width: 50px; height: 50px; border-radius: 50%; }
+    .seller-card .info h4 { font-size: 14px; }
+    .seller-card .info p { font-size: 12px; color: var(--text-light); }
+    .verified-tag { color: var(--primary-green); font-size: 11px; font-weight: 600; }
+    .tabs { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 60px; }
+    .tab-headers { display: flex; border-bottom: 1px solid var(--border-color); }
+    .tab-headers button { padding: 15px 25px; background: transparent; border: none; border-bottom: 2px solid transparent; font-size: 14px; font-weight: 500; color: var(--text-light); cursor: pointer; }
+    .tab-headers button.active { color: var(--primary-green); border-bottom-color: var(--primary-green); }
+    .tab-content { padding: 25px; font-size: 14px; color: var(--text-light); display: none; }
+    .tab-content.active { display: block; }
+    .specs-table { width: 100%; border-collapse: collapse; }
+    .specs-table td { padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+    .specs-table td:first-child { font-weight: 500; color: var(--text-dark); width: 200px; }
+    @media (max-width: 1024px) { .pdp-layout { grid-template-columns: 1fr; } .main-image { height: 300px; } }
+    @media (max-width: 768px) { .rfq-form { grid-template-columns: 1fr; } .rfq-form button { grid-column: span 1; } .pdp-actions { flex-direction: column; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="top-header">
+      <a href="index.html" class="logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</a>
+      <form class="search-bar" action="search.html"><input type="text" placeholder="Search..."><button><i class="fas fa-search"></i></button></form>
+      <div class="header-actions">
+        <a href="login.html">Login</a>
+        <a href="register.html" class="btn btn-primary">Register</a>
+        <a href="cart.html" class="icon-text"><i class="fas fa-shopping-cart"></i> <span id="cart-count" style="background:var(--primary-green); color:white; border-radius:50%; padding:2px 6px; font-size:10px;">0</span></a>
+      </div>
+    </div>
+    <div class="bottom-header">
+      <div class="all-categories"><i class="fas fa-bars"></i> All Categories</div>
+      <nav class="nav-links">
+        <a href="search.html">Retail Products</a>
+        <a href="search.html">Soft Commodities</a>
+        <a href="search.html">Hard Commodities</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="breadcrumbs">
+    <a href="index.html">Home</a><span>›</span>
+    <a href="search.html">Soft Commodities</a><span>›</span>
+    <span id="crumb-title" style="color:var(--text-dark);">Product</span>
+  </div>
+</div>
+
+<main class="container">
+  <div class="pdp-layout">
+    <div>
+      <img src="" alt="Product" class="main-image" id="mainImage">
+      <div class="thumbnails">
+        <img src="" class="active" onclick="document.getElementById('mainImage').src=this.src">
+        <img src="" onclick="document.getElementById('mainImage').src=this.src">
+        <img src="" onclick="document.getElementById('mainImage').src=this.src">
+      </div>
+    </div>
+    <div class="pdp-info">
+      <h1 id="pdpTitle">Loading...</h1>
+      <div class="pdp-meta">
+        <div class="rating" id="pdpRating"></div>
+        <div>SKU: <span style="color:var(--text-dark);" id="pdpSku">-</span></div>
+        <div style="color:var(--primary-green); font-weight:500;">In Stock</div>
+      </div>
+      <div class="pdp-price">
+        <span class="current" id="pdpPrice">₹0</span>
+        <span class="old" id="pdpOldPrice"></span>
+        <span class="discount-badge" id="pdpDiscount" style="font-size:13px;color:#e74c3c;font-weight:600;background:#fdeaea;padding:4px 8px;border-radius:4px;"></span>
+      </div>
+      <p class="pdp-desc">Premium quality product sourced directly from trusted suppliers. Perfect for bulk purchase and retail consumption. All products are verified for quality and authenticity.</p>
+      
+      <div class="rfq-box">
+        <h3><i class="fas fa-boxes"></i> Bulk Order / Request Quote</h3>
+        <div class="rfq-form">
+          <input type="number" placeholder="Quantity" value="1000">
+          <select><option>Metric Tons</option><option>Kilograms</option><option>Bags</option></select>
+          <button class="btn btn-primary" onclick="showToast('Quote request submitted!')"><i class="fas fa-paper-plane"></i> Request Quote</button>
+        </div>
+      </div>
+
+      <div class="pdp-actions">
+        <div class="qty-selector">
+          <button onclick="changeQty(-1)">−</button>
+          <input type="text" value="1" id="qty" readonly>
+          <button onclick="changeQty(1)">+</button>
+        </div>
+        <button class="btn btn-outline" onclick="addToCartFromPDP()"><i class="fas fa-shopping-cart"></i> Add to Cart</button>
+        <button class="btn btn-primary" onclick="addToCartFromPDP(); window.location.href='cart.html';"><i class="fas fa-bolt"></i> Buy Now</button>
+      </div>
+
+      <div class="seller-card">
+        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Seller">
+        <div class="info">
+          <h4>Punjab Agro Mills</h4>
+          <p>Ludhiana, Punjab, India</p>
+          <div class="verified-tag"><i class="fas fa-check-circle"></i> Verified Seller</div>
+        </div>
+        <button class="btn btn-outline" style="margin-left:auto;">View Store</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab-headers">
+      <button class="active" onclick="switchTab(this, 'tab1')">Description</button>
+      <button onclick="switchTab(this, 'tab2')">Specifications</button>
+      <button onclick="switchTab(this, 'tab3')">Reviews</button>
+    </div>
+    <div id="tab1" class="tab-content active">
+      <p>Our premium product is sourced from trusted suppliers and undergoes rigorous quality checks. Ideal for both retail and bulk purchase.</p>
+    </div>
+    <div id="tab2" class="tab-content">
+      <table class="specs-table">
+        <tr><td>Product Type</td><td>Premium Quality</td></tr>
+        <tr><td>Origin</td><td>India</td></tr>
+        <tr><td>Packaging</td><td>Standard Export Packing</td></tr>
+        <tr><td>Shelf Life</td><td>24 Months</td></tr>
+      </table>
+    </div>
+    <div id="tab3" class="tab-content">
+      <p>Customer reviews will be displayed here.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><div class="footer-logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</div><p>Global marketplace for commodities.</p></div>
+      <div class="footer-col"><h4>Marketplace</h4><ul><li><a href="search.html">Retail</a></li><li><a href="search.html">Soft</a></li><li><a href="search.html">Hard</a></li></ul></div>
+      <div class="footer-col"><h4>Business</h4><ul><li><a href="register.html">Register</a></li><li><a href="#">Sell</a></li></ul></div>
+      <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Contact</a></li></ul></div>
+      <div class="footer-col"><h4>Support</h4><ul><li><a href="#">Help</a></li><li><a href="#">FAQs</a></li></ul></div>
+      <div class="footer-col"><h4>Newsletter</h4><form class="newsletter-form"><input type="email" placeholder="Email"><button>Subscribe</button></form></div>
+    </div>
+    <div class="footer-bottom"><div>© 2026 Goeazymart.</div><div class="footer-bottom-links"><a href="#">Privacy</a><a href="#">Terms</a></div></div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+  let currentProduct = null;
+  let qty = 1;
+
+  const params = new URLSearchParams(window.location.search);
+  const productId = parseInt(params.get('id')) || 1;
+  currentProduct = PRODUCTS.find(p => p.id === productId) || PRODUCTS[0];
+
+  // Populate PDP
+  document.getElementById('pdpTitle').textContent = currentProduct.title;
+  document.getElementById('crumb-title').textContent = currentProduct.title;
+  document.getElementById('mainImage').src = currentProduct.img;
+  document.querySelectorAll('.thumbnails img').forEach(img => img.src = currentProduct.img);
+  document.getElementById('pdpRating').innerHTML = renderStars(currentProduct.rating) + ` <span>(${currentProduct.reviews} Reviews)</span>`;
+  document.getElementById('pdpPrice').textContent = '₹' + currentProduct.price.toLocaleString();
+  document.getElementById('pdpOldPrice').textContent = '₹' + currentProduct.oldPrice.toLocaleString();
+  const disc = Math.round((1 - currentProduct.price / currentProduct.oldPrice) * 100);
+  document.getElementById('pdpDiscount').textContent = disc + '% OFF';
+  document.getElementById('pdpSku').textContent = 'SKU-' + currentProduct.id;
+  document.title = currentProduct.title + ' - Goeazymart';
+
+  function changeQty(delta) {
+    qty = Math.max(1, qty + delta);
+    document.getElementById('qty').value = qty;
+  }
+
+  function addToCartFromPDP() {
+    addToCart(currentProduct.id, qty);
+  }
+
+  function switchTab(btn, tabId) {
+    document.querySelectorAll('.tab-headers button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+  }
+</script>
+</body>
+</html>

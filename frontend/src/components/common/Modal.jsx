@@ -30,7 +30,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '56
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: '12px',
         animation: 'fadeIn 0.2s ease-out',
       }}
       onClick={(e) => {
@@ -43,7 +43,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '56
           width: '100%',
           maxWidth,
           backgroundColor: colors.white,
-          maxHeight: '90vh',
+          maxHeight: '94vh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -51,10 +51,10 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '56
       >
         {/* Header */}
         <div
-          className="d-flex align-items-center justify-content-between p-3 px-4 border-bottom"
+          className="d-flex align-items-center justify-content-between p-3 px-3 px-sm-4 border-bottom"
           style={{ borderColor: colors.border }}
         >
-          <h5 className="mb-0 fw-bold" style={{ color: colors.darkBlue, fontSize: '18px' }}>
+          <h5 className="mb-0 fw-bold" style={{ color: colors.darkBlue, fontSize: 'clamp(15px, 4vw, 18px)' }}>
             {title}
           </h5>
           <button
@@ -66,7 +66,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '56
         </div>
 
         {/* Content */}
-        <div className="p-4 overflow-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
+        <div className="p-3 p-sm-4 overflow-auto" style={{ maxHeight: 'calc(94vh - 75px)' }}>
           {children}
         </div>
       </div>

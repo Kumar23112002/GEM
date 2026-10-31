@@ -7,6 +7,17 @@ import './theme/colors.css';
 import './index.css';
 import App from './App.jsx';
 
+// Prevent native browser popup alerts; route seamlessly to website-themed alerts
+if (typeof window !== 'undefined') {
+  window.alert = function (message) {
+    window.dispatchEvent(
+      new CustomEvent('gem_custom_toast', {
+        detail: { message: String(message), type: 'info' },
+      })
+    );
+  };
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />

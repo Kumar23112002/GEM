@@ -6,6 +6,12 @@
 @import './theme/colors.css';
 
 /* Typography & Reset */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -19,6 +25,11 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
 }
 
 a {
@@ -88,14 +99,90 @@ a {
 /* Responsive Table Enhancements */
 .table-responsive {
   border-radius: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Ensure mobile form fields and text areas fit comfortably */
-@media (max-width: 576px) {
+.table-responsive table {
+  min-width: 600px;
+}
+
+/* For small tables that don't need min-width */
+.table-responsive.no-min-width table {
+  min-width: 100%;
+}
+
+/* Horizontal scrollable nav tabs */
+.nav-tabs-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+
+.nav-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Chat container responsiveness */
+.chat-window-container {
+  height: 680px;
+}
+
+@media (max-width: 767.98px) {
+  .chat-window-container {
+    height: auto !important;
+    min-height: 520px;
+  }
+  .chat-sidebar-mobile {
+    max-height: 220px;
+    height: 220px !important;
+  }
+  .chat-thread-mobile {
+    height: 400px !important;
+  }
+}
+
+/* General Mobile Breakpoint Fixes */
+@media (max-width: 767.98px) {
   .display-5 {
-    font-size: 1.85rem !important;
+    font-size: 2rem !important;
+  }
+  .display-6 {
+    font-size: 1.6rem !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .display-5 {
+    font-size: 1.7rem !important;
+  }
+  .display-6 {
+    font-size: 1.4rem !important;
   }
   .fs-4 {
-    font-size: 1.25rem !important;
+    font-size: 1.2rem !important;
+  }
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .card {
+    border-radius: 12px !important;
+  }
+  .btn-responsive-sm {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .display-5 {
+    font-size: 1.45rem !important;
+  }
+  body {
+    font-size: 13.5px;
   }
 }

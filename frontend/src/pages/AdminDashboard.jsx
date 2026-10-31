@@ -33,6 +33,8 @@ export default function AdminDashboard() {
   const [cmsForm, setCmsForm] = useState(cmsContent);
   const [cmsSubTab, setCmsSubTab] = useState('hero');
 
+  const [resetConfirmModalOpen, setResetConfirmModalOpen] = useState(false);
+
   useEffect(() => {
     if (cmsContent) {
       setCmsForm(cmsContent);
@@ -56,11 +58,14 @@ export default function AdminDashboard() {
   };
 
   const handleResetCMS = () => {
-    if (window.confirm('Reset all CMS content back to initial default text?')) {
-      resetCMS();
-      setCmsForm(DEFAULT_CMS);
-      showToast('CMS content has been reset to defaults.');
-    }
+    setResetConfirmModalOpen(true);
+  };
+
+  const handleConfirmResetCMS = () => {
+    resetCMS();
+    setCmsForm(DEFAULT_CMS);
+    setResetConfirmModalOpen(false);
+    showToast('CMS content has been successfully restored to platform defaults.', 'info');
   };
 
   useEffect(() => {
@@ -1179,12 +1184,12 @@ export default function AdminDashboard() {
             )}
 
             {/* Bottom Save Bar */}
-            <div className="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+            <div className="mt-4 pt-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
               <span className="small text-muted">
                 <i className="fas fa-info-circle text-primary me-1"></i>
                 Edits are saved to browser storage and synchronized across all open storefront pages.
               </span>
-              <div className="d-flex gap-2">
+              <div className="d-flex flex-wrap gap-2 align-self-end align-self-sm-auto">
                 <button
                   type="button"
                   onClick={handleResetCMS}
@@ -1353,6 +1358,43 @@ export default function AdminDashboard() {
             Create Category
           </button>
         </form>
+      </Modal>
+
+      {/* CMS Reset Confirmation Modal */}
+      <Modal
+        isOpen={resetConfirmModalOpen}
+        onClose={() => setResetConfirmModalOpen(false)}
+        title="Reset CMS Content"
+        maxWidth="440px"
+      >
+        <div className="p-4 text-center">
+          <div
+            className="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+            style={{ width: '60px', height: '60px', backgroundColor: '#fef3c7', color: '#d97706', fontSize: '26px' }}
+          >
+            <i className="fas fa-exclamation-triangle"></i>
+          </div>
+          <h5 className="fw-bold mb-2" style={{ color: colors.darkBlue }}>Revert to Platform Defaults?</h5>
+          <p className="text-muted small mb-4">
+            Are you sure you want to revert all CMS customizations back to the initial platform defaults? This action cannot be undone.
+          </p>
+          <div className="d-flex justify-content-center gap-2">
+            <button
+              type="button"
+              className="btn btn-light px-4 py-2 fw-medium border"
+              onClick={() => setResetConfirmModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger px-4 py-2 fw-semibold shadow-sm"
+              onClick={handleConfirmResetCMS}
+            >
+              Confirm Reset
+            </button>
+          </div>
+        </div>
       </Modal>
     </DashboardLayout>
   );

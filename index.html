@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Goeazymart - Global Marketplace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Hero styles specific to homepage */
+    .hero {
+      position: relative;
+      background: url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+      color: white;
+      padding: 80px 0 60px;
+      min-height: 500px;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to right, rgba(18, 32, 50, 0.9) 0%, rgba(18, 32, 50, 0.6) 50%, rgba(18, 32, 50, 0.2) 100%);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+    }
+
+    .hero-tag {
+      color: #4ade80;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      color: #4ade80;
+    }
+
+    .hero p {
+      font-size: 16px;
+      color: #d1d5db;
+      margin-bottom: 30px;
+    }
+
+    .hero-search {
+      display: flex;
+      background: white;
+      border-radius: 4px;
+      padding: 5px;
+      margin-bottom: 30px;
+    }
+
+    .hero-search input {
+      flex: 1;
+      border: none;
+      padding: 10px 15px;
+      outline: none;
+    }
+
+    .hero-search button {
+      background: var(--primary-green);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .hero-features {
+      display: flex;
+      gap: 20px;
+      font-size: 13px;
+    }
+
+    .hero-features i {
+      color: #4ade80;
+      margin-right: 5px;
+    }
+
+    .hero-stats {
+      position: absolute;
+      bottom: -30px;
+      right: 20px;
+      background: rgba(18, 32, 50, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 20px 30px;
+      border-radius: 8px;
+      display: flex;
+      gap: 30px;
+      z-index: 2;
+    }
+
+    .stat-item h3 {
+      font-size: 20px;
+      color: white;
+    }
+
+    .stat-item p {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .categories-section {
+      padding: 60px 0 40px;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .category-card {
+      background: var(--white);
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .category-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .cat-retail .category-icon {
+      background: #e0f2fe;
+      color: #0284c7;
+    }
+
+    .cat-soft .category-icon {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .cat-hard .category-icon {
+      background: #e0e7ff;
+      color: #4338ca;
+    }
+
+    .category-info h3 {
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .category-info p {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-bottom: 10px;
+    }
+
+    .category-info a {
+      font-size: 13px;
+      color: var(--primary-green);
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <div class="top-header">
+        <a href="index.html" class="logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</a>
+        <form class="search-bar" action="search.html">
+          <input type="text" placeholder="Search for products, commodities, suppliers...">
+          <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+        <div class="header-actions">
+          <div class="icon-text"><i class="fas fa-globe"></i> EN</div>
+          <a href="login.html">Login</a>
+          <a href="register.html" class="btn btn-primary">Register</a>
+          <a href="cart.html" class="icon-text"><i class="fas fa-shopping-cart"></i> <span id="cart-count"
+              style="background:var(--primary-green); color:white; border-radius:50%; padding:2px 6px; font-size:10px;">0</span></a>
+        </div>
+      </div>
+      <div class="bottom-header">
+        <div class="all-categories"><i class="fas fa-bars"></i> All Categories</div>
+        <nav class="nav-links">
+          <a href="search.html">Retail Products</a>
+          <a href="search.html">Soft Commodities</a>
+          <a href="search.html">Hard Commodities</a>
+          <a href="how-it-works.html">How It Works</a>
+          <a href="about.html">About Us</a>
+          <a href="contact.html">Contact Us</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <span class="hero-tag">Global Marketplace</span>
+        <h1>Your Global Marketplace for <span>Commodities & More</span></h1>
+        <p>Connect with verified buyers and sellers worldwide for retail products, soft commodities and industrial
+          commodities — with transparent pricing, reliable sourcing and seamless trading.</p>
+        <form class="hero-search" action="search.html">
+          <input type="text" placeholder="Search products, commodities, suppliers...">
+          <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+        <div class="hero-features">
+          <span><i class="fas fa-check-circle"></i> Verified Sellers</span>
+          <span><i class="fas fa-globe"></i> Global Sourcing</span>
+          <span><i class="fas fa-lock"></i> Secure Transactions</span>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <h3>500+</h3>
+          <p>Commodities</p>
+        </div>
+        <div class="stat-item">
+          <h3>50+</h3>
+          <p>Countries</p>
+        </div>
+        <div class="stat-item">
+          <h3>10,000+</h3>
+          <p>Verified Buyers</p>
+        </div>
+        <div class="stat-item">
+          <h3>5,000+</h3>
+          <p>Trusted Sellers</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="categories-section">
+    <div class="container">
+      <div class="category-grid">
+        <a href="search.html" class="category-card cat-retail">
+          <div class="category-icon"><i class="fas fa-shopping-basket"></i></div>
+          <div class="category-info">
+            <h3>Retail Products</h3>
+            <p>Everyday essentials at competitive prices</p>
+            <span>Shop Now →</span>
+          </div>
+        </a>
+        <a href="search.html" class="category-card cat-soft">
+          <div class="category-icon"><i class="fas fa-leaf"></i></div>
+          <div class="category-info">
+            <h3>Soft Commodities</h3>
+            <p>Agricultural products from trusted suppliers</p>
+            <span>Explore →</span>
+          </div>
+        </a>
+        <a href="search.html" class="category-card cat-hard">
+          <div class="category-icon"><i class="fas fa-cubes"></i></div>
+          <div class="category-info">
+            <h3>Hard Commodities</h3>
+            <p>Industrial materials for construction</p>
+            <span>Explore →</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED PRODUCTS -->
+  <section class="container">
+    <div class="section-header">
+      <h2>Featured Retail Products</h2>
+      <a href="search.html">View All Products →</a>
+    </div>
+    <div class="product-grid" id="featured-products">
+      <!-- Products injected by JS -->
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</div>
+          <p>A global marketplace connecting buyers and sellers with trust and technology.</p>
+          <div class="social-icons">
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Marketplace</h4>
+          <ul>
+            <li><a href="search.html">Retail</a></li>
+            <li><a href="search.html">Soft Commodities</a></li>
+            <li><a href="search.html">Hard Commodities</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Business</h4>
+          <ul>
+            <li><a href="register.html">Become a Seller</a></li>
+            <li><a href="register.html">Register</a></li>
+            <li><a href="how-it-works.html">How It Works</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="about-us.html">About</a></li>
+            <li><a href="contact-us.html">Contact</a></li>
+            <li><a href="careers.html">Careers</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="help-center.html">Help Center</a></li>
+            <li><a href="faqs.html">FAQs</a></li>
+            <li><a href="privacy-policy.html">Privacy</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Newsletter</h4>
+          <p>Get latest insights and updates.</p>
+          <form class="newsletter-form"><input type="email" placeholder="Email"><button>Subscribe</button></form>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>© 2026 Goeazymart. All rights reserved.</div>
+        <div class="footer-bottom-links"><a href="#">Sitemap</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    // Load products into homepage
+    renderFeaturedProducts('featured-products');
+    updateCartCount();
+  </script>
+</body>
+
+</html>

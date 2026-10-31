@@ -263,7 +263,7 @@ export const INITIAL_PRODUCTS = [
 export const DEMO_USERS = [
   {
     email: 'seller@goeazymart.com',
-    password: 'seller123',
+    password: 'Goeazy#Seller2026',
     role: 'seller',
     name: 'Punjab Agro Mills',
     avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
@@ -276,7 +276,7 @@ export const DEMO_USERS = [
   },
   {
     email: 'buyer@goeazymart.com',
-    password: 'buyer123',
+    password: 'Goeazy#Buyer2026',
     role: 'buyer',
     name: 'Priya Sharma',
     avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
@@ -289,7 +289,7 @@ export const DEMO_USERS = [
   },
   {
     email: 'admin@goeazymart.com',
-    password: 'admin123',
+    password: 'Goeazy#Admin2026',
     role: 'admin',
     name: 'Super Admin',
     avatar: 'https://randomuser.me/api/portraits/men/75.jpg',

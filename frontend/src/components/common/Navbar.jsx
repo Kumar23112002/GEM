@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import { useCMS } from '../../context/CMSContext';
 import { colors } from '../../theme/colors';
 
 export default function Navbar() {
   const { currentUser, logout } = useAuth();
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
   const { cmsContent } = useCMS();
   const navigate = useNavigate();
   const location = useLocation();
@@ -128,6 +130,33 @@ export default function Navbar() {
 
           {/* Right Action Icons & Auth */}
           <div className="d-flex align-items-center gap-3">
+            {/* Wishlist Link */}
+            <Link
+              to="/wishlist"
+              className="btn btn-light position-relative d-flex align-items-center justify-content-center rounded-3 p-2"
+              style={{
+                backgroundColor: colors.surfaceBg,
+                color: wishlistCount > 0 ? colors.danger : colors.darkBlue,
+                border: `1px solid ${colors.border}`,
+                width: '42px',
+                height: '42px',
+              }}
+              title="My Wishlist"
+            >
+              <i className={wishlistCount > 0 ? "fas fa-heart fs-6 text-danger" : "far fa-heart fs-6"}></i>
+              {wishlistCount > 0 && (
+                <span
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style={{
+                    fontSize: '10px',
+                    padding: '4px 6px',
+                  }}
+                >
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
             {/* Cart Link */}
             <Link
               to="/cart"
@@ -310,72 +339,51 @@ export default function Navbar() {
       {/* Bottom Category & Navigation Bar */}
       <div className="d-none d-lg-block border-bottom bg-white" style={{ borderColor: colors.border }}>
         <div className="container d-flex align-items-center justify-content-between">
-          <div className="d-flex align-items-center">
-            {/* Category Dropdown Toggle */}
-            <div className="dropdown">
-              <button
-                className="btn text-white fw-medium py-2 px-3 d-flex align-items-center gap-2 rounded-0"
-                style={{ backgroundColor: colors.primary, fontSize: '13.5px' }}
-                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+          {/* Category Dropdown Toggle */}
+          <div className="dropdown">
+            <button
+              className="btn text-white fw-medium py-2 px-3 d-flex align-items-center gap-2 rounded-0"
+              style={{ backgroundColor: colors.primary, fontSize: '13.5px' }}
+              onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+            >
+              <i className="fas fa-bars"></i>
+              <span>All Categories</span>
+              <i className="fas fa-chevron-down ms-1" style={{ fontSize: '11px' }}></i>
+            </button>
+            {categoryDropdownOpen && (
+              <div
+                className="position-absolute bg-white shadow-lg border rounded-bottom py-2"
+                style={{ top: '100%', left: 0, minWidth: '360px', width: 'max-content', zIndex: 1030, boxShadow: '0 10px 25px rgba(0,0,0,0.12)' }}
+                onMouseLeave={() => setCategoryDropdownOpen(false)}
               >
-                <i className="fas fa-bars"></i>
-                <span>All Categories</span>
-                <i className="fas fa-chevron-down ms-1" style={{ fontSize: '11px' }}></i>
-              </button>
-              {categoryDropdownOpen && (
-                <div
-                  className="position-absolute bg-white shadow-lg border rounded-bottom py-2"
-                  style={{ top: '100%', left: 0, width: '260px', zIndex: 1030 }}
-                  onMouseLeave={() => setCategoryDropdownOpen(false)}
+                <Link
+                  to="/search?cat=retail"
+                  className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 text-nowrap"
+                  onClick={() => setCategoryDropdownOpen(false)}
                 >
-                  <Link
-                    to="/search?cat=retail"
-                    className="dropdown-item py-2 px-3 d-flex align-items-center gap-2"
-                    onClick={() => setCategoryDropdownOpen(false)}
-                  >
-                    <i className="fas fa-shopping-basket text-primary"></i> Retail Packaged Goods
-                  </Link>
-                  <Link
-                    to="/search?cat=soft"
-                    className="dropdown-item py-2 px-3 d-flex align-items-center gap-2"
-                    onClick={() => setCategoryDropdownOpen(false)}
-                  >
-                    <i className="fas fa-leaf text-success"></i> Soft Commodities (Rice, Wheat, Spices)
-                  </Link>
-                  <Link
-                    to="/search?cat=hard"
-                    className="dropdown-item py-2 px-3 d-flex align-items-center gap-2"
-                    onClick={() => setCategoryDropdownOpen(false)}
-                  >
-                    <i className="fas fa-cubes text-secondary"></i> Hard Commodities (Aluminium, Steel, Copper)
-                  </Link>
-                </div>
-              )}
-            </div>
+                  <i className="fas fa-shopping-basket text-primary"></i> Retail Packaged Goods
+                </Link>
+                <Link
+                  to="/search?cat=soft"
+                  className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 text-nowrap"
+                  onClick={() => setCategoryDropdownOpen(false)}
+                >
+                  <i className="fas fa-leaf text-success"></i> Soft Commodities (Rice, Wheat, Spices)
+                </Link>
+                <Link
+                  to="/search?cat=hard"
+                  className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 text-nowrap"
+                  onClick={() => setCategoryDropdownOpen(false)}
+                >
+                  <i className="fas fa-cubes text-secondary"></i> Hard Commodities (Aluminium, Steel, Copper)
+                </Link>
+              </div>
+            )}
+          </div>
 
-            {/* Navigation Links */}
-            <nav className="d-flex align-items-center ms-3 gap-1">
-              <Link
-                to="/search?cat=retail"
-                className={`nav-link px-3 py-2 fw-medium ${location.search.includes('retail') ? 'text-success' : ''}`}
-                style={{ fontSize: '13.5px', color: colors.darkBlue }}
-              >
-                Retail Products
-              </Link>
-              <Link
-                to="/search?cat=soft"
-                className={`nav-link px-3 py-2 fw-medium ${location.search.includes('soft') ? 'text-success' : ''}`}
-                style={{ fontSize: '13.5px', color: colors.darkBlue }}
-              >
-                Soft Commodities
-              </Link>
-              <Link
-                to="/search?cat=hard"
-                className={`nav-link px-3 py-2 fw-medium ${location.search.includes('hard') ? 'text-success' : ''}`}
-                style={{ fontSize: '13.5px', color: colors.darkBlue }}
-              >
-                Hard Commodities
-              </Link>
+          {/* Right Navigation Links & Become a Seller */}
+          <div className="d-flex align-items-center gap-2">
+            <nav className="d-flex align-items-center gap-1">
               <Link
                 to="/how-it-works"
                 className={`nav-link px-3 py-2 fw-medium ${location.pathname === '/how-it-works' ? 'text-success' : ''}`}
@@ -398,10 +406,10 @@ export default function Navbar() {
                 Contact Us
               </Link>
             </nav>
-          </div>
 
-          <div className="d-flex align-items-center gap-3" style={{ fontSize: '13px' }}>
-            <Link to="/register" className="text-decoration-none fw-semibold" style={{ color: colors.primary }}>
+            <span className="text-muted mx-1" style={{ opacity: 0.35 }}>|</span>
+
+            <Link to="/register" className="text-decoration-none fw-semibold ms-1" style={{ color: colors.primary, fontSize: '13px' }}>
               <i className="fas fa-store me-1"></i> Become a Seller
             </Link>
           </div>
@@ -412,7 +420,7 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div
           className="d-lg-none bg-white border-bottom p-3 shadow"
-          style={{ animation: 'slideDown 0.25s ease-out' }}
+          style={{ animation: 'slideDown 0.25s ease-out', maxHeight: 'calc(100vh - 130px)', overflowY: 'auto' }}
         >
           <div className="d-flex flex-column gap-2 mb-3">
             <Link
@@ -438,6 +446,32 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
             >
               <i className="fas fa-cubes text-secondary me-2"></i> Hard Commodities
+            </Link>
+            <Link
+              to="/wishlist"
+              className="p-2 text-decoration-none rounded fw-medium d-flex align-items-center justify-content-between"
+              style={{ color: colors.darkBlue, backgroundColor: colors.lightBg }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span>
+                <i className="fas fa-heart text-danger me-2"></i> My Wishlist
+              </span>
+              {wishlistCount > 0 && (
+                <span className="badge bg-danger rounded-pill">{wishlistCount}</span>
+              )}
+            </Link>
+            <Link
+              to="/cart"
+              className="p-2 text-decoration-none rounded fw-medium d-flex align-items-center justify-content-between"
+              style={{ color: colors.darkBlue, backgroundColor: colors.lightBg }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span>
+                <i className="fas fa-shopping-cart text-primary me-2"></i> Shopping Cart
+              </span>
+              {cartCount > 0 && (
+                <span className="badge bg-primary rounded-pill">{cartCount}</span>
+              )}
             </Link>
             <Link
               to="/how-it-works"

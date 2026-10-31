@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How It Works - Goeazymart</title>
+  <meta name="description" content="Learn how Goeazymart connects buyers and sellers worldwide. Simple 5-step process for bulk commodity trading.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ===== HERO ===== */
+    .hiw-hero {
+      background: linear-gradient(135deg, #122032 0%, #1f8a4c 100%);
+      color: white;
+      padding: 80px 0 100px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hiw-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+      opacity: 0.15;
+    }
+    .hiw-hero-inner { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 0 20px; }
+    .hiw-hero .tag {
+      display: inline-block;
+      padding: 6px 16px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hiw-hero h1 {
+      font-size: 44px;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    .hiw-hero p {
+      font-size: 17px;
+      color: #d1d5db;
+      line-height: 1.7;
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    /* ===== ROLE TOGGLE ===== */
+    .role-toggle-section {
+      background: white;
+      padding: 0;
+      margin-top: -50px;
+      position: relative;
+      z-index: 2;
+    }
+    .role-toggle {
+      background: white;
+      border-radius: 16px;
+      padding: 10px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+      display: inline-flex;
+      gap: 5px;
+      margin: 0 auto;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .role-toggle button {
+      padding: 14px 32px;
+      border: none;
+      background: transparent;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .role-toggle button:hover { background: #f8fafc; }
+    .role-toggle button.active {
+      background: var(--primary-green);
+      color: white;
+      box-shadow: 0 6px 18px rgba(31,138,76,0.3);
+    }
+    .role-toggle button i { font-size: 15px; }
+
+    /* ===== PROCESS SECTION ===== */
+    .process-section {
+      padding: 80px 0 40px;
+    }
+    .process-header {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 60px;
+    }
+    .process-header h2 {
+      font-size: 34px;
+      color: var(--dark-blue);
+      margin-bottom: 15px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .process-header p {
+      font-size: 15.5px;
+      color: var(--text-light);
+      line-height: 1.7;
+    }
+
+    /* ===== STEP CARDS ===== */
+    .steps-stack {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .step-card {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 35px;
+      align-items: flex-start;
+      padding: 30px 0;
+      border-bottom: 1px dashed var(--border-color);
+      position: relative;
+    }
+    .step-card:last-child { border-bottom: none; }
+    .step-num {
+      width: 90px;
+      height: 90px;
+      border-radius: 24px;
+      background: #f0fdf4;
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .step-num .num {
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--primary-green);
+    }
+    .step-num::after {
+      content: '';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary-green);
+      opacity: 0.3;
+    }
+    .step-body h3 {
+      font-size: 22px;
+      color: var(--dark-blue);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+    .step-body p {
+      font-size: 14.5px;
+      color: var(--text-light);
+      line-height: 1.7;
+      margin-bottom: 15px;
+    }
+    .step-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .step-bullets li {
+      font-size: 13.5px;
+      color: var(--text-dark);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .step-bullets i {
+      color: var(--primary-green);
+      font-size: 12px;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    /* ===== HIGHLIGHTS ROW ===== */
+    .highlights-row {
+      padding: 60px 0;
+      background: #f8fafc;
+    }
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 25px;
+    }
+    .highlight-item {
+      background: white;
+      border-radius: 14px;
+      padding: 28px 22px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      transition: all 0.25s;
+    }
+    .highlight-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    }
+    .highlight-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: #f0fdf4;
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin: 0 auto 18px;
+    }
+    .highlight-item h4 {
+      font-size: 15px;
+      color: var(--dark-blue);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .highlight-item p {
+      font-size: 13px;
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+
+    /* ===== FAQ SECTION ===== */
+    .faq-section {
+      padding: 80px 0;
+    }
+    .faq-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 50px;
+    }
+    .faq-header h2 {
+      font-size: 32px;
+      color: var(--dark-blue);
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+    .faq-header p {
+      font-size: 15px;
+      color: var(--text-light);
+      line-height: 1.7;
+    }
+    .faq-grid {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .faq-item {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.25s;
+    }
+    .faq-item:hover { border-color: var(--primary-green); }
+    .faq-item.open { border-color: var(--primary-green); box-shadow: 0 4px 20px rgba(31,138,76,0.08); }
+    .faq-q {
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--dark-blue);
+      gap: 15px;
+    }
+    .faq-q i {
+      color: var(--primary-green);
+      font-size: 14px;
+      transition: transform 0.25s;
+      flex-shrink: 0;
+    }
+    .faq-item.open .faq-q i { transform: rotate(180deg); }
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease;
+    }
+    .faq-item.open .faq-a { max-height: 400px; }
+    .faq-a-inner {
+      padding: 0 24px 22px;
+      font-size: 14px;
+      color: var(--text-light);
+      line-height: 1.75;
+    }
+
+    /* ===== CTA ===== */
+    .hiw-cta {
+      background: linear-gradient(135deg, #122032 0%, #1f8a4c 100%);
+      color: white;
+      padding: 70px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hiw-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+      opacity: 0.1;
+    }
+    .hiw-cta-inner { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; padding: 0 20px; }
+    .hiw-cta h2 {
+      font-size: 32px;
+      margin-bottom: 15px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .hiw-cta p {
+      font-size: 16px;
+      color: #d1d5db;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    .hiw-cta .buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-white {
+      background: white;
+      color: var(--dark-blue);
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14.5px;
+      transition: all 0.2s;
+    }
+    .btn-white:hover { background: #f0f0f0; transform: translateY(-2px); }
+    .btn-ghost {
+      background: transparent;
+      color: white;
+      padding: 14px 32px;
+      border: 2px solid white;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14.5px;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { background: white; color: var(--dark-blue); transform: translateY(-2px); }
+
+    @media (max-width: 900px) {
+      .hiw-hero h1 { font-size: 32px; }
+      .process-header h2 { font-size: 26px; }
+      .highlights-grid { grid-template-columns: 1fr 1fr; }
+      .step-card { grid-template-columns: 70px 1fr; gap: 20px; }
+      .step-num { width: 65px; height: 65px; border-radius: 18px; }
+      .step-num .num { font-size: 24px; }
+      .step-body h3 { font-size: 18px; }
+    }
+    @media (max-width: 600px) {
+      .highlights-grid { grid-template-columns: 1fr; }
+      .role-toggle { flex-direction: column; left: 0; transform: none; width: calc(100% - 40px); margin: 0 20px; }
+      .role-toggle button { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="container">
+    <div class="top-header">
+      <a href="index.html" class="logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</a>
+      <form class="search-bar" action="search.html">
+        <input type="text" placeholder="Search for products, commodities, suppliers...">
+        <button type="submit"><i class="fas fa-search"></i></button>
+      </form>
+      <div class="header-actions">
+        <div class="icon-text"><i class="fas fa-globe"></i> EN</div>
+        <a href="login.html">Login</a>
+        <a href="register.html" class="btn btn-primary">Register</a>
+        <a href="cart.html" class="icon-text"><i class="fas fa-shopping-cart"></i> <span id="cart-count" style="background:var(--primary-green); color:white; border-radius:50%; padding:2px 6px; font-size:10px;">0</span></a>
+      </div>
+    </div>
+    <div class="bottom-header">
+      <div class="all-categories"><i class="fas fa-bars"></i> All Categories</div>
+      <nav class="nav-links">
+        <a href="search.html">Retail Products</a>
+        <a href="search.html">Soft Commodities</a>
+        <a href="search.html">Hard Commodities</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="about-us.html">About Us</a>
+        <a href="contact-us.html">Contact Us</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hiw-hero">
+  <div class="hiw-hero-inner">
+    <span class="tag">How It Works</span>
+    <h1>Trade Commodities with Confidence</h1>
+    <p>Goeazymart connects verified buyers and sellers worldwide through a simple, transparent 5-step process. No middlemen. No hidden fees. Just seamless global trading.</p>
+  </div>
+</section>
+
+<!-- ROLE TOGGLE -->
+<div class="role-toggle-section">
+  <div class="role-toggle">
+    <button class="active" id="btnBuyer" onclick="switchRole('buyer')">
+      <i class="fas fa-shopping-bag"></i> For Buyers
+    </button>
+    <button id="btnSeller" onclick="switchRole('seller')">
+      <i class="fas fa-store"></i> For Sellers
+    </button>
+  </div>
+</div>
+
+<!-- PROCESS -->
+<section class="process-section">
+  <div class="container">
+    <div class="process-header">
+      <h2 id="processTitle">For Buyers: Source Commodities in 5 Simple Steps</h2>
+      <p id="processSubtitle">From discovering products to receiving deliveries — here's how buyers use Goeazymart.</p>
+    </div>
+
+    <div class="steps-stack" id="stepsStack">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- HIGHLIGHTS -->
+<section class="highlights-row">
+  <div class="container">
+    <div class="highlights-grid">
+      <div class="highlight-item">
+        <div class="highlight-icon"><i class="fas fa-shield-alt"></i></div>
+        <h4>Verified Network</h4>
+        <p>Every buyer and seller is KYC-verified before trading.</p>
+      </div>
+      <div class="highlight-item">
+        <div class="highlight-icon"><i class="fas fa-hand-holding-usd"></i></div>
+        <h4>Secure Payments</h4>
+        <p>Funds are held in escrow until delivery is confirmed.</p>
+      </div>
+      <div class="highlight-item">
+        <div class="highlight-icon"><i class="fas fa-globe"></i></div>
+        <h4>50+ Countries</h4>
+        <p>Source and sell across borders with customs support.</p>
+      </div>
+      <div class="highlight-item">
+        <div class="highlight-icon"><i class="fas fa-headset"></i></div>
+        <h4>24/7 Support</h4>
+        <p>Dedicated support team for every transaction.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="container">
+    <div class="faq-header">
+      <h2>Frequently Asked Questions</h2>
+      <p>Everything you need to know about trading on Goeazymart.</p>
+    </div>
+
+    <div class="faq-grid">
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">
+          How much does it cost to use Goeazymart?
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Registration is completely free for both buyers and sellers. Goeazymart charges a small commission (2-5% depending on category) only on successful transactions. There are no listing fees, subscription fees, or hidden charges.
+        </div></div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">
+          How do I know if a seller is trustworthy?
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Every seller goes through a strict KYC verification process where we validate their business registration, GST, PAN, and bank details. Verified sellers show a green checkmark on their profile. You can also see seller ratings, reviews from past buyers, and completed order history.
+        </div></div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">
+          What happens if I don't receive my order?
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Payment is held in escrow and only released to the seller once you confirm delivery. If there's a dispute (product not received, quality mismatch, damaged goods), you can raise a dispute within 7 days. Our team mediates and issues refunds if the seller is at fault.
+        </div></div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">
+          Can I buy small quantities or only bulk?
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Both! Retail products can be bought in single units through our standard e-commerce checkout. Bulk commodities require an RFQ (Request for Quote) where you specify your required quantity and negotiate with sellers.
+        </div></div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">
+          How long does shipping take?
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Shipping timelines vary by product and location. Domestic retail orders typically deliver in 3-7 days. Bulk commodity shipments take 15-45 days depending on destination, quantity, and shipping method. Each order shows the estimated delivery date.
+        </div></div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">
+          What payment methods are supported?
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">
+          We support credit/debit cards (Visa, Mastercard, Amex), UPI, net banking, and bank wire transfers for large transactions. All payments are processed through PCI-DSS compliant gateways (Stripe, Razorpay).
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="hiw-cta">
+  <div class="hiw-cta-inner">
+    <h2>Ready to Start Trading?</h2>
+    <p>Join thousands of businesses already sourcing and selling on Goeazymart.</p>
+    <div class="buttons">
+      <a href="register.html" class="btn-white"><i class="fas fa-user-plus"></i> Create Free Account</a>
+      <a href="contact-us.html" class="btn-ghost"><i class="fas fa-headset"></i> Talk to Sales</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</div>
+        <p>A global marketplace connecting buyers and sellers with trust and technology.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Marketplace</h4>
+        <ul>
+          <li><a href="search.html">Retail</a></li>
+          <li><a href="search.html">Soft Commodities</a></li>
+          <li><a href="search.html">Hard Commodities</a></li>
+          <li><a href="search.html">All Categories</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Business</h4>
+        <ul>
+          <li><a href="register.html">Become a Seller</a></li>
+          <li><a href="register.html">Buyer Registration</a></li>
+          <li><a href="how-it-works.html">How It Works</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="about-us.html">About Us</a></li>
+          <li><a href="contact-us.html">Contact Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Market Insights</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="contact-us.html">Help Center</a></li>
+          <li><a href="how-it-works.html">FAQs</a></li>
+          <li><a href="#">Terms & Conditions</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Newsletter</h4>
+        <p>Get the latest commodity opportunities.</p>
+        <form class="newsletter-form"><input type="email" placeholder="Enter your email"><button>Subscribe</button></form>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 Goeazymart. All rights reserved.</div>
+      <div class="footer-bottom-links">
+        <a href="#">Sitemap</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ============= PROCESS DATA =============
+const PROCESS = {
+  buyer: {
+    title: 'For Buyers: Source Commodities in 5 Simple Steps',
+    subtitle: 'From discovering products to receiving deliveries — here\'s how buyers use Goeazymart.',
+    steps: [
+      {
+        num: '01',
+        title: 'Browse & Discover',
+        desc: 'Explore thousands of products and commodities from verified suppliers around the world. Filter by category, price, location, or rating.',
+        bullets: [
+          'Search by product name, category, or supplier',
+          'Compare prices across multiple sellers',
+          'View detailed specifications and certifications',
+        ],
+      },
+      {
+        num: '02',
+        title: 'Submit Your RFQ',
+        desc: 'For bulk purchases, submit a Request for Quote (RFQ) with your requirements. For retail items, simply add to cart.',
+        bullets: [
+          'Specify quantity, target price, and delivery location',
+          'Add notes about quality requirements and certifications',
+          'Set your response deadline for sellers',
+        ],
+      },
+      {
+        num: '03',
+        title: 'Receive & Compare Quotes',
+        desc: 'Verified sellers respond to your RFQ within 24-48 hours with their best prices, delivery times, and terms.',
+        bullets: [
+          'Compare multiple quotes side by side',
+          'Review seller ratings and past performance',
+          'Check certifications and quality assurance',
+        ],
+      },
+      {
+        num: '04',
+        title: 'Negotiate Directly',
+        desc: 'Chat with sellers in real-time to negotiate price, quantity, delivery, and payment terms until you reach an agreement.',
+        bullets: [
+          'Transparent negotiation with full chat history',
+          'Counter-offer with structured pricing',
+          'Reach mutually beneficial terms',
+        ],
+      },
+      {
+        num: '05',
+        title: 'Order & Receive',
+        desc: 'Confirm your order, make secure payment through escrow, and track your shipment until it arrives at your doorstep.',
+        bullets: [
+          'Funds held safely in escrow until delivery',
+          'Real-time tracking with notifications',
+          'Automatic release to seller on delivery confirmation',
+        ],
+      },
+    ],
+  },
+  seller: {
+    title: 'For Sellers: Reach Global Buyers in 5 Steps',
+    subtitle: 'From listing products to receiving payments — here\'s how sellers grow with Goeazymart.',
+    steps: [
+      {
+        num: '01',
+        title: 'Register & Get Verified',
+        desc: 'Create your seller account and complete KYC verification. Upload your business registration, GST, PAN, and bank details.',
+        bullets: [
+          'Free registration for all business types',
+          'KYC verification within 24-48 hours',
+          'Dedicated onboarding assistance',
+        ],
+      },
+      {
+        num: '02',
+        title: 'List Your Products',
+        desc: 'Add products with detailed specifications, images, pricing, and minimum order quantities. Choose your categories.',
+        bullets: [
+          'Unlimited product listings at no cost',
+          'Rich product pages with specs and certifications',
+          'Bulk upload option via CSV',
+        ],
+      },
+      {
+        num: '03',
+        title: 'Receive RFQs from Buyers',
+        desc: 'Buyers worldwide submit RFQs matching your products. Receive real-time notifications and respond with your best quotes.',
+        bullets: [
+          'Access to 10,000+ verified buyers',
+          'Real-time RFQ notifications via email',
+          'Analytics on your product views and inquiries',
+        ],
+      },
+      {
+        num: '04',
+        title: 'Negotiate & Close Deals',
+        desc: 'Chat directly with buyers to negotiate price, delivery, and terms. Close deals faster with transparent communication.',
+        bullets: [
+          'Built-in negotiation chat with buyers',
+          'Structured offer/counter-offer history',
+          'Fast deal closure with digital agreements',
+        ],
+      },
+      {
+        num: '05',
+        title: 'Ship & Get Paid',
+        desc: 'Ship confirmed orders, provide tracking, and receive automatic payment to your bank account once delivery is confirmed.',
+        bullets: [
+          'Weekly payouts to your bank account',
+          'Platform handles payment collection',
+          'Zero chargebacks on completed orders',
+        ],
+      },
+    ],
+  },
+};
+
+let currentRole = 'buyer';
+
+function renderProcess() {
+  const data = PROCESS[currentRole];
+  document.getElementById('processTitle').textContent = data.title;
+  document.getElementById('processSubtitle').textContent = data.subtitle;
+
+  document.getElementById('stepsStack').innerHTML = data.steps.map(s => `
+    <div class="step-card">
+      <div class="step-num">
+        <span class="num">${s.num}</span>
+      </div>
+      <div class="step-body">
+        <h3>${s.title}</h3>
+        <p>${s.desc}</p>
+        <ul class="step-bullets">
+          ${s.bullets.map(b => `<li><i class="fas fa-check-circle"></i> ${b}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+  `).join('');
+}
+
+function switchRole(role) {
+  currentRole = role;
+  document.getElementById('btnBuyer').classList.toggle('active', role === 'buyer');
+  document.getElementById('btnSeller').classList.toggle('active', role === 'seller');
+  renderProcess();
+}
+
+function toggleFaq(el) {
+  el.classList.toggle('open');
+}
+
+// Init
+renderProcess();
+</script>
+</body>
+</html>

@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { colors } from '../theme/colors';
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, totals } = useCart();
+  const { cart, removeFromCart, updateQuantity, totals, showToast } = useCart();
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const navigate = useNavigate();
@@ -15,8 +15,9 @@ export default function CartPage() {
     e.preventDefault();
     if (promoCode.trim().toUpperCase() === 'GEM10') {
       setPromoApplied(true);
+      showToast('Coupon GEM10 applied successfully! 10% discount has been deducted.', 'success');
     } else {
-      alert('Invalid coupon code. Try using: GEM10');
+      showToast('Invalid coupon code. Please try using GEM10 for a 10% discount.', 'danger');
     }
   };
 
@@ -94,7 +95,7 @@ export default function CartPage() {
                           <Link
                             to={`/product/${item.id}`}
                             className="text-decoration-none fw-semibold d-block mb-1 text-truncate"
-                            style={{ color: colors.darkBlue, maxWidth: '280px', fontSize: '15px' }}
+                            style={{ color: colors.darkBlue, maxWidth: 'min(280px, 55vw)', fontSize: '14.5px' }}
                           >
                             {item.title}
                           </Link>
@@ -108,7 +109,7 @@ export default function CartPage() {
                       </div>
 
                       {/* Quantity Controls & Remove */}
-                      <div className="d-flex align-items-center justify-content-between justify-content-sm-end gap-3 ms-sm-auto">
+                      <div className="d-flex align-items-center justify-content-between justify-content-sm-end w-100 w-sm-auto gap-2 gap-sm-3 ms-sm-auto">
                         {/* Qty Box */}
                         <div className="input-group" style={{ width: '110px' }}>
                           <button

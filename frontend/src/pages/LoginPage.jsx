@@ -38,7 +38,7 @@ export default function LoginPage() {
       }}
     >
       <div
-        className="card border-0 shadow-lg rounded-4 p-4 p-sm-5"
+        className="card border-0 shadow-lg rounded-4 p-3 p-sm-4 p-md-5"
         style={{
           width: '100%',
           maxWidth: '460px',
@@ -80,7 +80,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off" data-lpignore="true">
           <div className="mb-3">
             <label className="form-label small fw-semibold">Email Address *</label>
             <div className="input-group">
@@ -93,6 +93,8 @@ export default function LoginPage() {
                 placeholder="name@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
+                data-lpignore="true"
                 required
               />
             </div>
@@ -115,6 +117,8 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                data-lpignore="true"
                 required
               />
               <button
@@ -164,7 +168,7 @@ export default function LoginPage() {
             <button
               type="button"
               className="btn btn-white btn-sm text-start d-flex justify-content-between align-items-center border shadow-none bg-white py-2"
-              onClick={() => fillDemoCreds('seller@goeazymart.com', 'seller123')}
+              onClick={() => fillDemoCreds('seller@goeazymart.com', 'Goeazy#Seller2026')}
             >
               <div>
                 <span className="badge me-1" style={{ backgroundColor: colors.sellerBadgeBg, color: colors.sellerBadge }}>
@@ -178,7 +182,7 @@ export default function LoginPage() {
             <button
               type="button"
               className="btn btn-white btn-sm text-start d-flex justify-content-between align-items-center border shadow-none bg-white py-2"
-              onClick={() => fillDemoCreds('buyer@goeazymart.com', 'buyer123')}
+              onClick={() => fillDemoCreds('buyer@goeazymart.com', 'Goeazy#Buyer2026')}
             >
               <div>
                 <span className="badge me-1" style={{ backgroundColor: colors.buyerBadgeBg, color: colors.buyerBadge }}>
@@ -192,7 +196,7 @@ export default function LoginPage() {
             <button
               type="button"
               className="btn btn-white btn-sm text-start d-flex justify-content-between align-items-center border shadow-none bg-white py-2"
-              onClick={() => fillDemoCreds('admin@goeazymart.com', 'admin123')}
+              onClick={() => fillDemoCreds('admin@goeazymart.com', 'Goeazy#Admin2026')}
             >
               <div>
                 <span className="badge me-1" style={{ backgroundColor: colors.adminBadgeBg, color: colors.adminBadge }}>

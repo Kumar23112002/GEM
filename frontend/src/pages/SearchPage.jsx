@@ -136,9 +136,9 @@ export default function SearchPage() {
                 <div className="d-flex flex-column gap-1">
                   {[
                     { id: 'all', label: 'All Products' },
-                    { id: 'retail', label: 'Retail Products' },
-                    { id: 'soft', label: 'Soft Commodities' },
-                    { id: 'hard', label: 'Hard Commodities' },
+                    { id: 'retail', label: 'Retail Products (Fixed Price)' },
+                    { id: 'soft', label: 'Soft Commodities (RFQ)' },
+                    { id: 'hard', label: 'Hard Commodities (RFQ)' },
                   ].map((cat) => (
                     <button
                       key={cat.id}
@@ -163,7 +163,7 @@ export default function SearchPage() {
               <div className="mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-1">
                   <h6 className="fw-bold mb-0 small text-uppercase" style={{ color: colors.textDark }}>
-                    Max Price
+                    {selectedCategory === 'soft' || selectedCategory === 'hard' ? 'Max Target Budget' : 'Max Price'}
                   </h6>
                   <span className="small fw-bold" style={{ color: colors.primary }}>
                     ₹{maxPrice.toLocaleString()}
@@ -221,7 +221,7 @@ export default function SearchPage() {
           <main className="col-12 col-lg-9">
             {/* Control Bar */}
             <div
-              className="card border-0 shadow-sm rounded-3 p-3 mb-4 d-flex flex-row justify-content-between align-items-center flex-wrap gap-3"
+              className="card border-0 shadow-sm rounded-3 p-3 mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3"
               style={{ backgroundColor: colors.white }}
             >
               <div>
@@ -233,24 +233,24 @@ export default function SearchPage() {
                 </span>
               </div>
 
-              <div className="d-flex align-items-center gap-2">
+              <div className="d-flex align-items-center justify-content-between justify-content-sm-end w-100 w-sm-auto gap-2">
                 {/* Mobile Filter Toggle */}
                 <button
                   type="button"
-                  className="btn btn-outline-secondary d-lg-none btn-sm"
+                  className="btn btn-outline-secondary d-lg-none btn-sm text-nowrap"
                   onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
                 >
                   <i className="fas fa-filter me-1"></i> Filter
                 </button>
 
                 {/* Sort selector */}
-                <div className="d-flex align-items-center gap-2">
-                  <span className="small text-muted d-none d-sm-inline">Sort by:</span>
+                <div className="d-flex align-items-center gap-2 flex-grow-1 flex-sm-grow-0">
+                  <span className="small text-muted d-none d-sm-inline text-nowrap">Sort by:</span>
                   <select
-                    className="form-select form-select-sm shadow-none"
+                    className="form-select form-select-sm shadow-none w-100"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    style={{ minWidth: '160px', borderColor: colors.border }}
+                    style={{ minWidth: '140px', borderColor: colors.border }}
                   >
                     <option value="featured">Featured / Default</option>
                     <option value="price-low">Price: Low to High</option>
@@ -276,14 +276,19 @@ export default function SearchPage() {
                   ></button>
                 </div>
                 <div className="d-flex flex-wrap gap-2 mb-3">
-                  {['all', 'retail', 'soft', 'hard'].map((c) => (
+                  {[
+                    { id: 'all', label: 'ALL' },
+                    { id: 'retail', label: 'RETAIL' },
+                    { id: 'soft', label: 'SOFT (RFQ)' },
+                    { id: 'hard', label: 'HARD (RFQ)' },
+                  ].map((c) => (
                     <button
-                      key={c}
+                      key={c.id}
                       type="button"
-                      onClick={() => handleCategorySelect(c)}
-                      className={`btn btn-sm ${selectedCategory === c ? 'btn-success text-white' : 'btn-white'}`}
+                      onClick={() => handleCategorySelect(c.id)}
+                      className={`btn btn-sm ${selectedCategory === c.id ? 'btn-success text-white' : 'btn-white'}`}
                     >
-                      {c.toUpperCase()}
+                      {c.label}
                     </button>
                   ))}
                 </div>

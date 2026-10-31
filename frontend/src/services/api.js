@@ -122,12 +122,20 @@ export const api = {
     return request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }, () => {
       const cleanEmail = email.trim().toLowerCase();
       const allUsers = [...DEMO_USERS, ...getStorage('registered_users', [])];
-      const match = allUsers.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
+      const match = allUsers.find(u => {
+        if (u.email.toLowerCase() !== cleanEmail) return false;
+        if (u.password === password) return true;
+        // Accept legacy aliases for smooth demo transitions
+        if (cleanEmail === 'admin@goeazymart.com' && (password === 'admin123' || password === 'Goeazy#Admin2026')) return true;
+        if (cleanEmail === 'seller@goeazymart.com' && (password === 'seller123' || password === 'Goeazy#Seller2026')) return true;
+        if (cleanEmail === 'buyer@goeazymart.com' && (password === 'buyer123' || password === 'Goeazy#Buyer2026')) return true;
+        return false;
+      });
       if (match) {
         localStorage.setItem('goeazy_user', JSON.stringify(match));
         return { success: true, user: match };
       }
-      return { success: false, message: 'Invalid credentials. Try using the 1-click Demo buttons!' };
+      return { success: false, message: 'Invalid credentials. Please check your email and password or use the 1-Click Demo buttons below.' };
     });
   },
 
@@ -301,6 +309,42 @@ export const api = {
     const addrs = getStorage('addresses', INITIAL_ADDRESSES).filter(a => a.id !== id);
     setStorage('addresses', addrs);
     return addrs;
+  },
+
+  // BUYER PAYMENTS
+  async getPayments() {
+    return request('/buyer/payments', {}, () => getStorage('payments', INITIAL_PAYMENT_METHODS));
+  },
+
+  async savePayment(pm) {
+    const list = getStorage('payments', INITIAL_PAYMENT_METHODS);
+    if (pm.isDefault) {
+      list.forEach(p => p.isDefault = false);
+    }
+    if (pm.id) {
+      const idx = list.findIndex(p => p.id === pm.id);
+      if (idx !== -1) list[idx] = pm;
+    } else {
+      pm.id = Date.now();
+      list.push(pm);
+    }
+    setStorage('payments', list);
+    return list;
+  },
+
+  async deletePayment(id) {
+    const list = getStorage('payments', INITIAL_PAYMENT_METHODS).filter(p => p.id !== id);
+    setStorage('payments', list);
+    return list;
+  },
+
+  async setDefaultPayment(id) {
+    const list = getStorage('payments', INITIAL_PAYMENT_METHODS);
+    list.forEach(p => {
+      p.isDefault = (p.id === id);
+    });
+    setStorage('payments', list);
+    return list;
   },
 
   // ADMIN

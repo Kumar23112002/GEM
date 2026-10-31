@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - Goeazymart</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background: #f0f4f8;
+      min-height: 100vh;
+    }
+
+    /* ===== TOP BAR ===== */
+    .reg-topbar {
+      background: white;
+      border-bottom: 1px solid var(--border-color);
+      padding: 15px 0;
+    }
+    .reg-topbar-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .reg-topbar .logo {
+      display: flex;
+      align-items: center;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--dark-blue);
+      text-decoration: none;
+    }
+    .reg-topbar .logo i {
+      color: var(--primary-green);
+      font-size: 24px;
+      margin-right: 8px;
+    }
+    .reg-topbar .help-link {
+      font-size: 13.5px;
+      color: var(--text-light);
+    }
+    .reg-topbar .help-link a {
+      color: var(--primary-green);
+      font-weight: 600;
+    }
+
+    /* ===== LAYOUT ===== */
+    .reg-layout {
+      max-width: 1150px;
+      margin: 40px auto;
+      padding: 0 20px 60px;
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 30px;
+    }
+
+    /* ===== SIDEBAR (STEPS) ===== */
+    .reg-sidebar {
+      background: white;
+      border-radius: 12px;
+      padding: 30px 25px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      height: fit-content;
+      position: sticky;
+      top: 20px;
+    }
+    .reg-sidebar h3 {
+      font-size: 16px;
+      color: var(--dark-blue);
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .step-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+      position: relative;
+    }
+    .step-item:last-child { margin-bottom: 0; }
+    .step-item::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 32px;
+      bottom: -22px;
+      width: 2px;
+      background: #e5e7eb;
+    }
+    .step-item:last-child::before { display: none; }
+    .step-item.completed::before { background: var(--primary-green); }
+    .step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: all 0.3s;
+      z-index: 1;
+    }
+    .step-item.active .step-dot {
+      background: var(--primary-green);
+      color: white;
+      box-shadow: 0 0 0 4px rgba(31,138,76,0.15);
+    }
+    .step-item.completed .step-dot {
+      background: var(--primary-green);
+      color: white;
+    }
+    .step-text { flex: 1; padding-top: 4px; }
+    .step-text h4 {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 2px;
+      transition: color 0.2s;
+    }
+    .step-text p {
+      font-size: 11.5px;
+      color: #9ca3af;
+    }
+    .step-item.active .step-text h4,
+    .step-item.completed .step-text h4 { color: var(--dark-blue); }
+
+    /* ===== MAIN CONTENT ===== */
+    .reg-main {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      min-height: 640px;
+    }
+
+    /* ===== ROLE SELECTION SCREEN ===== */
+    .role-screen { text-align: center; }
+    .role-screen h1 {
+      font-size: 28px;
+      color: var(--dark-blue);
+      margin-bottom: 10px;
+    }
+    .role-screen .subtitle {
+      font-size: 14.5px;
+      color: var(--text-light);
+      margin-bottom: 40px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .role-card {
+      border: 2px solid var(--border-color);
+      border-radius: 14px;
+      padding: 28px 20px;
+      cursor: pointer;
+      transition: all 0.25s;
+      text-align: center;
+      background: white;
+    }
+    .role-card:hover {
+      border-color: var(--primary-green);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(31,138,76,0.12);
+    }
+    .role-card.selected {
+      border-color: var(--primary-green);
+      background: #f0fdf4;
+    }
+    .role-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 30px;
+    }
+    .role-icon.buyer { background: #dbeafe; color: #2563eb; }
+    .role-icon.seller { background: #dcfce7; color: #16a34a; }
+    .role-icon.retailer { background: #fed7aa; color: #ea580c; }
+    .role-card h3 {
+      font-size: 17px;
+      color: var(--dark-blue);
+      margin-bottom: 10px;
+    }
+    .role-card p {
+      font-size: 12.5px;
+      color: var(--text-light);
+      line-height: 1.6;
+      margin-bottom: 15px;
+      min-height: 60px;
+    }
+    .role-features {
+      text-align: left;
+      list-style: none;
+      font-size: 12px;
+      color: var(--text-light);
+    }
+    .role-features li {
+      padding: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .role-features i {
+      color: var(--primary-green);
+      font-size: 11px;
+    }
+
+    /* ===== FORM STYLES ===== */
+    .form-step h2 {
+      font-size: 22px;
+      color: var(--dark-blue);
+      margin-bottom: 6px;
+    }
+    .form-step .step-desc {
+      font-size: 13.5px;
+      color: var(--text-light);
+      margin-bottom: 30px;
+    }
+    .section-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--primary-green);
+      margin: 25px 0 15px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-dark);
+    }
+    .form-group label .req { color: #dc2626; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      background: white;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--primary-green); }
+    .form-group .hint {
+      font-size: 11.5px;
+      color: var(--text-light);
+      margin-top: 5px;
+    }
+    .form-group textarea { min-height: 90px; resize: vertical; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+
+    /* Radio pill group */
+    .pill-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+    }
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 15px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .pill:hover { border-color: var(--primary-green); }
+    .pill input { accent-color: var(--primary-green); }
+    .pill.selected {
+      border-color: var(--primary-green);
+      background: #f0fdf4;
+      color: var(--primary-green);
+    }
+
+    /* Upload box */
+    .upload-box {
+      border: 2px dashed var(--border-color);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
+    }
+    .upload-box:hover { border-color: var(--primary-green); background: #f0fdf4; }
+    .upload-box.uploaded {
+      border-color: var(--primary-green);
+      background: #f0fdf4;
+      border-style: solid;
+    }
+    .upload-box i.upload-icon {
+      font-size: 24px;
+      color: var(--primary-green);
+      margin-bottom: 8px;
+      display: block;
+    }
+    .upload-box .upload-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dark-blue);
+      margin-bottom: 4px;
+    }
+    .upload-box .upload-sub {
+      font-size: 11.5px;
+      color: var(--text-light);
+    }
+
+    /* Checkbox */
+    .check-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 12px;
+      cursor: pointer;
+      line-height: 1.5;
+    }
+    .check-row input {
+      accent-color: var(--primary-green);
+      width: 17px;
+      height: 17px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .check-row a {
+      color: var(--primary-green);
+      font-weight: 600;
+    }
+
+    /* Navigation */
+    .step-nav {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 35px;
+      padding-top: 25px;
+      border-top: 1px solid var(--border-color);
+      gap: 15px;
+    }
+
+    /* Password strength */
+    .pwd-strength {
+      display: flex;
+      gap: 5px;
+      margin-top: 8px;
+    }
+    .pwd-strength div {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #e5e7eb;
+      transition: background 0.2s;
+    }
+    .pwd-strength.weak div:nth-child(1) { background: #dc2626; }
+    .pwd-strength.fair div:nth-child(1),
+    .pwd-strength.fair div:nth-child(2) { background: #f59e0b; }
+    .pwd-strength.good div:nth-child(1),
+    .pwd-strength.good div:nth-child(2),
+    .pwd-strength.good div:nth-child(3) { background: #3b82f6; }
+    .pwd-strength.strong div { background: #16a34a; }
+
+    /* Category chips */
+    .chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      padding: 8px 14px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 20px;
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .chip:hover { border-color: var(--primary-green); }
+    .chip.selected {
+      background: var(--primary-green);
+      color: white;
+      border-color: var(--primary-green);
+    }
+
+    /* Success screen */
+    .success-screen {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .success-screen .success-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: #dcfce7;
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 25px;
+      font-size: 44px;
+      animation: pop 0.5s ease-out;
+    }
+    @keyframes pop {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .success-screen h2 {
+      font-size: 26px;
+      color: var(--dark-blue);
+      margin-bottom: 10px;
+    }
+    .success-screen p {
+      font-size: 14.5px;
+      color: var(--text-light);
+      max-width: 480px;
+      margin: 0 auto 30px;
+      line-height: 1.6;
+    }
+
+    /* Error message */
+    .error-msg {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 12px 15px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .error-msg.show { display: flex; }
+
+    /* Info box */
+    .info-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 12.5px;
+      color: #1e40af;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .info-box i { flex-shrink: 0; margin-top: 1px; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .reg-layout { grid-template-columns: 1fr; }
+      .reg-sidebar { position: static; }
+      .role-grid { grid-template-columns: 1fr; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .reg-main { padding: 25px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="reg-topbar">
+  <div class="container reg-topbar-inner">
+    <a href="index.html" class="logo"><i class="fas fa-shopping-cart"></i> GOEAZYMART</a>
+    <div class="help-link">
+      Already have an account? <a href="login.html">Sign In</a>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="reg-layout">
+  <aside class="reg-sidebar" id="regSidebar">
+    <h3>Create Your Account</h3>
+    <div id="sidebarSteps"></div>
+  </aside>
+  <main class="reg-main" id="regMain"></main>
+</div>
+
+<script src="app.js"></script>
+<script>
+// ============= STATE =============
+const state = {
+  role: null,
+  currentStep: 0,
+  data: {
+    firstName: '', lastName: '', email: '', phone: '', password: '',
+    country: 'India', city: '', gender: '', dob: '',
+    // Buyer-specific
+    buyerType: 'individual',
+    companyName: '', jobTitle: '', industry: '',
+    buyerCategories: [],
+    buyerAddress: '', buyerZip: '',
+    annualPurchase: '',
+    // Seller-specific
+    legalName: '', tradeName: '', businessType: 'pvt-ltd',
+    businessRegNumber: '', gstNumber: '', panNumber: '',
+    yearsInBusiness: '',
+    sellerCategories: [],
+    employeesCount: '',
+    annualRevenue: '',
+    businessAddress: '', businessZip: '',
+    bankName: '', accountNumber: '', ifsc: '', accountHolder: '',
+    // Retailer-specific
+    shopName: '', shopType: 'grocery', shopRegNumber: '',
+    shopAddress: '', shopZip: '', shopSize: '',
+    retailerCategories: [],
+    monthlySales: '',
+    // Documents
+    docs: { gst: false, pan: false, businessReg: false, addressProof: false, bankProof: false },
+    // Agreements
+    agreeTerms: false, agreeMarketing: false, confirmTruthful: false,
+    referralCode: '',
+  }
+};
+
+// ============= ROLE DEFINITIONS =============
+const ROLES = {
+  buyer: {
+    title: 'Buyer',
+    icon: 'fa-shopping-bag',
+    color: 'buyer',
+    description: 'Purchase commodities in bulk. Perfect for importers, distributors, and businesses sourcing raw materials.',
+    features: ['Request bulk quotes (RFQ)', 'Negotiate with sellers', 'Track orders globally', 'Access 10,000+ sellers'],
+  },
+  seller: {
+    title: 'Seller',
+    icon: 'fa-store',
+    color: 'seller',
+    description: 'Sell commodities or products in bulk. Ideal for manufacturers, exporters, mills, and wholesalers.',
+    features: ['List unlimited products', 'Receive RFQs from buyers', 'Global customer reach', 'Secure payouts'],
+  },
+  retailer: {
+    title: 'Retailer',
+    icon: 'fa-shopping-basket',
+    color: 'retailer',
+    description: 'Own a retail shop? Sell everyday products to end consumers with local delivery and pickup.',
+    features: ['List retail products', 'Manage local inventory', 'Direct customer sales', 'Fast order fulfillment'],
+  },
+};
+
+// ============= STEPS PER ROLE =============
+const STEPS = {
+  buyer: [
+    { title: 'Account Type', subtitle: 'Choose your buyer profile', key: 'accountType' },
+    { title: 'Personal Info', subtitle: 'Tell us about yourself', key: 'personal' },
+    { title: 'Business Details', subtitle: 'Company & sourcing info', key: 'business' },
+    { title: 'Security', subtitle: 'Password & verification', key: 'security' },
+    { title: 'Agreements', subtitle: 'Terms & conditions', key: 'agreements' },
+  ],
+  seller: [
+    { title: 'Business Type', subtitle: 'Choose your business structure', key: 'businessType' },
+    { title: 'Business Info', subtitle: 'Legal & registration details', key: 'businessInfo' },
+    { title: 'Owner Info', subtitle: 'Personal details', key: 'personal' },
+    { title: 'Categories', subtitle: 'What do you sell?', key: 'categories' },
+    { title: 'Bank & Docs', subtitle: 'Payout & verification', key: 'banking' },
+    { title: 'Security', subtitle: 'Password & verification', key: 'security' },
+    { title: 'Agreements', subtitle: 'Terms & conditions', key: 'agreements' },
+  ],
+  retailer: [
+    { title: 'Shop Type', subtitle: 'What kind of shop?', key: 'shopType' },
+    { title: 'Shop Info', subtitle: 'Shop name & license', key: 'shopInfo' },
+    { title: 'Owner Info', subtitle: 'Your personal details', key: 'personal' },
+    { title: 'Categories', subtitle: 'What do you sell?', key: 'categories' },
+    { title: 'Payment Info', subtitle: 'Bank & UPI details', key: 'banking' },
+    { title: 'Security', subtitle: 'Password & verification', key: 'security' },
+    { title: 'Agreements', subtitle: 'Terms & conditions', key: 'agreements' },
+  ],
+};
+
+// ============= CATEGORY OPTIONS =============
+const CATEGORIES = {
+  buyer: ['Rice & Grains', 'Wheat & Flour', 'Spices', 'Pulses', 'Edible Oils', 'Metals', 'Textiles', 'Packaging', 'Chemicals', 'Machinery'],
+  seller: ['Rice', 'Wheat', 'Maize', 'Spices', 'Pulses', 'Edible Oils', 'Aluminium', 'Steel', 'Copper', 'Zinc', 'Cotton', 'Coffee', 'Tea'],
+  retailer: ['Groceries', 'Fruits & Vegetables', 'Dairy', 'Snacks', 'Beverages', 'Household', 'Personal Care', 'Stationery', 'Electronics'],
+};
+
+// ============= RENDER =============
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebarSteps');
+  if (!state.role) {
+    sidebar.innerHTML = '<p style="font-size:13px; color:var(--text-light); line-height:1.6;">Choose your account type to get started. The registration takes just a few minutes.</p>';
+    return;
+  }
+  const steps = STEPS[state.role];
+  sidebar.innerHTML = steps.map((s, i) => {
+    const cls = i === state.currentStep ? 'active' : i < state.currentStep ? 'completed' : '';
+    const icon = i < state.currentStep ? '<i class="fas fa-check"></i>' : (i + 1);
+    return `
+      <div class="step-item ${cls}">
+        <div class="step-dot">${icon}</div>
+        <div class="step-text">
+          <h4>${s.title}</h4>
+          <p>${s.subtitle}</p>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderMain() {
+  const main = document.getElementById('regMain');
+  if (!state.role) {
+    main.innerHTML = renderRoleSelection();
+    return;
+  }
+  const steps = STEPS[state.role];
+  if (state.currentStep >= steps.length) {
+    main.innerHTML = renderSuccess();
+    return;
+  }
+  const stepKey = steps[state.currentStep].key;
+  const renderFn = {
+    accountType: renderBuyerAccountType,
+    businessType: renderSellerBusinessType,
+    shopType: renderRetailerShopType,
+    personal: renderPersonal,
+    business: renderBuyerBusiness,
+    businessInfo: renderSellerBusiness,
+    shopInfo: renderRetailerShop,
+    categories: renderCategories,
+    banking: renderBanking,
+    security: renderSecurity,
+    agreements: renderAgreements,
+  }[stepKey];
+  main.innerHTML = renderFn();
+  attachListeners();
+}
+
+function renderRoleSelection() {
+  return `
+    <div class="role-screen">
+      <h1>Join Goeazymart</h1>
+      <p class="subtitle">Choose how you want to use the platform. Each account type has its own tools and features.</p>
+      <div class="role-grid">
+        ${Object.entries(ROLES).map(([key, r]) => `
+          <div class="role-card" onclick="selectRole('${key}')">
+            <div class="role-icon ${r.color}"><i class="fas ${r.icon}"></i></div>
+            <h3>${r.title}</h3>
+            <p>${r.description}</p>
+            <ul class="role-features">
+              ${r.features.map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
+            </ul>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+function selectRole(role) {
+  state.role = role;
+  state.currentStep = 0;
+  renderSidebar();
+  renderMain();
+  window.scrollTo(0, 0);
+}
+
+// ============= STEP 1: BUYER ACCOUNT TYPE =============
+function renderBuyerAccountType() {
+  return `
+    <div class="form-step">
+      <h2>What type of buyer are you?</h2>
+      <p class="step-desc">This helps us tailor your experience.</p>
+
+      <div class="pill-group" style="grid-template-columns: 1fr 1fr;">
+        <label class="pill ${state.data.buyerType === 'individual' ? 'selected' : ''}" onclick="setBuyerType('individual')">
+          <input type="radio" name="buyerType" ${state.data.buyerType === 'individual' ? 'checked' : ''}>
+          <div>
+            <div style="font-weight: 600;">Individual</div>
+            <div style="font-size: 11px; color: var(--text-light); margin-top: 2px;">Personal purchases</div>
+          </div>
+        </label>
+        <label class="pill ${state.data.buyerType === 'business' ? 'selected' : ''}" onclick="setBuyerType('business')">
+          <input type="radio" name="buyerType" ${state.data.buyerType === 'business' ? 'checked' : ''}>
+          <div>
+            <div style="font-weight: 600;">Business</div>
+            <div style="font-size: 11px; color: var(--text-light); margin-top: 2px;">Company / Bulk sourcing</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="info-box" style="margin-top: 25px;">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Business accounts</strong> get access to bulk RFQs, negotiated pricing, and priority support.
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="backToRoleSelect()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="nextStep()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+function setBuyerType(type) {
+  state.data.buyerType = type;
+  renderMain();
+}
+
+// ============= STEP 1: SELLER BUSINESS TYPE =============
+function renderSellerBusinessType() {
+  const types = [
+    { key: 'pvt-ltd', label: 'Private Limited', icon: 'fa-building' },
+    { key: 'llp', label: 'LLP', icon: 'fa-users' },
+    { key: 'partnership', label: 'Partnership', icon: 'fa-handshake' },
+    { key: 'proprietorship', label: 'Proprietorship', icon: 'fa-user-tie' },
+    { key: 'public-ltd', label: 'Public Limited', icon: 'fa-landmark' },
+    { key: 'cooperative', label: 'Cooperative', icon: 'fa-people-group' },
+  ];
+  return `
+    <div class="form-step">
+      <h2>Business Structure</h2>
+      <p class="step-desc">What is the legal structure of your business?</p>
+
+      <div class="pill-group" style="grid-template-columns: 1fr 1fr 1fr;">
+        ${types.map(t => `
+          <label class="pill ${state.data.businessType === t.key ? 'selected' : ''}" onclick="setSellerBizType('${t.key}')" style="flex-direction:column; align-items:flex-start; padding: 15px;">
+            <i class="fas ${t.icon}" style="color: var(--primary-green); font-size: 18px; margin-bottom: 6px;"></i>
+            <span style="font-weight: 600; font-size: 13px;">${t.label}</span>
+          </label>
+        `).join('')}
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="backToRoleSelect()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="nextStep()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+function setSellerBizType(type) {
+  state.data.businessType = type;
+  renderMain();
+}
+
+// ============= STEP 1: RETAILER SHOP TYPE =============
+function renderRetailerShopType() {
+  const types = [
+    { key: 'grocery', label: 'Grocery / Kirana', icon: 'fa-shopping-basket' },
+    { key: 'supermarket', label: 'Supermarket', icon: 'fa-store' },
+    { key: 'pharmacy', label: 'Pharmacy', icon: 'fa-prescription-bottle-medical' },
+    { key: 'electronics', label: 'Electronics', icon: 'fa-tv' },
+    { key: 'clothing', label: 'Clothing / Apparel', icon: 'fa-shirt' },
+    { key: 'stationery', label: 'Stationery', icon: 'fa-pen' },
+    { key: 'general', label: 'General Store', icon: 'fa-store-alt' },
+    { key: 'other', label: 'Other', icon: 'fa-ellipsis-h' },
+  ];
+  return `
+    <div class="form-step">
+      <h2>Shop Type</h2>
+      <p class="step-desc">What type of retail shop do you operate?</p>
+
+      <div class="pill-group" style="grid-template-columns: repeat(4, 1fr);">
+        ${types.map(t => `
+          <label class="pill ${state.data.shopType === t.key ? 'selected' : ''}" onclick="setRetailerShopType('${t.key}')" style="flex-direction:column; align-items:flex-start; padding: 15px;">
+            <i class="fas ${t.icon}" style="color: var(--primary-green); font-size: 18px; margin-bottom: 6px;"></i>
+            <span style="font-weight: 600; font-size: 12px;">${t.label}</span>
+          </label>
+        `).join('')}
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="backToRoleSelect()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="nextStep()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+function setRetailerShopType(type) {
+  state.data.shopType = type;
+  renderMain();
+}
+
+// ============= STEP: PERSONAL INFO (All roles) =============
+function renderPersonal() {
+  const isSeller = state.role === 'seller';
+  const isRetailer = state.role === 'retailer';
+  const title = isSeller ? 'Owner Information' : isRetailer ? 'Shop Owner Information' : 'Personal Information';
+  const desc = isSeller ? 'Tell us about the primary business owner.'
+              : isRetailer ? 'Information about the shop owner.'
+              : 'This information is used to verify your account and contact you.';
+
+  return `
+    <div class="form-step">
+      <h2>${title}</h2>
+      <p class="step-desc">${desc}</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name <span class="req">*</span></label>
+          <input type="text" id="fldFirstName" placeholder="e.g. Priya" value="${state.data.firstName}" oninput="saveField('firstName', this.value)">
+        </div>
+        <div class="form-group">
+          <label>Last Name <span class="req">*</span></label>
+          <input type="text" id="fldLastName" placeholder="e.g. Sharma" value="${state.data.lastName}" oninput="saveField('lastName', this.value)">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email Address <span class="req">*</span></label>
+          <input type="email" id="fldEmail" placeholder="you@example.com" value="${state.data.email}" oninput="saveField('email', this.value)">
+        </div>
+        <div class="form-group">
+          <label>Phone Number <span class="req">*</span></label>
+          <input type="tel" id="fldPhone" placeholder="+91 98765 43210" value="${state.data.phone}" oninput="saveField('phone', this.value)">
+        </div>
+      </div>
+
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input type="date" id="fldDob" value="${state.data.dob}" oninput="saveField('dob', this.value)">
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="fldGender" onchange="saveField('gender', this.value)">
+            <option value="">Select</option>
+            <option value="male" ${state.data.gender === 'male' ? 'selected' : ''}>Male</option>
+            <option value="female" ${state.data.gender === 'female' ? 'selected' : ''}>Female</option>
+            <option value="other" ${state.data.gender === 'other' ? 'selected' : ''}>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Country <span class="req">*</span></label>
+          <select id="fldCountry" onchange="saveField('country', this.value)">
+            ${['India', 'USA', 'UAE', 'UK', 'Saudi Arabia', 'Singapore', 'China', 'Brazil'].map(c => `<option ${state.data.country === c ? 'selected' : ''}>${c}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>City <span class="req">*</span></label>
+          <input type="text" id="fldCity" placeholder="e.g. Mumbai" value="${state.data.city}" oninput="saveField('city', this.value)">
+        </div>
+        <div class="form-group">
+          <label>Preferred Language</label>
+          <select>
+            <option>English</option>
+            <option>Hindi</option>
+            <option>Arabic</option>
+            <option>Mandarin</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="prevStep()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="validatePersonalAndNext()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ============= STEP: BUYER BUSINESS DETAILS =============
+function renderBuyerBusiness() {
+  const isBusiness = state.data.buyerType === 'business';
+  return `
+    <div class="form-step">
+      <h2>${isBusiness ? 'Business Details' : 'Purchase Preferences'}</h2>
+      <p class="step-desc">${isBusiness ? 'Tell us about your company and what you typically purchase.' : 'Help us recommend the right products for you.'}</p>
+
+      ${isBusiness ? `
+        <div class="section-title"><i class="fas fa-building"></i> Company Information</div>
+        <div class="form-group">
+          <label>Company Name <span class="req">*</span></label>
+          <input type="text" placeholder="e.g. Global Foods LLC" value="${state.data.companyName}" oninput="saveField('companyName', this.value)">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Your Role / Designation</label>
+            <input type="text" placeholder="e.g. Procurement Manager" value="${state.data.jobTitle}" oninput="saveField('jobTitle', this.value)">
+          </div>
+          <div class="form-group">
+            <label>Industry</label>
+            <select onchange="saveField('industry', this.value)">
+              <option value="">Select</option>
+              ${['Food & Beverage', 'Retail', 'Wholesale', 'Manufacturing', 'Import / Export', 'Hotel / Restaurant', 'Construction', 'Other'].map(i => `<option ${state.data.industry === i ? 'selected' : ''}>${i}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>GST / Tax ID</label>
+          <input type="text" placeholder="Optional" oninput="saveField('gstNumber', this.value)">
+          <div class="hint">Adding a valid tax ID may qualify you for B2B pricing.</div>
+        </div>
+      ` : ''}
+
+      <div class="section-title"><i class="fas fa-tags"></i> What are you looking to buy?</div>
+      <div class="chip-grid">
+        ${CATEGORIES.buyer.map(c => `
+          <div class="chip ${state.data.buyerCategories.includes(c) ? 'selected' : ''}" onclick="toggleCategory('buyerCategories', '${c}')">${c}</div>
+        `).join('')}
+      </div>
+
+      <div class="section-title"><i class="fas fa-map-marker-alt"></i> Shipping Address</div>
+      <div class="form-group">
+        <label>Full Address <span class="req">*</span></label>
+        <textarea placeholder="Street, building, area..." oninput="saveField('buyerAddress', this.value)">${state.data.buyerAddress}</textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>ZIP / Postal Code</label>
+          <input type="text" placeholder="400001" value="${state.data.buyerZip}" oninput="saveField('buyerZip', this.value)">
+        </div>
+        <div class="form-group">
+          <label>Typical Annual Purchase</label>
+          <select onchange="saveField('annualPurchase', this.value)">
+            <option value="">Select</option>
+            <option>Under ₹1 Lakh</option>
+            <option>₹1 - 10 Lakhs</option>
+            <option>₹10 - 50 Lakhs</option>
+            <option>₹50 Lakhs - 1 Crore</option>
+            <option>Above ₹1 Crore</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="prevStep()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="validateBuyerBusinessAndNext()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ============= STEP: SELLER BUSINESS INFO =============
+function renderSellerBusiness() {
+  return `
+    <div class="form-step">
+      <h2>Business Information</h2>
+      <p class="step-desc">We need these details to verify your business and enable payouts.</p>
+
+      <div class="section-title"><i class="fas fa-building"></i> Legal Details</div>
+      <div class="form-group">
+        <label>Legal Business Name <span class="req">*</span></label>
+        <input type="text" placeholder="As per business registration" value="${state.data.legalName}" oninput="saveField('legalName', this.value)">
+      </div>
+      <div class="form-group">
+        <label>Trade / Brand Name</label>
+        <input type="text" placeholder="Name customers know you by" value="${state.data.tradeName}" oninput="saveField('tradeName', this.value)">
+        <div class="hint">Leave blank if same as legal name.</div>
+      </div>
+
+      <div class="section-title"><i class="fas fa-file-contract"></i> Registrations</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Business Registration No. <span class="req">*</span></label>
+          <input type="text" placeholder="CIN / Registration ID" value="${state.data.businessRegNumber}" oninput="saveField('businessRegNumber', this.value)">
+        </div>
+        <div class="form-group">
+          <label>GST Number <span class="req">*</span></label>
+          <input type="text" placeholder="22AAAAA0000A1Z5" value="${state.data.gstNumber}" oninput="saveField('gstNumber', this.value)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>PAN Number</label>
+          <input type="text" placeholder="ABCDE1234F" value="${state.data.panNumber}" oninput="saveField('panNumber', this.value)">
+        </div>
+        <div class="form-group">
+          <label>Years in Business</label>
+          <select onchange="saveField('yearsInBusiness', this.value)">
+            <option value="">Select</option>
+            <option>Less than 1 year</option>
+            <option>1 - 3 years</option>
+            <option>3 - 5 years</option>
+            <option>5 - 10 years</option>
+            <option>10+ years</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-title"><i class="fas fa-chart-line"></i> Business Size</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Employees</label>
+          <select onchange="saveField('employeesCount', this.value)">
+            <option value="">Select</option>
+            <option>1 - 10</option>
+            <option>11 - 50</option>
+            <option>51 - 200</option>
+            <option>201 - 500</option>
+            <option>500+</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Annual Revenue</label>
+          <select onchange="saveField('annualRevenue', this.value)">
+            <option value="">Select</option>
+            <option>Under ₹50 Lakhs</option>
+            <option>₹50L - ₹1 Crore</option>
+            <option>₹1 - 5 Crores</option>
+            <option>₹5 - 25 Crores</option>
+            <option>Above ₹25 Crores</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-title"><i class="fas fa-map-marker-alt"></i> Business Address</div>
+      <div class="form-group">
+        <label>Registered Address <span class="req">*</span></label>
+        <textarea placeholder="Full business address" oninput="saveField('businessAddress', this.value)">${state.data.businessAddress}</textarea>
+      </div>
+      <div class="form-group" style="max-width: 250px;">
+        <label>ZIP / Postal Code</label>
+        <input type="text" placeholder="141003" value="${state.data.businessZip}" oninput="saveField('businessZip', this.value)">
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="prevStep()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="validateSellerBusinessAndNext()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ============= STEP: RETAILER SHOP INFO =============
+function renderRetailerShop() {
+  return `
+    <div class="form-step">
+      <h2>Shop Information</h2>
+      <p class="step-desc">Tell us about your retail shop.</p>
+
+      <div class="section-title"><i class="fas fa-store"></i> Shop Details</div>
+      <div class="form-group">
+        <label>Shop Name <span class="req">*</span></label>
+        <input type="text" placeholder="e.g. Sharma General Store" value="${state.data.shopName}" oninput="saveField('shopName', this.value)">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Shop Registration No.</label>
+          <input type="text" placeholder="Shop Act / License No." value="${state.data.shopRegNumber}" oninput="saveField('shopRegNumber', this.value)">
+        </div>
+        <div class="form-group">
+          <label>Shop Size</label>
+          <select onchange="saveField('shopSize', this.value)">
+            <option value="">Select</option>
+            <option>Under 500 sq ft</option>
+            <option>500 - 1000 sq ft</option>
+            <option>1000 - 2000 sq ft</option>
+            <option>2000+ sq ft</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-title"><i class="fas fa-map-marker-alt"></i> Shop Address</div>
+      <div class="form-group">
+        <label>Shop Address <span class="req">*</span></label>
+        <textarea placeholder="Shop number, street, landmark..." oninput="saveField('shopAddress', this.value)">${state.data.shopAddress}</textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>ZIP / Postal Code</label>
+          <input type="text" placeholder="400001" value="${state.data.shopZip}" oninput="saveField('shopZip', this.value)">
+        </div>
+        <div class="form-group">
+          <label>Monthly Sales (approx.)</label>
+          <select onchange="saveField('monthlySales', this.value)">
+            <option value="">Select</option>
+            <option>Under ₹50,000</option>
+            <option>₹50K - ₹2 Lakhs</option>
+            <option>₹2 - 5 Lakhs</option>
+            <option>₹5 - 10 Lakhs</option>
+            <option>Above ₹10 Lakhs</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="prevStep()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="validateRetailerShopAndNext()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ============= STEP: CATEGORIES =============
+function renderCategories() {
+  const cats = CATEGORIES[state.role === 'seller' ? 'seller' : state.role === 'retailer' ? 'retailer' : 'buyer'];
+  const dataKey = state.role === 'seller' ? 'sellerCategories' : state.role === 'retailer' ? 'retailerCategories' : 'buyerCategories';
+  const title = state.role === 'buyer' ? 'What do you purchase?' : 'What do you sell?';
+
+  return `
+    <div class="form-step">
+      <h2>${title}</h2>
+      <p class="step-desc">Select all categories that apply. You can change these later.</p>
+
+      <div class="chip-grid">
+        ${cats.map(c => `
+          <div class="chip ${state.data[dataKey].includes(c) ? 'selected' : ''}" onclick="toggleCategory('${dataKey}', '${c}')">${c}</div>
+        `).join('')}
+      </div>
+
+      ${state.data[dataKey].length > 0 ? `
+        <div class="info-box" style="margin-top: 20px;">
+          <i class="fas fa-check-circle"></i>
+          <div>You selected <strong>${state.data[dataKey].length}</strong> categor${state.data[dataKey].length === 1 ? 'y' : 'ies'}.</div>
+        </div>
+      ` : ''}
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="prevStep()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="validateCategoriesAndNext()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ============= STEP: BANK & DOCS =============
+function renderBanking() {
+  const isRetailer = state.role === 'retailer';
+  return `
+    <div class="form-step">
+      <h2>${isRetailer ? 'Payment Information' : 'Bank Account'}</h2>
+      <p class="step-desc">${isRetailer ? 'Where should we send your earnings?' : 'Where should we send your payouts? This is verified before your first payment.'}</p>
+
+      <div class="section-title"><i class="fas fa-university"></i> Bank Details</div>
+      <div class="form-group">
+        <label>Bank Name <span class="req">*</span></label>
+        <input type="text" placeholder="e.g. HDFC Bank" value="${state.data.bankName}" oninput="saveField('bankName', this.value)">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Account Holder Name <span class="req">*</span></label>
+          <input type="text" placeholder="As per bank records" value="${state.data.accountHolder}" oninput="saveField('accountHolder', this.value)">
+        </div>
+        <div class="form-group">
+          <label>Account Number <span class="req">*</span></label>
+          <input type="text" placeholder="Your account number" value="${state.data.accountNumber}" oninput="saveField('accountNumber', this.value)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>IFSC Code <span class="req">*</span></label>
+          <input type="text" placeholder="e.g. HDFC0000123" value="${state.data.ifsc}" oninput="saveField('ifsc', this.value)">
+        </div>
+        <div class="form-group">
+          <label>UPI ID (optional)</label>
+          <input type="text" placeholder="yourname@okhdfc">
+        </div>
+      </div>
+
+      <div class="section-title"><i class="fas fa-file-upload"></i> Verification Documents</div>
+      <div class="form-row">
+        ${['gst', 'pan'].map(doc => `
+          <div class="upload-box ${state.data.docs[doc] ? 'uploaded' : ''}" onclick="toggleDoc('${doc}')">
+            <i class="fas ${state.data.docs[doc] ? 'fa-check-circle' : 'fa-cloud-upload-alt'} upload-icon"></i>
+            <div class="upload-title">${doc === 'gst' ? 'GST Certificate' : 'PAN Card'}</div>
+            <div class="upload-sub">${state.data.docs[doc] ? 'Uploaded ✓ Click to remove' : 'Click to upload (PDF, JPG)'}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="form-row" style="margin-top: 15px;">
+        <div class="upload-box ${state.data.docs.businessReg ? 'uploaded' : ''}" onclick="toggleDoc('businessReg')">
+          <i class="fas ${state.data.docs.businessReg ? 'fa-check-circle' : 'fa-cloud-upload-alt'} upload-icon"></i>
+          <div class="upload-title">Business Registration</div>
+          <div class="upload-sub">${state.data.docs.businessReg ? 'Uploaded ✓ Click to remove' : 'Certificate of Incorporation'}</div>
+        </div>
+        <div class="upload-box ${state.data.docs.bankProof ? 'uploaded' : ''}" onclick="toggleDoc('bankProof')">
+          <i class="fas ${state.data.docs.bankProof ? 'fa-check-circle' : 'fa-cloud-upload-alt'} upload-icon"></i>
+          <div class="upload-title">Bank Statement / Cancelled Cheque</div>
+          <div class="upload-sub">${state.data.docs.bankProof ? 'Uploaded ✓ Click to remove' : 'Last 3 months or cheque'}</div>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-top: 20px;">
+        <i class="fas fa-lock"></i>
+        <div>Your documents are encrypted and only visible to our verification team.</div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="prevStep()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="validateBankingAndNext()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ============= STEP: SECURITY =============
+function renderSecurity() {
+  return `
+    <div class="form-step">
+      <h2>Secure Your Account</h2>
+      <p class="step-desc">Choose a strong password that you don't use elsewhere.</p>
+
+      <div class="form-group">
+        <label>Password <span class="req">*</span></label>
+        <div style="position: relative;">
+          <input type="password" id="fldPassword" placeholder="Minimum 8 characters" value="${state.data.password}" oninput="updatePasswordStrength(this.value)" style="padding-right: 45px;">
+          <button type="button" onclick="togglePwdVisibility('fldPassword', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-light); cursor:pointer;">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="pwd-strength" id="pwdStrength">
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="hint" id="pwdHint">Use 8+ characters with a mix of letters, numbers & symbols.</div>
+      </div>
+
+      <div class="form-group">
+        <label>Confirm Password <span class="req">*</span></label>
+        <input type="password" id="fldConfirmPassword" placeholder="Re-enter your password" style="padding-right: 45px;">
+      </div>
+
+      <div class="section-title"><i class="fas fa-shield-alt"></i> Additional Security</div>
+      <label class="check-row">
+        <input type="checkbox" checked>
+        <span>Send me security alerts via email when there's suspicious activity</span>
+      </label>
+      <label class="check-row">
+        <input type="checkbox" checked>
+        <span>Require email verification for logins from new devices</span>
+      </label>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="prevStep()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="validateSecurityAndNext()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ============= STEP: AGREEMENTS =============
+function renderAgreements() {
+  return `
+    <div class="form-step">
+      <h2>Almost Done!</h2>
+      <p class="step-desc">Please review and accept the terms to complete your registration.</p>
+
+      <div class="info-box" style="background: #f0fdf4; border-color: #bbf7d0; color: #166534;">
+        <i class="fas fa-check-circle"></i>
+        <div>By creating an account as a <strong>${ROLES[state.role].title}</strong>, you agree to the following:</div>
+      </div>
+
+      <div style="background: #f8fafc; border-radius: 10px; padding: 20px; margin-bottom: 20px; font-size: 13px; line-height: 1.7; color: var(--text-light); max-height: 200px; overflow-y: auto;">
+        <strong style="color: var(--text-dark);">Terms of Service Summary</strong>
+        <ul style="padding-left: 20px; margin-top: 10px;">
+          <li>You will provide accurate and truthful information</li>
+          <li>You are responsible for complying with all applicable laws in your jurisdiction</li>
+          <li>Goeazymart acts as an intermediary platform and is not party to transactions between buyers and sellers</li>
+          <li>Platform commission applies to completed transactions</li>
+          <li>You will maintain confidentiality of your account credentials</li>
+          <li>Violation of terms may result in account suspension</li>
+        </ul>
+      </div>
+
+      <label class="check-row">
+        <input type="checkbox" id="agreeTerms" ${state.data.agreeTerms ? 'checked' : ''} onchange="saveField('agreeTerms', this.checked)">
+        <span>I have read and agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. <span class="req">*</span></span>
+      </label>
+      <label class="check-row">
+        <input type="checkbox" id="confirmTruthful" ${state.data.confirmTruthful ? 'checked' : ''} onchange="saveField('confirmTruthful', this.checked)">
+        <span>I confirm that all information provided is accurate and complete. <span class="req">*</span></span>
+      </label>
+      <label class="check-row">
+        <input type="checkbox" id="agreeMarketing" ${state.data.agreeMarketing ? 'checked' : ''} onchange="saveField('agreeMarketing', this.checked)">
+        <span>Send me product updates, tips, and exclusive offers (optional)</span>
+      </label>
+
+      <div class="form-group" style="margin-top: 20px;">
+        <label>Referral Code (optional)</label>
+        <input type="text" placeholder="Enter referral code" value="${state.data.referralCode}" oninput="saveField('referralCode', this.value)">
+        <div class="hint">If someone referred you, enter their code so they get rewarded.</div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-outline" onclick="prevStep()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <button class="btn btn-primary" onclick="submitRegistration()" style="padding: 12px 30px;">
+          <i class="fas fa-check-circle"></i> Create My Account
+        </button>
+      </div>
+    </div>`;
+}
+
+// ============= SUCCESS SCREEN =============
+function renderSuccess() {
+  return `
+    <div class="success-screen">
+      <div class="success-icon"><i class="fas fa-check"></i></div>
+      <h2>Welcome to Goeazymart! 🎉</h2>
+      <p>Your <strong>${ROLES[state.role].title}</strong> account has been created successfully. We've sent a verification email to <strong>${state.data.email || 'your email'}</strong>.</p>
+
+      <div style="background: #f8fafc; border-radius: 12px; padding: 25px; max-width: 500px; margin: 0 auto 30px; text-align: left;">
+        <div style="font-weight: 600; font-size: 13.5px; color: var(--dark-blue); margin-bottom: 15px;">What happens next?</div>
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: var(--text-light);">
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <i class="fas fa-envelope" style="color: var(--primary-green); margin-top: 2px;"></i>
+            <span>Verify your email address by clicking the link we sent you</span>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <i class="fas fa-user-check" style="color: var(--primary-green); margin-top: 2px;"></i>
+            <span>Our team will verify your documents within 24-48 hours</span>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <i class="fas fa-rocket" style="color: var(--primary-green); margin-top: 2px;"></i>
+            <span>Once approved, you can ${state.role === 'buyer' ? 'start shopping and submitting RFQs' : 'start listing your products and receiving orders'}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <a href="login.html" class="btn btn-primary" style="padding: 14px 30px;">
+          <i class="fas fa-sign-in-alt"></i> Sign In to Your Dashboard
+        </a>
+        <a href="index.html" class="btn btn-outline" style="padding: 14px 30px;">
+          <i class="fas fa-home"></i> Go Home
+        </a>
+      </div>
+    </div>`;
+}
+
+// ============= HELPERS =============
+function saveField(key, value) {
+  state.data[key] = value;
+}
+function toggleCategory(key, value) {
+  const arr = state.data[key];
+  const idx = arr.indexOf(value);
+  if (idx === -1) arr.push(value);
+  else arr.splice(idx, 1);
+  renderMain();
+}
+function toggleDoc(key) {
+  state.data.docs[key] = !state.data.docs[key];
+  renderMain();
+}
+function backToRoleSelect() {
+  state.role = null;
+  state.currentStep = 0;
+  renderSidebar();
+  renderMain();
+}
+function nextStep() {
+  state.currentStep++;
+  renderSidebar();
+  renderMain();
+  window.scrollTo(0, 0);
+}
+function prevStep() {
+  if (state.currentStep === 0) return backToRoleSelect();
+  state.currentStep--;
+  renderSidebar();
+  renderMain();
+  window.scrollTo(0, 0);
+}
+function togglePwdVisibility(id, btn) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.querySelector('i').className = el.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+function updatePasswordStrength(pwd) {
+  state.data.password = pwd;
+  const el = document.getElementById('pwdStrength');
+  el.className = 'pwd-strength';
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  const levels = ['', 'weak', 'fair', 'good', 'strong'];
+  if (pwd.length > 0) el.classList.add(levels[score]);
+  const hint = document.getElementById('pwdHint');
+  hint.textContent = score >= 4 ? '✅ Strong password!' :
+                     score >= 3 ? '👍 Good — add a symbol for stronger security' :
+                     score >= 2 ? '⚠️ Fair — add numbers, uppercase letters, or symbols' :
+                     '❌ Weak — use 8+ characters with a mix of letters, numbers & symbols';
+}
+
+// ============= VALIDATORS =============
+function showError(msg) {
+  alert('❌ ' + msg);
+}
+function validatePersonalAndNext() {
+  const d = state.data;
+  if (!d.firstName.trim()) return showError('Please enter your first name.');
+  if (!d.lastName.trim()) return showError('Please enter your last name.');
+  if (!d.email.trim() || !/^\S+@\S+\.\S+$/.test(d.email)) return showError('Please enter a valid email address.');
+  if (isEmailRegistered(d.email)) return showError('This email is already registered. Try logging in instead.');
+  if (!d.phone.trim() || d.phone.length < 8) return showError('Please enter a valid phone number.');
+  if (!d.city.trim()) return showError('Please enter your city.');
+  nextStep();
+}
+function validateBuyerBusinessAndNext() {
+  if (state.data.buyerType === 'business' && !state.data.companyName.trim()) {
+    return showError('Please enter your company name.');
+  }
+  if (!state.data.buyerAddress.trim()) return showError('Please enter your shipping address.');
+  if (state.data.buyerCategories.length === 0) return showError('Please select at least one category.');
+  nextStep();
+}
+function validateSellerBusinessAndNext() {
+  const d = state.data;
+  if (!d.legalName.trim()) return showError('Please enter your legal business name.');
+  if (!d.businessRegNumber.trim()) return showError('Please enter your business registration number.');
+  if (!d.gstNumber.trim()) return showError('Please enter your GST number.');
+  if (!d.businessAddress.trim()) return showError('Please enter your business address.');
+  nextStep();
+}
+function validateRetailerShopAndNext() {
+  const d = state.data;
+  if (!d.shopName.trim()) return showError('Please enter your shop name.');
+  if (!d.shopAddress.trim()) return showError('Please enter your shop address.');
+  nextStep();
+}
+function validateCategoriesAndNext() {
+  const key = state.role === 'seller' ? 'sellerCategories' : state.role === 'retailer' ? 'retailerCategories' : 'buyerCategories';
+  if (state.data[key].length === 0) return showError('Please select at least one category.');
+  nextStep();
+}
+function validateBankingAndNext() {
+  const d = state.data;
+  if (!d.bankName.trim()) return showError('Please enter your bank name.');
+  if (!d.accountHolder.trim()) return showError('Please enter the account holder name.');
+  if (!d.accountNumber.trim() || d.accountNumber.length < 6) return showError('Please enter a valid account number.');
+  if (!d.ifsc.trim() || d.ifsc.length < 8) return showError('Please enter a valid IFSC code.');
+  if (!d.docs.gst || !d.docs.pan) return showError('Please upload GST and PAN documents.');
+  nextStep();
+}
+function validateSecurityAndNext() {
+  const pwd = document.getElementById('fldPassword').value;
+  const confirm = document.getElementById('fldConfirmPassword').value;
+  if (pwd.length < 8) return showError('Password must be at least 8 characters.');
+  if (pwd !== confirm) return showError('Passwords do not match.');
+  state.data.password = pwd;
+  nextStep();
+}
+function submitRegistration() {
+  const d = state.data;
+  if (!d.agreeTerms) return showError('Please accept the Terms of Service.');
+  if (!d.confirmTruthful) return showError('Please confirm that your information is truthful.');
+
+  createAccount({
+    ...d,
+    role: state.role,
+  });
+
+  state.currentStep = STEPS[state.role].length;
+  renderSidebar();
+  renderMain();
+  window.scrollTo(0, 0);
+}
+
+// ============= ATTACH LISTENERS =============
+function attachListeners() {
+  // Auto-capitalize slug fields, etc. - placeholder for future
+}
+
+// ============= INIT =============
+renderSidebar();
+renderMain();
+</script>
+</body>
+</html>

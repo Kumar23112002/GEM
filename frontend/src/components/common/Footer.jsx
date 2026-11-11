@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCMS } from '../../context/CMSContext';
 import { colors } from '../../theme/colors';
+import BrandLogo from './BrandLogo';
 
 export default function Footer() {
   const { cmsContent } = useCMS();
@@ -11,20 +12,10 @@ export default function Footer() {
         <div className="row g-4 mb-4">
           {/* Brand info */}
           <div className="col-12 col-md-4 col-lg-3">
-            <div className="d-flex align-items-center gap-2 mb-3">
-              <div
-                className="d-flex align-items-center justify-content-center rounded-circle"
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  backgroundColor: 'rgba(31, 138, 76, 0.2)',
-                  color: colors.primaryLight,
-                  fontSize: '18px',
-                }}
-              >
-                <i className="fas fa-shopping-cart"></i>
-              </div>
-              <span className="fw-bold fs-5 text-white">GOEAZY<span style={{ color: colors.primaryLight }}>MART</span></span>
+            <div className="mb-3">
+              <Link to="/" className="text-decoration-none d-inline-block" title="Goeazymart - Anywhere & Anytime">
+                <BrandLogo surface="dark" height="36px" />
+              </Link>
             </div>
             <p className="small mb-3" style={{ lineHeight: '1.6' }}>
               {cmsContent?.footer?.aboutText || 'A state-of-the-art global marketplace connecting verified buyers and suppliers for retail goods, agricultural soft commodities, and industrial raw materials.'}

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
+import NegotiationWorkspace from '../components/dashboard/NegotiationWorkspace';
 import StatCard from '../components/dashboard/StatCard';
 import Modal from '../components/common/Modal';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +12,8 @@ import { colors } from '../theme/colors';
 export default function BuyerDashboard() {
   const { currentUser } = useAuth();
   const { addToCart, showToast } = useCart();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [orders, setOrders] = useState([]);
@@ -22,8 +26,14 @@ export default function BuyerDashboard() {
 
   // Active negotiation selection
   const [selectedNegId, setSelectedNegId] = useState('NEG-301');
-  const [negInput, setNegInput] = useState('');
-  const [negOfferInput, setNegOfferInput] = useState('');
+  const [newNegModalOpen, setNewNegModalOpen] = useState(false);
+  const [newNegForm, setNewNegForm] = useState({
+    seller: 'Punjab Agro Mills',
+    product: 'Sharbati Wheat (Export Grade)',
+    qty: '500 Metric Tons',
+    targetPrice: '₹1,620/MT',
+    message: 'We are looking to secure a wholesale contract. Please consider our target offer.',
+  });
 
   // Modals
   const [trackingModalOrder, setTrackingModalOrder] = useState(null);
@@ -47,6 +57,17 @@ export default function BuyerDashboard() {
   const [deleteConfirmPaymentId, setDeleteConfirmPaymentId] = useState(null);
 
   useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+    const negIdParam = searchParams.get('negId');
+    if (negIdParam) {
+      setSelectedNegId(negIdParam);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     async function loadData() {
       const [ord, r, neg, w, addr, p] = await Promise.all([
         api.getOrders(),
@@ -56,12 +77,19 @@ export default function BuyerDashboard() {
         api.getAddresses(),
         api.getPayments(),
       ]);
-      setOrders(ord);
-      setRfqs(r);
-      setNegotiations(neg);
-      setWishlist(w);
-      setAddresses(addr);
-      setPayments(p);
+      setOrders(ord || []);
+      setRfqs(r || []);
+      const negList = neg || [];
+      setNegotiations(negList);
+      if (negList.length > 0) {
+        setSelectedNegId((prev) => {
+          const exists = negList.some((n) => n.id === prev);
+          return exists ? prev : negList[0].id;
+        });
+      }
+      setWishlist(w || []);
+      setAddresses(addr || []);
+      setPayments(p || []);
     }
     loadData();
   }, []);
@@ -70,7 +98,7 @@ export default function BuyerDashboard() {
     { id: 'overview', label: 'Overview', icon: 'fas fa-th-large' },
     { id: 'orders', label: 'My Orders', icon: 'fas fa-box', badge: orders.filter((o) => o.status === 'processing' || o.status === 'shipped').length },
     { id: 'rfqs', label: 'RFQs & Quotes', icon: 'fas fa-file-invoice', badge: rfqs.filter((r) => r.status === 'pending').length },
-    { id: 'negotiations', label: 'Negotiations', icon: 'fas fa-comments-dollar', badge: 1 },
+    { id: 'negotiations', label: 'Negotiations', icon: 'fas fa-comments-dollar', badge: negotiations.length },
     { id: 'wishlist', label: 'Wishlist', icon: 'fas fa-heart', badge: wishlist.length },
     { id: 'addresses', label: 'Addresses', icon: 'fas fa-map-marker-alt' },
     { id: 'payments', label: 'Payment Methods', icon: 'fas fa-credit-card' },
@@ -87,24 +115,75 @@ export default function BuyerDashboard() {
     return o.status === orderFilter;
   });
 
-  const activeNeg = negotiations.find((n) => n.id === selectedNegId) || negotiations[0];
-
-  const handleSendNegMessage = async (e) => {
-    e.preventDefault();
-    if (!negInput.trim()) return;
-
-    await api.sendNegotiationMessage(
-      activeNeg.id,
-      negInput,
-      negOfferInput ? 'counter' : 'message',
-      negOfferInput ? `₹${negOfferInput}` : null
+  const handleProceedNegOrder = (neg) => {
+    const rawNum = String(neg?.currentOffer || '0').replace(/[^0-9.]/g, '');
+    const parsedPrice = Number(rawNum) || 1000;
+    addToCart(
+      {
+        id: neg.id,
+        title: `${neg.product} (${neg.qty})`,
+        price: parsedPrice,
+        seller: neg.seller,
+        img: neg.sellerAvatar || 'https://randomuser.me/api/portraits/men/32.jpg',
+        categoryName: 'Negotiated Contract',
+      },
+      1
     );
+    navigate('/checkout');
+  };
+
+  const handleStartNegotiationFromQuote = async (rfq, sellerName, companyName, quoteOffer) => {
+    setViewQuotesRfq(null);
+    const newNeg = await api.createNegotiation({
+      seller: sellerName || 'Punjab Agro Mills',
+      sellerAvatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+      company: companyName || `${sellerName} Pvt Ltd`,
+      buyer: currentUser?.name || 'Priya Sharma',
+      buyerCompany: currentUser?.company || 'Sharma Trading & Retail',
+      country: 'India',
+      product: rfq.product,
+      qty: rfq.qty,
+      rfqId: rfq.id,
+      currentOffer: quoteOffer || '₹1,660/MT',
+      yourOffer: rfq.yourTarget || '₹1,620/MT',
+      status: 'active',
+      online: true,
+      lastMessage: `Counter proposal on ${rfq.product} (${rfq.qty})`,
+      lastTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    });
 
     const updated = await api.getNegotiations();
     setNegotiations(updated);
-    setNegInput('');
-    setNegOfferInput('');
-    showToast('Counter offer sent to supplier!');
+    setSelectedNegId(newNeg.id);
+    setActiveTab('negotiations');
+    showToast(`Negotiation opened with ${sellerName}!`);
+  };
+
+  const handleCreateNewNegotiation = async (e) => {
+    e.preventDefault();
+    const newNeg = await api.createNegotiation({
+      seller: newNegForm.seller,
+      sellerAvatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+      company: `${newNegForm.seller} Pvt Ltd`,
+      buyer: currentUser?.name || 'Priya Sharma',
+      buyerCompany: currentUser?.company || 'Sharma Trading & Retail',
+      country: 'India',
+      product: newNegForm.product,
+      qty: newNegForm.qty,
+      currentOffer: newNegForm.targetPrice,
+      yourOffer: newNegForm.targetPrice,
+      status: 'active',
+      online: true,
+      lastMessage: newNegForm.message,
+      lastTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    });
+
+    const updated = await api.getNegotiations();
+    setNegotiations(updated);
+    setSelectedNegId(newNeg.id);
+    setNewNegModalOpen(false);
+    setActiveTab('negotiations');
+    showToast(`New trade negotiation initiated with ${newNegForm.seller}!`);
   };
 
   const handleSaveAddress = async (e) => {
@@ -501,138 +580,16 @@ export default function BuyerDashboard() {
 
       {/* NEGOTIATIONS CHAT TAB */}
       {activeTab === 'negotiations' && (
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden chat-window-container" style={{ backgroundColor: colors.white }}>
-          <div className="row g-0 h-100">
-            {/* Conversation list sidebar */}
-            <div className="col-12 col-md-4 border-end chat-sidebar-mobile h-100 d-flex flex-column">
-              <div className="p-3 border-bottom bg-light">
-                <h6 className="fw-bold mb-0 text-dark">Supplier Negotiations</h6>
-                <div className="small text-muted">Direct trade chat with mill representatives</div>
-              </div>
-              <div className="overflow-auto flex-grow-1">
-                {negotiations.map((neg) => (
-                  <div
-                    key={neg.id}
-                    className="p-3 border-bottom cursor-pointer transition-all"
-                    style={{
-                      backgroundColor: selectedNegId === neg.id ? colors.primarySubtle : colors.white,
-                      borderLeft: selectedNegId === neg.id ? `4px solid ${colors.primary}` : 'none',
-                    }}
-                    onClick={() => setSelectedNegId(neg.id)}
-                  >
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                      <strong className="text-dark small">{neg.seller}</strong>
-                      <span className="small text-muted">{neg.lastTime}</span>
-                    </div>
-                    <div className="small text-muted text-truncate mb-1">{neg.product} ({neg.qty})</div>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="badge bg-light text-dark border small">Offer: {neg.currentOffer}</span>
-                      {neg.unread > 0 && <span className="badge bg-danger rounded-pill">{neg.unread}</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Chat Thread */}
-            <div className="col-12 col-md-8 chat-thread-mobile h-100 d-flex flex-column">
-              {/* Header */}
-              <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
-                <div className="d-flex align-items-center gap-2">
-                  <img
-                    src={activeNeg.sellerAvatar}
-                    alt=""
-                    className="rounded-circle"
-                    style={{ width: '40px', height: '40px', objectFit: 'cover' }}
-                  />
-                  <div>
-                    <h6 className="fw-bold mb-0 text-dark">{activeNeg.seller}</h6>
-                    <div className="small text-muted">{activeNeg.product} • {activeNeg.qty}</div>
-                  </div>
-                </div>
-                <div className="text-end">
-                  <div className="small text-muted">Current Offer</div>
-                  <strong className="text-success fs-6">{activeNeg.currentOffer}</strong>
-                </div>
-              </div>
-
-              {/* Message Feed */}
-              <div className="p-4 overflow-auto flex-grow-1 d-flex flex-column gap-3" style={{ backgroundColor: '#f8fafc' }}>
-                {activeNeg.thread.map((msg, idx) => {
-                  const isMe = msg.from === 'me';
-                  return (
-                    <div
-                      key={idx}
-                      className={`d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'}`}
-                    >
-                      <div
-                        className="p-3 rounded-4 shadow-sm"
-                        style={{
-                          maxWidth: '75%',
-                          backgroundColor: isMe ? colors.primary : colors.white,
-                          color: isMe ? colors.white : colors.textDark,
-                          border: isMe ? 'none' : `1px solid ${colors.border}`,
-                        }}
-                      >
-                        {msg.type === 'counter' || msg.type === 'offer' ? (
-                          <div className="mb-1 fw-bold small">
-                            <span className={`badge ${isMe ? 'bg-light text-success' : 'bg-success text-white'} me-1`}>
-                              OFFER: {msg.amount}
-                            </span>
-                          </div>
-                        ) : null}
-                        <div>{msg.text}</div>
-                        <div
-                          className="text-end mt-1 small"
-                          style={{ fontSize: '10px', color: isMe ? 'rgba(255,255,255,0.7)' : colors.textMuted }}
-                        >
-                          {msg.time}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Chat Form */}
-              <form onSubmit={handleSendNegMessage} className="p-3 border-top bg-white">
-                <div className="row g-2 mb-2">
-                  <div className="col-12 col-sm-4">
-                    <div className="input-group input-group-sm">
-                      <span className="input-group-text">₹ Offer</span>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="e.g. 1,620/MT"
-                        value={negOfferInput}
-                        onChange={(e) => setNegOfferInput(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-12 col-sm-8">
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder="Type your counter offer terms or message..."
-                      value={negInput}
-                      onChange={(e) => setNegInput(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="d-flex justify-content-end">
-                  <button
-                    type="submit"
-                    className="btn btn-sm text-white px-4 fw-semibold"
-                    style={{ backgroundColor: colors.primary }}
-                  >
-                    <i className="fas fa-paper-plane me-1"></i> Send Offer
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+        <NegotiationWorkspace
+          role="buyer"
+          negotiations={negotiations}
+          selectedNegId={selectedNegId}
+          onSelectNeg={setSelectedNegId}
+          onNegotiationsUpdated={setNegotiations}
+          onStartNew={() => setNewNegModalOpen(true)}
+          onProceedOrder={handleProceedNegOrder}
+          showToast={showToast}
+        />
       )}
 
       {/* WISHLIST TAB */}
@@ -1016,13 +973,23 @@ export default function BuyerDashboard() {
               <span className="badge bg-success">Best Offer: ₹1,660/MT</span>
             </div>
             <div className="small text-muted mb-2">Delivery: 30 days • FSSAI Certified • Lab Certificate Included</div>
-            <button
-              type="button"
-              className="btn btn-sm btn-success w-100"
-              onClick={() => handleAcceptQuote(viewQuotesRfq?.id)}
-            >
-              Accept Quote & Start Contract
-            </button>
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-success flex-grow-1"
+                onClick={() => handleAcceptQuote(viewQuotesRfq?.id)}
+              >
+                Accept Quote & Contract
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-success flex-grow-1 d-flex align-items-center justify-content-center gap-1"
+                onClick={() => handleStartNegotiationFromQuote(viewQuotesRfq, 'Punjab Agro Mills', 'Punjab Agro Mills Pvt Ltd', '₹1,660/MT')}
+              >
+                <i className="fas fa-comments-dollar"></i>
+                <span>Negotiate Counter</span>
+              </button>
+            </div>
           </div>
 
           <div className="p-3 border rounded-3 bg-light">
@@ -1031,15 +998,112 @@ export default function BuyerDashboard() {
               <span className="badge bg-secondary">Quote: ₹1,695/MT</span>
             </div>
             <div className="small text-muted mb-2">Delivery: 25 days • Sample Available</div>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary w-100"
-              onClick={() => handleAcceptQuote(viewQuotesRfq?.id)}
-            >
-              Accept Quote
-            </button>
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary flex-grow-1"
+                onClick={() => handleAcceptQuote(viewQuotesRfq?.id)}
+              >
+                Accept Quote
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-success flex-grow-1 d-flex align-items-center justify-content-center gap-1"
+                onClick={() => handleStartNegotiationFromQuote(viewQuotesRfq, 'Haryana Rice Traders', 'Haryana Rice Traders Ltd', '₹1,695/MT')}
+              >
+                <i className="fas fa-comments-dollar"></i>
+                <span>Negotiate Counter</span>
+              </button>
+            </div>
           </div>
         </div>
+      </Modal>
+
+      {/* Start Direct Trade Negotiation Modal */}
+      <Modal
+        isOpen={newNegModalOpen}
+        onClose={() => setNewNegModalOpen(false)}
+        title="Start Direct Trade Negotiation"
+        maxWidth="500px"
+      >
+        <form onSubmit={handleCreateNewNegotiation}>
+          <div className="mb-3">
+            <label className="form-label small fw-semibold">Select Verified Mill / Producer *</label>
+            <select
+              className="form-select"
+              value={newNegForm.seller}
+              onChange={(e) => setNewNegForm({ ...newNegForm, seller: e.target.value })}
+              required
+            >
+              <option value="Punjab Agro Mills">Punjab Agro Mills Pvt Ltd (Ludhiana)</option>
+              <option value="Gujarat Cotton Mills">Gujarat Cotton & Fibers Ltd (Rajkot)</option>
+              <option value="Haryana Rice Traders">Haryana Rice Traders Ltd (Karnal)</option>
+              <option value="Deccan Spices Co">Deccan Spices & Oil Mills (Hyderabad)</option>
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="form-label small fw-semibold">Commodity / Product *</label>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="e.g. Sharbati Wheat, Basmati Rice 1121..."
+              value={newNegForm.product}
+              onChange={(e) => setNewNegForm({ ...newNegForm, product: e.target.value })}
+              required
+            />
+          </div>
+          <div className="row g-2 mb-3">
+            <div className="col-6">
+              <label className="form-label small fw-semibold">Volume / Quantity *</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="e.g. 500 Metric Tons"
+                value={newNegForm.qty}
+                onChange={(e) => setNewNegForm({ ...newNegForm, qty: e.target.value })}
+                required
+              />
+            </div>
+            <div className="col-6">
+              <label className="form-label small fw-semibold">Your Target Price *</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="e.g. ₹1,620/MT"
+                value={newNegForm.targetPrice}
+                onChange={(e) => setNewNegForm({ ...newNegForm, targetPrice: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+          <div className="mb-4">
+            <label className="form-label small fw-semibold">Terms / Message *</label>
+            <textarea
+              className="form-control"
+              rows="3"
+              placeholder="Mention your preferred payment instrument (LC / Escrow / Bank Guarantee) and delivery port..."
+              value={newNegForm.message}
+              onChange={(e) => setNewNegForm({ ...newNegForm, message: e.target.value })}
+              required
+            ></textarea>
+          </div>
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={() => setNewNegModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn text-white fw-semibold"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <i className="fas fa-paper-plane me-1"></i> Initiate Negotiation
+            </button>
+          </div>
+        </form>
       </Modal>
 
       {/* Add / Edit Payment Method Modal */}

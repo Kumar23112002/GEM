@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { CMSProvider } from './context/CMSContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import Toast from './components/common/Toast';
 
 import HomePage from './pages/HomePage';
@@ -25,11 +26,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <CMSProvider>
-              <Toast />
-              <Routes>
+        <CurrencyProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <CMSProvider>
+                <Toast />
+                <Routes>
                 {/* Public Storefront */}
                 <Route path="/" element={<HomePage />} />
                 <Route path="/search" element={<SearchPage />} />
@@ -56,7 +58,8 @@ export default function App() {
             </CMSProvider>
           </WishlistProvider>
         </CartProvider>
-      </AuthProvider>
-    </BrowserRouter>
+      </CurrencyProvider>
+    </AuthProvider>
+  </BrowserRouter>
   );
 }

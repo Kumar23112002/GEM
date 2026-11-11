@@ -128,7 +128,12 @@ a {
 
 /* Chat container responsiveness */
 .chat-window-container {
-  height: 680px;
+  height: clamp(440px, calc(100vh - 185px), 620px);
+}
+
+.chat-sidebar-mobile,
+.chat-thread-mobile {
+  min-height: 0;
 }
 
 @media (max-width: 767.98px) {
@@ -141,7 +146,7 @@ a {
     height: 220px !important;
   }
   .chat-thread-mobile {
-    height: 400px !important;
+    height: 460px !important;
   }
 }
 
@@ -185,4 +190,53 @@ a {
   body {
     font-size: 13.5px;
   }
+}
+
+/* ============================================================
+   Live Website Theme Synchronization (Bootstrap Overrides)
+   ============================================================ */
+.btn-success {
+  --bs-btn-color: #ffffff;
+  --bs-btn-bg: var(--gem-primary);
+  --bs-btn-border-color: var(--gem-primary);
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: var(--gem-primary-hover);
+  --bs-btn-hover-border-color: var(--gem-primary-hover);
+  --bs-btn-focus-shadow-rgb: var(--gem-primary-rgb);
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: var(--gem-primary-dark);
+  --bs-btn-active-border-color: var(--gem-primary-dark);
+  --bs-btn-disabled-bg: var(--gem-primary);
+  --bs-btn-disabled-border-color: var(--gem-primary);
+}
+
+.btn-outline-success {
+  --bs-btn-color: var(--gem-primary);
+  --bs-btn-border-color: var(--gem-primary);
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: var(--gem-primary);
+  --bs-btn-hover-border-color: var(--gem-primary);
+  --bs-btn-focus-shadow-rgb: var(--gem-primary-rgb);
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: var(--gem-primary-hover);
+  --bs-btn-active-border-color: var(--gem-primary-hover);
+}
+
+.form-range::-webkit-slider-thumb {
+  background-color: var(--gem-primary);
+}
+
+.form-range::-moz-range-thumb {
+  background-color: var(--gem-primary);
+}
+
+.form-check-input:checked {
+  background-color: var(--gem-primary);
+  border-color: var(--gem-primary);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--gem-primary-border);
+  box-shadow: 0 0 0 0.2rem rgba(var(--gem-primary-rgb), 0.18);
 }

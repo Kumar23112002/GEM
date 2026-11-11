@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
+import NegotiationWorkspace from '../components/dashboard/NegotiationWorkspace';
 import StatCard from '../components/dashboard/StatCard';
 import Modal from '../components/common/Modal';
 import { useAuth } from '../context/AuthContext';
@@ -10,12 +12,13 @@ import { colors } from '../theme/colors';
 export default function SellerDashboard() {
   const { currentUser } = useAuth();
   const { showToast } = useCart();
+  const [searchParams] = useSearchParams();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [rfqs, setRfqs] = useState([]);
-  const [messages, setMessages] = useState([]);
+  const [negotiations, setNegotiations] = useState([]);
   const [payouts, setPayouts] = useState([]);
 
   // Modals state
@@ -45,9 +48,19 @@ export default function SellerDashboard() {
   const [orderFilter, setOrderFilter] = useState('all');
   const fileInputRef = useRef(null);
 
-  // Messages state
-  const [selectedMsgThread, setSelectedMsgThread] = useState(1);
-  const [replyText, setReplyText] = useState('');
+  // Negotiations / inquiries state
+  const [selectedMsgThread, setSelectedMsgThread] = useState('NEG-301');
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam === 'negotiations' ? 'messages' : tabParam);
+    }
+    const negIdParam = searchParams.get('negId');
+    if (negIdParam) {
+      setSelectedMsgThread(negIdParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadData() {
@@ -57,35 +70,19 @@ export default function SellerDashboard() {
         api.getRFQs(),
         api.getNegotiations(),
       ]);
-      setProducts(prods);
-      setOrders(ords);
-      setRfqs(r);
-      setMessages([
-        {
-          id: 1,
-          with: 'Ahmed Ali',
-          company: 'Gulf Foods LLC (UAE)',
-          lastMessage: 'Can you share the lab certificate?',
-          time: '10:42 AM',
-          thread: [
-            { from: 'them', text: 'Hello! We received your quote for Basmati Rice.', time: '10:15 AM' },
-            { from: 'me', text: 'Great! We have 1000 MT ready in our Karnal mill.', time: '10:20 AM' },
-            { from: 'them', text: 'Can you share the lab certificate?', time: '10:42 AM' },
-          ],
-        },
-        {
-          id: 2,
-          with: 'Priya Sharma',
-          company: 'Sharma Trading & Retail',
-          lastMessage: 'Order arrived on time, thank you!',
-          time: 'Yesterday',
-          thread: [
-            { from: 'them', text: 'Hi, is tracking updated for ORD-2840?', time: 'Yesterday 2:00 PM' },
-            { from: 'me', text: 'Yes, dispatched with FedEx.', time: 'Yesterday 2:15 PM' },
-            { from: 'them', text: 'Order arrived on time, thank you!', time: 'Yesterday 6:00 PM' },
-          ],
-        },
-      ]);
+      setProducts(prods || []);
+      setOrders(ords || []);
+      setRfqs(r || []);
+      const negList = negs || [];
+      setNegotiations(negList);
+
+      if (negList.length > 0) {
+        setSelectedMsgThread((prev) => {
+          const exists = negList.some((n) => n.id === prev);
+          return exists ? prev : negList[0].id;
+        });
+      }
+
       setPayouts([
         { id: 'PAY-003', date: '2026-10-15', amount: 45000, method: 'Bank Transfer (HDFC)', status: 'completed' },
         { id: 'PAY-002', date: '2026-10-08', amount: 32000, method: 'Bank Transfer (HDFC)', status: 'completed' },
@@ -100,7 +97,7 @@ export default function SellerDashboard() {
     { id: 'products', label: 'Catalog & Stock', icon: 'fas fa-boxes', badge: products.length },
     { id: 'orders', label: 'Customer Orders', icon: 'fas fa-truck-loading', badge: orders.filter((o) => o.status === 'processing').length },
     { id: 'rfqs', label: 'Tender RFQs', icon: 'fas fa-file-invoice-dollar', badge: rfqs.filter((r) => r.status === 'pending').length },
-    { id: 'messages', label: 'Buyer Inquiries', icon: 'fas fa-comments', badge: 1 },
+    { id: 'messages', label: 'Buyer Inquiries', icon: 'fas fa-comments', badge: negotiations.filter((n) => (n.status || 'active') === 'active').length },
     { id: 'payouts', label: 'Payouts & Banking', icon: 'fas fa-money-check-alt' },
     { id: 'profile', label: 'Mill Profile & KYC', icon: 'fas fa-building' },
   ];
@@ -217,36 +214,35 @@ export default function SellerDashboard() {
   const handleSubmitQuote = async (e) => {
     e.preventDefault();
     await api.updateRFQStatus(quoteModalRfq.id, 'negotiating');
-    const updated = await api.getRFQs();
-    setRfqs(updated);
+
+    // Create negotiation record in database
+    await api.createNegotiation({
+      seller: currentUser?.name || 'Punjab Agro Mills',
+      sellerAvatar: currentUser?.avatar || 'https://randomuser.me/api/portraits/men/32.jpg',
+      company: currentUser?.company || 'Punjab Agro Mills Pvt Ltd',
+      buyer: quoteModalRfq.buyer || 'Me',
+      buyerCompany: quoteModalRfq.company || 'My Trading Co',
+      country: quoteModalRfq.country || 'India',
+      product: quoteModalRfq.product,
+      qty: quoteModalRfq.qty,
+      rfqId: quoteModalRfq.id,
+      currentOffer: `₹${quotePrice}`,
+      yourOffer: quoteModalRfq.yourTarget || `₹${quotePrice}`,
+      status: 'active',
+      online: true,
+      lastMessage: `Official Mill Quote: ₹${quotePrice} (${quoteDeliveryDays} days delivery). ${quoteNotes || ''}`,
+      lastTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    });
+
+    const [updatedRfqs, updatedNegs] = await Promise.all([
+      api.getRFQs(),
+      api.getNegotiations(),
+    ]);
+    setRfqs(updatedRfqs);
+    setNegotiations(updatedNegs || []);
     setQuoteModalRfq(null);
-    showToast(`Quote of ₹${quotePrice} submitted to ${quoteModalRfq.buyer}!`);
+    showToast(`Quote of ₹${quotePrice} submitted to ${quoteModalRfq.buyer}! Negotiation thread created.`);
   };
-
-  const handleSendReply = (e) => {
-    e.preventDefault();
-    if (!replyText.trim()) return;
-
-    setMessages((prev) =>
-      prev.map((m) => {
-        if (m.id === selectedMsgThread) {
-          return {
-            ...m,
-            lastMessage: replyText,
-            thread: [
-              ...m.thread,
-              { from: 'me', text: replyText, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
-            ],
-          };
-        }
-        return m;
-      })
-    );
-    setReplyText('');
-    showToast('Reply dispatched to buyer!');
-  };
-
-  const activeThread = messages.find((m) => m.id === selectedMsgThread) || messages[0];
 
   return (
     <DashboardLayout
@@ -765,81 +761,16 @@ export default function SellerDashboard() {
         </div>
       )}
 
-      {/* MESSAGES TAB */}
+      {/* MESSAGES / NEGOTIATIONS TAB */}
       {activeTab === 'messages' && (
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden chat-window-container" style={{ backgroundColor: colors.white }}>
-          <div className="row g-0 h-100">
-            <div className="col-12 col-md-4 border-end chat-sidebar-mobile h-100 d-flex flex-column">
-              <div className="p-3 border-bottom bg-light">
-                <h6 className="fw-bold mb-0 text-dark">Buyer Conversations</h6>
-              </div>
-              <div className="overflow-auto flex-grow-1">
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className="p-3 border-bottom cursor-pointer"
-                    style={{
-                      backgroundColor: selectedMsgThread === m.id ? colors.primarySubtle : colors.white,
-                      borderLeft: selectedMsgThread === m.id ? `4px solid ${colors.primary}` : 'none',
-                    }}
-                    onClick={() => setSelectedMsgThread(m.id)}
-                  >
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                      <strong className="text-dark small">{m.with}</strong>
-                      <span className="small text-muted">{m.time}</span>
-                    </div>
-                    <div className="small text-muted">{m.company}</div>
-                    <div className="small text-truncate mt-1 text-dark">"{m.lastMessage}"</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="col-12 col-md-8 chat-thread-mobile h-100 d-flex flex-column">
-              <div className="p-3 border-bottom bg-light">
-                <h6 className="fw-bold mb-0 text-dark">{activeThread.with}</h6>
-                <div className="small text-muted">{activeThread.company}</div>
-              </div>
-
-              <div className="p-4 overflow-auto flex-grow-1 d-flex flex-column gap-3" style={{ backgroundColor: '#f8fafc' }}>
-                {activeThread.thread.map((msg, idx) => {
-                  const isMe = msg.from === 'me';
-                  return (
-                    <div key={idx} className={`d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'}`}>
-                      <div
-                        className="p-3 rounded-4 shadow-sm"
-                        style={{
-                          maxWidth: '75%',
-                          backgroundColor: isMe ? colors.primary : colors.white,
-                          color: isMe ? colors.white : colors.textDark,
-                        }}
-                      >
-                        <div>{msg.text}</div>
-                        <div className="text-end small mt-1" style={{ fontSize: '10px', opacity: 0.8 }}>
-                          {msg.time}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <form onSubmit={handleSendReply} className="p-3 border-top bg-white d-flex gap-2">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Type official reply or quote clarification..."
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  required
-                />
-                <button type="submit" className="btn text-white px-4" style={{ backgroundColor: colors.primary }}>
-                  Send
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
+        <NegotiationWorkspace
+          role="seller"
+          negotiations={negotiations}
+          selectedNegId={selectedMsgThread}
+          onSelectNeg={setSelectedMsgThread}
+          onNegotiationsUpdated={setNegotiations}
+          showToast={showToast}
+        />
       )}
 
       {/* PAYOUTS TAB */}

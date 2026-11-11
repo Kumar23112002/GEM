@@ -1,5 +1,6 @@
 package com.goeazymart.controller;
 
+import com.goeazymart.model.AuditLog;
 import com.goeazymart.model.Dispute;
 import com.goeazymart.model.User;
 import com.goeazymart.service.MarketplaceService;
@@ -27,6 +28,9 @@ public class AdminController {
         stats.put("totalUsers", users.size());
         stats.put("buyers", users.stream().filter(u -> "buyer".equalsIgnoreCase(u.getRole())).count());
         stats.put("sellers", users.stream().filter(u -> "seller".equalsIgnoreCase(u.getRole())).count());
+        stats.put("openDisputes", service.getAllDisputes().stream()
+                .filter(d -> "open".equalsIgnoreCase(d.getStatus()) || "escalated".equalsIgnoreCase(d.getStatus()))
+                .count());
         stats.put("totalRevenue", 24000000);
         return stats;
     }
@@ -58,7 +62,7 @@ public class AdminController {
     }
 
     @GetMapping("/audit")
-    public List<Map<String, Object>> getAuditLogs() {
+    public List<AuditLog> getAuditLogs() {
         return service.getAuditLogs();
     }
 }

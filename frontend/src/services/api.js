@@ -33,18 +33,24 @@ function setStorage(key, value) {
   }
 }
 
-// Initialize seed data if not present
-if (!localStorage.getItem('gem_products')) setStorage('products', INITIAL_PRODUCTS);
-if (!localStorage.getItem('gem_orders')) setStorage('orders', INITIAL_ORDERS);
-if (!localStorage.getItem('gem_rfqs')) setStorage('rfqs', INITIAL_RFQS);
-if (!localStorage.getItem('gem_negotiations')) setStorage('negotiations', INITIAL_NEGOTIATIONS);
-if (!localStorage.getItem('gem_wishlist')) setStorage('wishlist', INITIAL_WISHLIST);
-if (!localStorage.getItem('gem_addresses')) setStorage('addresses', INITIAL_ADDRESSES);
-if (!localStorage.getItem('gem_payments')) setStorage('payments', INITIAL_PAYMENT_METHODS);
+// Remove legacy mock dummy data so that only live database data is used
+const STORAGE_CLEANUP_KEY = 'gem_dummy_data_purged_v4';
+if (localStorage.getItem(STORAGE_CLEANUP_KEY) !== 'true') {
+  [
+    'gem_products',
+    'gem_orders',
+    'gem_rfqs',
+    'gem_negotiations',
+    'gem_wishlist',
+    'gem_disputes',
+    'gem_audit'
+  ].forEach(k => {
+    try { localStorage.removeItem(k); } catch (e) {}
+  });
+  try { localStorage.setItem(STORAGE_CLEANUP_KEY, 'true'); } catch (e) {}
+}
+
 if (!localStorage.getItem('gem_categories')) setStorage('categories', INITIAL_CATEGORIES);
-if (!localStorage.getItem('gem_disputes')) setStorage('disputes', INITIAL_DISPUTES);
-if (!localStorage.getItem('gem_audit')) setStorage('audit', INITIAL_AUDIT_LOGS);
-if (!localStorage.getItem('gem_users')) setStorage('users', INITIAL_ADMIN_USERS);
 
 /**
  * Universal safe request with automatic Spring Boot connectivity
@@ -240,16 +246,75 @@ export const api = {
     return request('/negotiations', {}, () => getStorage('negotiations', INITIAL_NEGOTIATIONS));
   },
 
-  async sendNegotiationMessage(negId, text, type = 'message', amount = null) {
-    return request(`/negotiations/${negId}/message`, { method: 'POST', body: JSON.stringify({ text, type, amount }) }, () => {
+  async createNegotiation(negData) {
+    return request('/negotiations', { method: 'POST', body: JSON.stringify(negData) }, () => {
+      const negs = getStorage('negotiations', INITIAL_NEGOTIATIONS);
+      const newNeg = {
+        id: `NEG-${Math.floor(100 + Math.random() * 900)}`,
+        status: 'active',
+        thread: [],
+        online: true,
+        unread: 0,
+        ...negData,
+      };
+      negs.unshift(newNeg);
+      setStorage('negotiations', negs);
+      return newNeg;
+    });
+  },
+
+  async sendNegotiationMessage(negId, text, type = 'message', amount = null, from = 'buyer') {
+    return request(`/negotiations/${negId}/message`, { method: 'POST', body: JSON.stringify({ text, type, amount, from }) }, () => {
       const negs = getStorage('negotiations', INITIAL_NEGOTIATIONS);
       const neg = negs.find(n => n.id === negId);
       if (neg) {
         const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        neg.thread.push({ from: 'me', text, time: timeNow, type, amount });
+        neg.thread = neg.thread || [];
+        neg.thread.push({ from, text, time: timeNow, type, amount });
         neg.lastMessage = text;
         neg.lastTime = timeNow;
-        if (amount) neg.yourOffer = amount;
+        if (amount) {
+          neg.currentOffer = amount;
+          if (from !== 'seller') neg.yourOffer = amount;
+        }
+        setStorage('negotiations', negs);
+      }
+      return neg;
+    });
+  },
+
+  async decideNegotiation(negId, action, from = 'buyer', amount = null, text = null) {
+    return request(`/negotiations/${negId}/decision`, { method: 'POST', body: JSON.stringify({ action, from, amount, text }) }, () => {
+      const negs = getStorage('negotiations', INITIAL_NEGOTIATIONS);
+      const neg = negs.find(n => n.id === negId);
+      if (neg) {
+        const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const offerVal = amount || neg.currentOffer || neg.yourOffer;
+        let msgType = action === 'counter' ? 'counter' : action === 'accept' ? 'accept' : action === 'reject' ? 'reject' : 'message';
+        let msgText = text;
+        if (action === 'accept') {
+          neg.status = 'accepted';
+          if (offerVal) neg.currentOffer = offerVal;
+          msgText = msgText || `Offer accepted at ${offerVal || 'agreed terms'}. Trade contract approved.`;
+        } else if (action === 'reject') {
+          neg.status = 'rejected';
+          msgText = msgText || `Offer of ${offerVal || 'current terms'} was declined.`;
+        } else if (action === 'reopen') {
+          neg.status = 'active';
+          msgText = msgText || 'Negotiation reopened for revised terms.';
+        } else {
+          neg.status = 'active';
+          if (offerVal) {
+            neg.currentOffer = offerVal;
+            if (from !== 'seller') neg.yourOffer = offerVal;
+          }
+          msgText = msgText || `Submitted counter-offer of ${offerVal}.`;
+        }
+        neg.thread = neg.thread || [];
+        neg.thread.push({ from, text: msgText, time: timeNow, type: msgType, amount: offerVal });
+        neg.lastMessage = msgText;
+        neg.lastTime = timeNow;
+        neg.unread = 0;
         setStorage('negotiations', negs);
       }
       return neg;
@@ -262,27 +327,32 @@ export const api = {
   },
 
   async toggleWishlist(product) {
-    const list = getStorage('wishlist', INITIAL_WISHLIST);
-    const existing = list.findIndex(item => item.productId === product.id || item.id === product.id);
-    let updated;
-    if (existing !== -1) {
-      updated = list.filter((_, idx) => idx !== existing);
-    } else {
-      updated = [...list, {
-        id: Date.now(),
-        productId: product.id,
-        title: product.title,
-        price: product.price,
-        oldPrice: product.oldPrice,
-        img: product.img,
-        rating: product.rating,
-        reviews: product.reviews,
-        seller: product.seller || 'Punjab Agro Mills',
-        inStock: true
-      }];
-    }
-    setStorage('wishlist', updated);
-    return updated;
+    const payload = {
+      productId: product.id,
+      title: product.title,
+      price: product.price,
+      oldPrice: product.oldPrice,
+      img: product.img,
+      rating: product.rating,
+      reviews: product.reviews,
+      seller: product.seller || 'Punjab Agro Mills',
+      inStock: true
+    };
+    return request('/buyer/wishlist', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }, () => {
+      const list = getStorage('wishlist', INITIAL_WISHLIST);
+      const existing = list.findIndex(item => item.productId === product.id || item.id === product.id);
+      let updated;
+      if (existing !== -1) {
+        updated = list.filter((_, idx) => idx !== existing);
+      } else {
+        updated = [...list, { id: Date.now(), ...payload }];
+      }
+      setStorage('wishlist', updated);
+      return updated;
+    });
   },
 
   async getAddresses() {
@@ -290,25 +360,34 @@ export const api = {
   },
 
   async saveAddress(addr) {
-    const addrs = getStorage('addresses', INITIAL_ADDRESSES);
-    if (addr.isDefault) {
-      addrs.forEach(a => a.isDefault = false);
-    }
-    if (addr.id) {
-      const idx = addrs.findIndex(a => a.id === addr.id);
-      if (idx !== -1) addrs[idx] = addr;
-    } else {
-      addr.id = Date.now();
-      addrs.push(addr);
-    }
-    setStorage('addresses', addrs);
-    return addrs;
+    return request('/buyer/addresses', {
+      method: 'POST',
+      body: JSON.stringify(addr)
+    }, () => {
+      const addrs = getStorage('addresses', INITIAL_ADDRESSES);
+      if (addr.isDefault) {
+        addrs.forEach(a => a.isDefault = false);
+      }
+      if (addr.id) {
+        const idx = addrs.findIndex(a => a.id === addr.id);
+        if (idx !== -1) addrs[idx] = addr;
+      } else {
+        addr.id = Date.now();
+        addrs.push(addr);
+      }
+      setStorage('addresses', addrs);
+      return addrs;
+    });
   },
 
   async deleteAddress(id) {
-    const addrs = getStorage('addresses', INITIAL_ADDRESSES).filter(a => a.id !== id);
-    setStorage('addresses', addrs);
-    return addrs;
+    return request(`/buyer/addresses/${id}`, {
+      method: 'DELETE'
+    }, () => {
+      const addrs = getStorage('addresses', INITIAL_ADDRESSES).filter(a => a.id !== id);
+      setStorage('addresses', addrs);
+      return addrs;
+    });
   },
 
   // BUYER PAYMENTS
@@ -317,34 +396,47 @@ export const api = {
   },
 
   async savePayment(pm) {
-    const list = getStorage('payments', INITIAL_PAYMENT_METHODS);
-    if (pm.isDefault) {
-      list.forEach(p => p.isDefault = false);
-    }
-    if (pm.id) {
-      const idx = list.findIndex(p => p.id === pm.id);
-      if (idx !== -1) list[idx] = pm;
-    } else {
-      pm.id = Date.now();
-      list.push(pm);
-    }
-    setStorage('payments', list);
-    return list;
+    return request('/buyer/payments', {
+      method: 'POST',
+      body: JSON.stringify(pm)
+    }, () => {
+      const list = getStorage('payments', INITIAL_PAYMENT_METHODS);
+      if (pm.isDefault) {
+        list.forEach(p => p.isDefault = false);
+      }
+      if (pm.id) {
+        const idx = list.findIndex(p => p.id === pm.id);
+        if (idx !== -1) list[idx] = pm;
+      } else {
+        pm.id = Date.now();
+        list.push(pm);
+      }
+      setStorage('payments', list);
+      return list;
+    });
   },
 
   async deletePayment(id) {
-    const list = getStorage('payments', INITIAL_PAYMENT_METHODS).filter(p => p.id !== id);
-    setStorage('payments', list);
-    return list;
+    return request(`/buyer/payments/${id}`, {
+      method: 'DELETE'
+    }, () => {
+      const list = getStorage('payments', INITIAL_PAYMENT_METHODS).filter(p => p.id !== id);
+      setStorage('payments', list);
+      return list;
+    });
   },
 
   async setDefaultPayment(id) {
-    const list = getStorage('payments', INITIAL_PAYMENT_METHODS);
-    list.forEach(p => {
-      p.isDefault = (p.id === id);
+    return request(`/buyer/payments/${id}/default`, {
+      method: 'PUT'
+    }, () => {
+      const list = getStorage('payments', INITIAL_PAYMENT_METHODS);
+      list.forEach(p => {
+        p.isDefault = (p.id === id);
+      });
+      setStorage('payments', list);
+      return list;
     });
-    setStorage('payments', list);
-    return list;
   },
 
   // ADMIN

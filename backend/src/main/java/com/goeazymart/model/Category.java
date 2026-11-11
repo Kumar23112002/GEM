@@ -1,12 +1,24 @@
 package com.goeazymart.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "categories")
 public class Category {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
     private String slug;
     private Integer products;
     private String icon;
     private String status;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    @JsonProperty("desc")
     private String desc;
 
     public Category() {}

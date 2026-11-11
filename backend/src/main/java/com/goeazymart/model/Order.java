@@ -1,12 +1,22 @@
 package com.goeazymart.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "orders")
 public class Order {
+
+    @Id
     private String id;
+
     private String customer;
     private String buyerCountry;
     private String seller;
     private String sellerCountry;
+
+    @Column(columnDefinition = "TEXT")
     private String product;
+
     private Integer qty;
     private Double amount;
     private String status;

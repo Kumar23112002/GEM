@@ -6,46 +6,46 @@
  */
 
 export const colors = {
-  // Brand Primary Green Palette
-  primary: '#1f8a4c',
-  primaryHover: '#166a39',
-  primaryDark: '#0e4a25',
-  primaryLight: '#4ade80',
-  primarySoft: '#dcfce7',
-  primarySubtle: '#f0fdf4',
-  primaryBorder: '#86efac',
+  // Brand Primary Palette (Live Theme Controlled via CSS Variables)
+  primary: 'var(--gem-primary, #1f8a4c)',
+  primaryHover: 'var(--gem-primary-hover, #166a39)',
+  primaryDark: 'var(--gem-primary-dark, #0e4a25)',
+  primaryLight: 'var(--gem-primary-light, #4ade80)',
+  primarySoft: 'var(--gem-primary-soft, #dcfce7)',
+  primarySubtle: 'var(--gem-primary-subtle, #f0fdf4)',
+  primaryBorder: 'var(--gem-primary-border, #86efac)',
 
-  // Deep Navy / Dark Blue Palette
-  darkBlue: '#122032',
-  darkBlueDarker: '#0a1526',
-  darkBlueLight: '#1f2937',
-  darkBlueMuted: '#334155',
-  darkBlueSubtle: '#e2e8f0',
+  // Deep Dark Header / Sidebar Chrome Palette
+  darkBlue: 'var(--gem-dark-blue, #122032)',
+  darkBlueDarker: 'var(--gem-dark-blue-darker, #0a1526)',
+  darkBlueLight: 'var(--gem-dark-blue-light, #1f2937)',
+  darkBlueMuted: 'var(--gem-dark-blue-muted, #334155)',
+  darkBlueSubtle: 'var(--gem-dark-blue-subtle, #e2e8f0)',
 
   // Neutrals & Backgrounds
-  lightBg: '#f8f9fa',
-  surfaceBg: '#f0f4f8',
-  white: '#ffffff',
-  black: '#000000',
-  border: '#e2e8f0',
-  borderLight: '#f1f5f9',
-  borderDark: '#cbd5e1',
+  lightBg: 'var(--gem-light-bg, #f8f9fa)',
+  surfaceBg: 'var(--gem-surface-bg, #f0f4f8)',
+  white: 'var(--gem-white, #ffffff)',
+  black: 'var(--gem-black, #000000)',
+  border: 'var(--gem-border, #e2e8f0)',
+  borderLight: 'var(--gem-border-light, #f1f5f9)',
+  borderDark: 'var(--gem-border-dark, #cbd5e1)',
 
   // Typography
-  textDark: '#1e293b',
-  textBody: '#334155',
-  textLight: '#64748b',
-  textMuted: '#94a3b8',
-  textWhite: '#ffffff',
+  textDark: 'var(--gem-text-dark, #1e293b)',
+  textBody: 'var(--gem-text-body, #334155)',
+  textLight: 'var(--gem-text-light, #64748b)',
+  textMuted: 'var(--gem-text-muted, #94a3b8)',
+  textWhite: 'var(--gem-text-white, #ffffff)',
 
   // Accent & Functional Statuses
   orange: '#f59e0b',
   orangeLight: '#fed7aa',
   orangeDark: '#b45309',
-  
-  success: '#16a34a',
-  successLight: '#dcfce7',
-  successText: '#15803d',
+
+  success: 'var(--gem-primary, #16a34a)',
+  successLight: 'var(--gem-primary-soft, #dcfce7)',
+  successText: 'var(--gem-primary-dark, #15803d)',
 
   danger: '#dc2626',
   dangerLight: '#fee2e2',
@@ -74,15 +74,15 @@ export const colors = {
   // Role Specific Accents
   buyerBadge: '#2563eb',
   buyerBadgeBg: '#dbeafe',
-  sellerBadge: '#16a34a',
-  sellerBadgeBg: '#dcfce7',
+  sellerBadge: 'var(--gem-primary, #16a34a)',
+  sellerBadgeBg: 'var(--gem-primary-soft, #dcfce7)',
   adminBadge: '#dc2626',
   adminBadgeBg: '#fee2e2',
 
   // Gradients
-  heroGradient: 'linear-gradient(135deg, #122032 0%, #1a324d 50%, #1f8a4c 100%)',
-  authGradient: 'linear-gradient(135deg, #122032 0%, #164e33 60%, #1f8a4c 100%)',
-  primaryGradient: 'linear-gradient(135deg, #1f8a4c 0%, #16a34a 100%)',
+  heroGradient: 'var(--gem-hero-gradient, linear-gradient(135deg, #122032 0%, #1a324d 50%, #1f8a4c 100%))',
+  authGradient: 'var(--gem-auth-gradient, linear-gradient(135deg, #122032 0%, #164e33 60%, #1f8a4c 100%))',
+  primaryGradient: 'var(--gem-primary-gradient, linear-gradient(135deg, #1f8a4c 0%, #16a34a 100%))',
   cardGradient: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
 
   // Shadows
@@ -90,7 +90,7 @@ export const colors = {
   shadowMd: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
   shadowLg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
   shadowXl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-  shadowPrimary: '0 4px 14px rgba(31, 138, 76, 0.35)',
+  shadowPrimary: 'var(--gem-shadow-primary, 0 4px 14px rgba(31, 138, 76, 0.35))',
 };
 
 export default colors;

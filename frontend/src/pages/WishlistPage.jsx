@@ -4,11 +4,13 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { colors } from '../theme/colors';
 
 export default function WishlistPage() {
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
+  const { formatPrice } = useCurrency();
 
   return (
     <div className="d-flex flex-column min-vh-100" style={{ backgroundColor: colors.lightBg }}>
@@ -177,11 +179,11 @@ export default function WishlistPage() {
                         <div className="mb-3 mt-auto">
                           <div className="d-flex align-items-baseline gap-2">
                             <span className="fw-bold" style={{ color: colors.primary, fontSize: '16px' }}>
-                              ₹{item.price?.toLocaleString()}
+                              {formatPrice(item.price)}
                             </span>
                             {item.oldPrice && (
                               <span className="text-decoration-line-through text-muted small">
-                                ₹{item.oldPrice?.toLocaleString()}
+                                {formatPrice(item.oldPrice)}
                               </span>
                             )}
                             {discount > 0 && (

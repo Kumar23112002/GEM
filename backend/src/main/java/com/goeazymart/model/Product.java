@@ -1,11 +1,22 @@
 package com.goeazymart.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "products")
 public class Product {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String title;
     private Double price;
     private Double oldPrice;
+
+    @Column(columnDefinition = "TEXT")
     private String img;
+
     private Double rating;
     private Integer reviews;
     private String category;
@@ -15,6 +26,8 @@ public class Product {
     private String location;
     private Integer stock;
     private String moq;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     public Product() {}

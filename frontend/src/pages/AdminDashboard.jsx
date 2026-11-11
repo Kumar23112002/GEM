@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useCMS } from '../context/CMSContext';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
+import { WEBSITE_THEMES } from '../theme/themes';
 
 export default function AdminDashboard() {
   const { currentUser } = useAuth();
@@ -29,9 +30,20 @@ export default function AdminDashboard() {
   const [newCategory, setNewCategory] = useState({ name: '', slug: '', desc: '', icon: 'fa-box' });
 
   // CMS Content State
-  const { cmsContent, updateCMS, resetCMS, DEFAULT_CMS } = useCMS();
+  const { cmsContent, activeTheme, updateCMS, applyTheme, resetCMS, DEFAULT_CMS } = useCMS();
   const [cmsForm, setCmsForm] = useState(cmsContent);
   const [cmsSubTab, setCmsSubTab] = useState('hero');
+  const [themeFeedback, setThemeFeedback] = useState('');
+
+  useEffect(() => {
+    setCmsForm((prev) => ({ ...prev, theme: activeTheme }));
+  }, [activeTheme]);
+
+  const handleSelectWebsiteTheme = (themeObj) => {
+    applyTheme(themeObj.id);
+    setThemeFeedback(`Live website switched to "${themeObj.name}" (${themeObj.badge}) and saved for all visitors.`);
+    setTimeout(() => setThemeFeedback(''), 4000);
+  };
 
   const [resetConfirmModalOpen, setResetConfirmModalOpen] = useState(false);
 
@@ -94,6 +106,7 @@ export default function AdminDashboard() {
     { id: 'categories', label: 'Commodity Sectors', icon: 'fas fa-folder-tree', badge: categories.length },
     { id: 'disputes', label: 'Escrow Disputes', icon: 'fas fa-gavel', badge: disputes.filter((d) => d.status === 'open').length },
     { id: 'orders', label: 'Global Trade Ledger', icon: 'fas fa-book-journal-whills', badge: orders.length },
+    { id: 'themes', label: 'Website Themes', icon: 'fas fa-palette', badge: '4' },
     { id: 'cms', label: 'CMS & Site Content', icon: 'fas fa-edit', badge: 'Live' },
     { id: 'settings', label: 'Commission & Rules', icon: 'fas fa-sliders' },
     { id: 'audit', label: 'Audit Trail', icon: 'fas fa-shield-halved' },
@@ -594,7 +607,7 @@ export default function AdminDashboard() {
                 {/* Live Preview Card */}
                 <div className="mb-4 p-4 rounded-4 text-white position-relative overflow-hidden"
                   style={{
-                    background: `linear-gradient(to right, rgba(18, 32, 50, 0.95), rgba(18, 32, 50, 0.7)), url('${cmsForm?.hero?.bgImage || 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1920&q=80'}') center/cover`,
+                    background: `linear-gradient(to right, rgba(var(--gem-dark-blue-rgb), 0.95), rgba(var(--gem-dark-blue-rgb), 0.7)), url('${cmsForm?.hero?.bgImage || 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1920&q=80'}') center/cover`,
                     minHeight: '200px',
                   }}
                 >
@@ -1207,6 +1220,228 @@ export default function AdminDashboard() {
               </div>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* WEBSITE THEMES TAB */}
+      {activeTab === 'themes' && (
+        <div className="card border-0 shadow-sm rounded-4 p-4" style={{ backgroundColor: '#fff' }}>
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-4 border-bottom">
+            <div>
+              <span
+                className="badge rounded-pill px-3 py-1 mb-2 fw-semibold"
+                style={{ backgroundColor: colors.primarySubtle, color: colors.primaryDark, border: `1px solid ${colors.primaryBorder}` }}
+              >
+                <i className="fas fa-palette me-1"></i> LIVE THEME STUDIO
+              </span>
+              <h5 className="fw-bold mb-1" style={{ color: colors.darkBlue }}>
+                Platform-Wide Website Color Themes
+              </h5>
+              <p className="text-muted small mb-0">
+                Select any of the 4 enterprise themes below. Changes apply instantaneously across every live page, dashboard, button, and badge — and persist for all visitors.
+              </p>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              {WEBSITE_THEMES.filter((t) => t.id === activeTheme).map((current) => (
+                <div
+                  key={current.id}
+                  className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 border"
+                  style={{ backgroundColor: colors.primarySubtle, borderColor: colors.primaryBorder }}
+                >
+                  <span
+                    className="rounded-circle d-inline-block"
+                    style={{ width: '14px', height: '14px', backgroundColor: current.tokens.primary }}
+                  />
+                  <span className="small fw-bold" style={{ color: colors.darkBlue }}>
+                    Active: {current.name}
+                  </span>
+                </div>
+              ))}
+              {activeTheme !== 'emerald' && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary rounded-3 fw-semibold"
+                  onClick={() => handleSelectWebsiteTheme(WEBSITE_THEMES[0])}
+                >
+                  <i className="fas fa-rotate-left me-1"></i> Reset Default
+                </button>
+              )}
+            </div>
+          </div>
+
+          {themeFeedback && (
+            <div
+              className="alert d-flex align-items-center gap-2 rounded-3 mb-4 border-0 py-2 px-3 small fw-semibold"
+              role="alert"
+              style={{ backgroundColor: colors.primarySoft, color: colors.primaryDark }}
+            >
+              <i className="fas fa-circle-check"></i>
+              <span>{themeFeedback}</span>
+            </div>
+          )}
+
+          <div className="row g-4">
+            {WEBSITE_THEMES.map((themeItem) => {
+              const isSelected = activeTheme === themeItem.id;
+              const t = themeItem.tokens;
+              const swatches = [
+                { label: 'Navy/Base', hex: t.darkBlue },
+                { label: 'Primary', hex: t.primary },
+                { label: 'Hover', hex: t.primaryHover },
+                { label: 'Highlight', hex: t.primaryLight },
+                { label: 'Surface', hex: t.primarySoft },
+              ];
+
+              return (
+                <div className="col-md-6" key={themeItem.id}>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    data-theme-card={themeItem.id}
+                    onClick={() => handleSelectWebsiteTheme(themeItem)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSelectWebsiteTheme(themeItem);
+                      }
+                    }}
+                    className="h-100 rounded-4 p-3 transition-all d-flex flex-column"
+                    style={{
+                      border: isSelected ? `2.5px solid ${t.primary}` : '1.5px solid #e2e8f0',
+                      backgroundColor: isSelected ? t.primarySubtle : '#ffffff',
+                      boxShadow: isSelected ? `0 12px 28px rgba(0, 0, 0, 0.08)` : 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {/* Theme Header */}
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+                      <div>
+                        <div className="d-flex align-items-center gap-2 mb-1">
+                          <h6 className="fw-bold mb-0" style={{ color: t.darkBlue }}>
+                            {themeItem.name}
+                          </h6>
+                          <span
+                            className="badge rounded-pill"
+                            style={{
+                              fontSize: '0.68rem',
+                              backgroundColor: t.primarySoft,
+                              color: t.primaryDark,
+                              border: `1px solid ${t.primaryBorder}`,
+                            }}
+                          >
+                            {themeItem.badge}
+                          </span>
+                        </div>
+                        <p className="text-muted mb-0" style={{ fontSize: '0.78rem' }}>
+                          {themeItem.tagline}
+                        </p>
+                      </div>
+                      {isSelected && (
+                        <span
+                          className="badge rounded-pill px-2 py-1 d-inline-flex align-items-center gap-1"
+                          style={{ backgroundColor: t.primary, color: '#ffffff', fontSize: '0.7rem' }}
+                        >
+                          <i className="fas fa-check"></i> ACTIVE
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Live Mini Storefront Preview */}
+                    <div
+                      className="rounded-3 overflow-hidden border mb-3"
+                      style={{ borderColor: '#e2e8f0', backgroundColor: t.lightBg }}
+                    >
+                      <div style={{ height: '14px', backgroundColor: t.darkBlueDarker }} className="px-2 d-flex align-items-center justify-content-between">
+                        <span style={{ width: '48px', height: '4px', borderRadius: '2px', backgroundColor: 'rgba(255,255,255,0.45)' }} />
+                        <span style={{ width: '28px', height: '6px', borderRadius: '3px', backgroundColor: t.primary }} />
+                      </div>
+                      <div className="bg-white px-2 py-2 d-flex align-items-center justify-content-between border-bottom">
+                        <div className="d-flex align-items-center gap-1">
+                          <span className="rounded-1 d-inline-block" style={{ width: '12px', height: '12px', backgroundColor: t.primary }} />
+                          <span className="fw-bold" style={{ fontSize: '0.68rem', color: t.darkBlue }}>Goeazymart</span>
+                        </div>
+                        <div className="d-flex align-items-center gap-1">
+                          <span style={{ width: '54px', height: '12px', borderRadius: '3px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1' }} />
+                          <span style={{ width: '26px', height: '12px', borderRadius: '3px', backgroundColor: t.primary }} />
+                        </div>
+                      </div>
+                      <div
+                        className="p-3 text-white"
+                        style={{ background: `linear-gradient(125deg, ${t.darkBlueDarker} 0%, ${t.darkBlue} 65%, ${t.darkBlueLight} 100%)` }}
+                      >
+                        <div className="fw-bold mb-1" style={{ fontSize: '0.78rem', lineHeight: 1.2 }}>
+                          Trusted Portal for <span style={{ color: t.primaryLight }}>Global Trade</span>
+                        </div>
+                        <div className="d-flex align-items-center gap-2 mt-2">
+                          <span
+                            className="px-2 py-1 rounded-2 fw-semibold"
+                            style={{ backgroundColor: t.primary, fontSize: '0.64rem', color: '#fff' }}
+                          >
+                            Find Deals
+                          </span>
+                          <span
+                            className="px-2 py-1 rounded-2"
+                            style={{ border: `1px solid ${t.primaryLight}`, color: t.primaryLight, fontSize: '0.64rem' }}
+                          >
+                            Verified Escrow
+                          </span>
+                        </div>
+                      </div>
+                      <div className="px-2 py-2 d-flex align-items-center justify-content-between" style={{ backgroundColor: t.surfaceBg }}>
+                        <span
+                          className="px-2 py-1 rounded-pill fw-semibold"
+                          style={{ backgroundColor: t.primarySoft, color: t.primaryDark, fontSize: '0.62rem', border: `1px solid ${t.primaryBorder}` }}
+                        >
+                          Live Market Pulse
+                        </span>
+                        <span className="fw-bold" style={{ color: t.primary, fontSize: '0.66rem' }}>
+                          Active Accent
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Swatches + Action Button */}
+                    <div className="mt-auto d-flex flex-wrap align-items-center justify-content-between gap-2 pt-1">
+                      <div className="d-flex align-items-center gap-2">
+                        {swatches.map((sw) => (
+                          <div key={sw.label} className="text-center" title={`${sw.label}: ${sw.hex}`}>
+                            <div
+                              className="rounded-circle border"
+                              style={{ width: '20px', height: '20px', backgroundColor: sw.hex, borderColor: 'rgba(0,0,0,0.12)' }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        data-apply-theme={themeItem.id}
+                        className="btn btn-sm fw-bold rounded-3 px-3 py-1"
+                        style={
+                          isSelected
+                            ? { backgroundColor: t.primary, color: '#ffffff', border: 'none' }
+                            : { backgroundColor: '#ffffff', color: t.primaryDark, border: `1.5px solid ${t.primary}` }
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectWebsiteTheme(themeItem);
+                        }}
+                      >
+                        {isSelected ? (
+                          <>
+                            <i className="fas fa-check me-1"></i> Applied Live
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-wand-magic-sparkles me-1"></i> Apply Theme
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

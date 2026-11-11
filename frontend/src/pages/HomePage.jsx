@@ -45,7 +45,7 @@ export default function HomePage() {
       <section
         className="position-relative py-5 text-white"
         style={{
-          background: `linear-gradient(to right, rgba(18, 32, 50, 0.95) 0%, rgba(18, 32, 50, 0.75) 55%, rgba(18, 32, 50, 0.3) 100%), url('${cmsContent?.hero?.bgImage || 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1920&q=80'}') center center / cover no-repeat`,
+          background: `linear-gradient(to right, rgba(var(--gem-dark-blue-rgb), 0.95) 0%, rgba(var(--gem-dark-blue-rgb), 0.75) 55%, rgba(var(--gem-dark-blue-rgb), 0.3) 100%), url('${cmsContent?.hero?.bgImage || 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1920&q=80'}') center center / cover no-repeat`,
           minHeight: '520px',
           display: 'flex',
           alignItems: 'center',
@@ -57,7 +57,7 @@ export default function HomePage() {
               <span
                 className="badge mb-3 px-3 py-2 text-uppercase fw-bold"
                 style={{
-                  backgroundColor: 'rgba(74, 222, 128, 0.2)',
+                  backgroundColor: 'rgba(var(--gem-primary-light-rgb), 0.2)',
                   color: colors.primaryLight,
                   letterSpacing: '1px',
                   fontSize: '11px',
@@ -123,47 +123,106 @@ export default function HomePage() {
               <div
                 className="card border-0 p-4 rounded-4 shadow-lg"
                 style={{
-                  backgroundColor: 'rgba(18, 32, 50, 0.85)',
+                  backgroundColor: 'rgba(var(--gem-dark-blue-rgb), 0.85)',
                   backdropFilter: 'blur(10px)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
               >
-                <h6 className="text-uppercase text-white fw-bold mb-3 small" style={{ letterSpacing: '1px' }}>
-                  Live Trading Pulse
-                </h6>
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <h6 className="text-uppercase text-white fw-bold mb-0 small d-flex align-items-center gap-2" style={{ letterSpacing: '1px' }}>
+                    <span className="spinner-grow spinner-grow-sm text-success" role="status" style={{ width: '8px', height: '8px' }}></span>
+                    Live Trading Pulse
+                  </h6>
+                  <span className="badge rounded-pill fw-bold px-2 py-1" style={{ backgroundColor: 'rgba(var(--gem-primary-light-rgb), 0.2)', color: colors.primaryLight, fontSize: '10px', letterSpacing: '0.5px' }}>
+                    LIVE
+                  </span>
+                </div>
+
                 <div className="row g-3">
+                  {/* Stat 1: Commodities */}
                   <div className="col-6">
-                    <div className="p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-                      <h4 className="fw-bold mb-0" style={{ color: colors.primaryLight }}>{cmsContent?.hero?.stat1Value || '500+'}</h4>
-                      <div className="small text-muted" style={{ fontSize: '12px' }}>{cmsContent?.hero?.stat1Label || 'Commodities'}</div>
+                    <div
+                      className="p-3 rounded-3 h-100"
+                      style={{
+                        backgroundColor: 'rgba(var(--gem-primary-light-rgb), 0.1)',
+                        border: '1px solid rgba(var(--gem-primary-light-rgb), 0.25)',
+                        transition: 'transform 0.2s ease',
+                      }}
+                    >
+                      <h4 className="fw-bold mb-1" style={{ color: colors.primaryLight, fontSize: '24px' }}>
+                        {cmsContent?.hero?.stat1Value || '500+'}
+                      </h4>
+                      <div className="small fw-semibold" style={{ color: colors.primarySoft, fontSize: '12px' }}>
+                        {cmsContent?.hero?.stat1Label || 'Commodities'}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Stat 2: Export Nations */}
                   <div className="col-6">
-                    <div className="p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-                      <h4 className="fw-bold mb-0 text-white">{cmsContent?.hero?.stat2Value || '50+'}</h4>
-                      <div className="small text-muted" style={{ fontSize: '12px' }}>{cmsContent?.hero?.stat2Label || 'Export Nations'}</div>
+                    <div
+                      className="p-3 rounded-3 h-100"
+                      style={{
+                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                        border: '1px solid rgba(56, 189, 248, 0.25)',
+                        transition: 'transform 0.2s ease',
+                      }}
+                    >
+                      <h4 className="fw-bold mb-1" style={{ color: '#38bdf8', fontSize: '24px' }}>
+                        {cmsContent?.hero?.stat2Value || '50+'}
+                      </h4>
+                      <div className="small fw-semibold" style={{ color: '#e0f2fe', fontSize: '12px' }}>
+                        {cmsContent?.hero?.stat2Label || 'Export Nations'}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Stat 3: Active Buyers */}
                   <div className="col-6">
-                    <div className="p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-                      <h4 className="fw-bold mb-0 text-white">{cmsContent?.hero?.stat3Value || '10,000+'}</h4>
-                      <div className="small text-muted" style={{ fontSize: '12px' }}>{cmsContent?.hero?.stat3Label || 'Active Buyers'}</div>
+                    <div
+                      className="p-3 rounded-3 h-100"
+                      style={{
+                        backgroundColor: 'rgba(192, 132, 252, 0.1)',
+                        border: '1px solid rgba(192, 132, 252, 0.25)',
+                        transition: 'transform 0.2s ease',
+                      }}
+                    >
+                      <h4 className="fw-bold mb-1" style={{ color: '#c084fc', fontSize: '24px' }}>
+                        {cmsContent?.hero?.stat3Value || '10,000+'}
+                      </h4>
+                      <div className="small fw-semibold" style={{ color: '#f3e8ff', fontSize: '12px' }}>
+                        {cmsContent?.hero?.stat3Label || 'Active Buyers'}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Stat 4: Monthly Volume */}
                   <div className="col-6">
-                    <div className="p-3 rounded-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-                      <h4 className="fw-bold mb-0" style={{ color: colors.orange }}>{cmsContent?.hero?.stat4Value || '₹2.4 Cr+'}</h4>
-                      <div className="small text-muted" style={{ fontSize: '12px' }}>{cmsContent?.hero?.stat4Label || 'Monthly Volume'}</div>
+                    <div
+                      className="p-3 rounded-3 h-100"
+                      style={{
+                        backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                        border: '1px solid rgba(251, 191, 36, 0.25)',
+                        transition: 'transform 0.2s ease',
+                      }}
+                    >
+                      <h4 className="fw-bold mb-1" style={{ color: '#fbbf24', fontSize: '24px' }}>
+                        {cmsContent?.hero?.stat4Value || '₹2.4 Cr+'}
+                      </h4>
+                      <div className="small fw-semibold" style={{ color: '#fef3c7', fontSize: '12px' }}>
+                        {cmsContent?.hero?.stat4Label || 'Monthly Volume'}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <Link
                   to="/register"
-                  className="btn btn-outline-light w-100 mt-3 py-2 fw-medium"
-                  style={{ fontSize: '13.5px' }}
+                  className="btn btn-outline-light w-100 mt-3 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2"
+                  style={{ fontSize: '13.5px', borderColor: 'rgba(255, 255, 255, 0.35)', color: '#ffffff' }}
                 >
-                  Start Sourcing Today →
+                  <span>Start Sourcing Today</span>
+                  <span>→</span>
                 </Link>
               </div>
             </div>
@@ -320,6 +379,10 @@ export default function HomePage() {
           <div className="text-center py-5">
             <div className="spinner-border text-success" role="status"></div>
           </div>
+        ) : retailProducts.length === 0 ? (
+          <div className="card border-0 shadow-sm rounded-3 p-4 text-center" style={{ backgroundColor: colors.white }}>
+            <p className="text-muted mb-0 small">No retail products currently listed. Add new products via the Seller Dashboard.</p>
+          </div>
         ) : (
           <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
             {retailProducts.map((p) => (
@@ -355,6 +418,10 @@ export default function HomePage() {
           <div className="text-center py-5">
             <div className="spinner-border text-success" role="status"></div>
           </div>
+        ) : softCommodities.length === 0 ? (
+          <div className="card border-0 shadow-sm rounded-3 p-4 text-center" style={{ backgroundColor: colors.white }}>
+            <p className="text-muted mb-0 small">No soft commodities currently listed. Add new commodities via the Seller Dashboard.</p>
+          </div>
         ) : (
           <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
             {softCommodities.map((p) => (
@@ -389,6 +456,10 @@ export default function HomePage() {
         {loading ? (
           <div className="text-center py-5">
             <div className="spinner-border text-success" role="status"></div>
+          </div>
+        ) : hardCommodities.length === 0 ? (
+          <div className="card border-0 shadow-sm rounded-3 p-4 text-center" style={{ backgroundColor: colors.white }}>
+            <p className="text-muted mb-0 small">No hard commodities currently listed. Add new commodities via the Seller Dashboard.</p>
           </div>
         ) : (
           <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
@@ -510,18 +581,18 @@ export default function HomePage() {
       </section>
 
       {/* CTA BANNER */}
-      <section className="container my-5">
+      <section className="container-fluid px-3 px-sm-4 px-md-5 my-4">
         <div
-          className="rounded-4 p-4 p-md-5 text-white"
+          className="rounded-4 py-3 py-md-3 px-4 px-md-5 text-white"
           style={{
             background: colors.authGradient,
             boxShadow: colors.shadowLg,
           }}
         >
-          <div className="row align-items-center g-4">
+          <div className="row align-items-center g-3">
             <div className="col-12 col-lg-8">
-              <h2 className="fw-bold mb-2">{cmsContent?.cta?.title || 'Ready to Expand Your Commodity Supply Chain?'}</h2>
-              <p className="text-light mb-0" style={{ maxWidth: '600px' }}>
+              <h3 className="fw-bold mb-1 fs-4">{cmsContent?.cta?.title || 'Ready to Expand Your Commodity Supply Chain?'}</h3>
+              <p className="text-light mb-0 small" style={{ maxWidth: '750px', opacity: 0.9 }}>
                 {cmsContent?.cta?.subtitle || 'Join thousands of verified distributors, agricultural grain mills, industrial manufacturers, and retail chains on Goeazymart today.'}
               </p>
             </div>

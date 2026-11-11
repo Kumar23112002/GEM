@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '../services/api';
+import { applyWebsiteTheme } from '../theme/themes';
 
 export const CMS_STORAGE_KEY = 'gem_cms_content';
 
 export const DEFAULT_CMS = {
+  theme: 'emerald',
   topBar: {
     announcement: 'Verified Global B2B & Retail Marketplace',
     phone: '+91 98765 43210',
@@ -62,44 +65,67 @@ export const DEFAULT_CMS = {
 
 const CMSContext = createContext(null);
 
+function mergeCmsContent(parsed) {
+  if (!parsed || typeof parsed !== 'object') return DEFAULT_CMS;
+  return {
+    ...DEFAULT_CMS,
+    ...parsed,
+    theme: parsed.theme || DEFAULT_CMS.theme,
+    topBar: { ...DEFAULT_CMS.topBar, ...(parsed.topBar || {}) },
+    hero: { ...DEFAULT_CMS.hero, ...(parsed.hero || {}) },
+    features: { ...DEFAULT_CMS.features, ...(parsed.features || {}) },
+    cta: { ...DEFAULT_CMS.cta, ...(parsed.cta || {}) },
+    about: { ...DEFAULT_CMS.about, ...(parsed.about || {}) },
+    footer: { ...DEFAULT_CMS.footer, ...(parsed.footer || {}) },
+  };
+}
+
 export function CMSProvider({ children }) {
   const [cmsContent, setCmsContent] = useState(() => {
+    let initial = DEFAULT_CMS;
     try {
       const saved = localStorage.getItem(CMS_STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          ...DEFAULT_CMS,
-          ...parsed,
-          topBar: { ...DEFAULT_CMS.topBar, ...(parsed.topBar || {}) },
-          hero: { ...DEFAULT_CMS.hero, ...(parsed.hero || {}) },
-          features: { ...DEFAULT_CMS.features, ...(parsed.features || {}) },
-          cta: { ...DEFAULT_CMS.cta, ...(parsed.cta || {}) },
-          about: { ...DEFAULT_CMS.about, ...(parsed.about || {}) },
-          footer: { ...DEFAULT_CMS.footer, ...(parsed.footer || {}) },
-        };
+        initial = mergeCmsContent(JSON.parse(saved));
       }
     } catch (e) {
       console.error('Failed to load CMS content from localStorage', e);
     }
-    return DEFAULT_CMS;
+    applyWebsiteTheme(initial.theme);
+    return initial;
   });
+
+  useEffect(() => {
+    applyWebsiteTheme(cmsContent?.theme || DEFAULT_CMS.theme);
+  }, [cmsContent?.theme]);
+
+  useEffect(() => {
+    let active = true;
+    api.getCMS()
+      .then((remote) => {
+        if (!active || !remote || typeof remote !== 'object' || Object.keys(remote).length === 0) return;
+        const merged = mergeCmsContent(remote);
+        setCmsContent(merged);
+        applyWebsiteTheme(merged.theme);
+        try {
+          localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(merged));
+        } catch (err) {
+          console.error('Failed to cache remote CMS content', err);
+        }
+      })
+      .catch((err) => {
+        console.warn('CMS API fetch skipped, using cached CMS:', err?.message || err);
+      });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === CMS_STORAGE_KEY && e.newValue) {
         try {
-          const parsed = JSON.parse(e.newValue);
-          setCmsContent({
-            ...DEFAULT_CMS,
-            ...parsed,
-            topBar: { ...DEFAULT_CMS.topBar, ...(parsed.topBar || {}) },
-            hero: { ...DEFAULT_CMS.hero, ...(parsed.hero || {}) },
-            features: { ...DEFAULT_CMS.features, ...(parsed.features || {}) },
-            cta: { ...DEFAULT_CMS.cta, ...(parsed.cta || {}) },
-            about: { ...DEFAULT_CMS.about, ...(parsed.about || {}) },
-            footer: { ...DEFAULT_CMS.footer, ...(parsed.footer || {}) },
-          });
+          const merged = mergeCmsContent(JSON.parse(e.newValue));
+          setCmsContent(merged);
+          applyWebsiteTheme(merged.theme);
         } catch (err) {
           console.error(err);
         }
@@ -109,29 +135,51 @@ export function CMSProvider({ children }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const updateCMS = (newContent) => {
-    setCmsContent(newContent);
+  const persistCMS = (nextContent) => {
     try {
-      localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(newContent));
+      localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(nextContent));
       // Dispatch custom event for same-tab instant listeners if any
       window.dispatchEvent(new Event('gem_cms_updated'));
     } catch (e) {
       console.error('Failed to save CMS content', e);
     }
+    api.updateCMS(nextContent).catch((err) => {
+      console.warn('Failed to persist CMS content to backend:', err?.message || err);
+    });
+  };
+
+  const updateCMS = (newContent) => {
+    const merged = mergeCmsContent(newContent);
+    setCmsContent(merged);
+    applyWebsiteTheme(merged.theme);
+    persistCMS(merged);
+  };
+
+  const applyTheme = (themeId) => {
+    const applied = applyWebsiteTheme(themeId);
+    const nextThemeId = applied?.id || themeId || DEFAULT_CMS.theme;
+    const next = mergeCmsContent({ ...cmsContent, theme: nextThemeId });
+    setCmsContent(next);
+    persistCMS(next);
   };
 
   const resetCMS = () => {
     setCmsContent(DEFAULT_CMS);
-    try {
-      localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(DEFAULT_CMS));
-      window.dispatchEvent(new Event('gem_cms_updated'));
-    } catch (e) {
-      console.error('Failed to reset CMS content', e);
-    }
+    applyWebsiteTheme(DEFAULT_CMS.theme);
+    persistCMS(DEFAULT_CMS);
   };
 
   return (
-    <CMSContext.Provider value={{ cmsContent, updateCMS, resetCMS, DEFAULT_CMS }}>
+    <CMSContext.Provider
+      value={{
+        cmsContent,
+        activeTheme: cmsContent?.theme || DEFAULT_CMS.theme,
+        updateCMS,
+        applyTheme,
+        resetCMS,
+        DEFAULT_CMS,
+      }}
+    >
       {children}
     </CMSContext.Provider>
   );
@@ -142,7 +190,9 @@ export function useCMS() {
   if (!context) {
     return {
       cmsContent: DEFAULT_CMS,
+      activeTheme: DEFAULT_CMS.theme,
       updateCMS: () => {},
+      applyTheme: () => {},
       resetCMS: () => {},
       DEFAULT_CMS
     };

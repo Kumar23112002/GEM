@@ -5,35 +5,51 @@ import Footer from '../components/common/Footer';
 import Modal from '../components/common/Modal';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
 
 export default function CheckoutPage() {
   const { cart, totals, clearCart } = useCart();
-  const { currentUser } = useAuth();
+  const { currentUser, login } = useAuth();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    firstName: currentUser?.name ? currentUser.name.split(' ')[0] : 'Priya',
-    lastName: currentUser?.name ? currentUser.name.split(' ')[1] || 'Sharma' : 'Sharma',
-    email: currentUser?.email || 'buyer@goeazymart.com',
-    phone: currentUser?.phone || '+91 98765 43210',
-    address: 'A-204, Sunrise Apartments, Palm Beach Road',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    zip: '400001',
-    country: 'India',
+    firstName: currentUser?.name ? currentUser.name.split(' ')[0] : '',
+    lastName: currentUser?.name ? currentUser.name.split(' ')[1] || '' : '',
+    email: currentUser?.email || '',
+    phone: currentUser?.phone || '',
+    address: currentUser?.address || 'A-204, Sunrise Apartments, Palm Beach Road',
+    city: currentUser?.city || 'Mumbai',
+    state: currentUser?.state || 'Maharashtra',
+    zip: currentUser?.zip || '400001',
+    country: currentUser?.country || 'India',
     paymentMethod: 'card',
   });
 
   const [submitting, setSubmitting] = useState(false);
   const [successOrder, setSuccessOrder] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     if (cart.length === 0 && !successOrder) {
       navigate('/cart');
     }
   }, [cart, successOrder, navigate]);
+
+  useEffect(() => {
+    if (currentUser) {
+      const names = currentUser.name ? currentUser.name.split(' ') : ['', ''];
+      setFormData((prev) => ({
+        ...prev,
+        firstName: prev.firstName || names[0] || '',
+        lastName: prev.lastName || names.slice(1).join(' ') || '',
+        email: prev.email || currentUser.email || '',
+        phone: prev.phone || currentUser.phone || '',
+      }));
+    }
+  }, [currentUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,6 +58,10 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    if (!currentUser) {
+      setShowAuthModal(true);
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -96,6 +116,60 @@ export default function CheckoutPage() {
         <div className="row g-4">
           {/* Shipping & Payment Form */}
           <div className="col-12 col-lg-7">
+            {!currentUser && (
+              <div
+                className="card border-0 shadow-sm rounded-4 p-3 p-sm-4 mb-4"
+                style={{
+                  backgroundColor: '#fffbeb',
+                  borderLeft: `5px solid ${colors.orange}`,
+                }}
+              >
+                <div className="d-flex align-items-start gap-3">
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      backgroundColor: '#fef3c7',
+                      color: '#b45309',
+                      fontSize: '18px',
+                    }}
+                  >
+                    <i className="fas fa-user-lock"></i>
+                  </div>
+                  <div className="flex-grow-1">
+                    <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+                      <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: '15px' }}>
+                        Sign In Required to Place Order
+                      </h6>
+                      <span className="badge bg-warning text-dark fw-semibold px-2.5 py-1">
+                        Guest Browsing
+                      </span>
+                    </div>
+                    <p className="small text-muted mb-2.5" style={{ lineHeight: '1.5' }}>
+                      You can review your order as a guest, but <strong>you must log in to finalize this order</strong>, bind the Escrow trade guarantee, and receive live shipment tracking.
+                    </p>
+                    <div className="d-flex flex-wrap gap-2">
+                      <Link
+                        to="/login?redirect=/checkout"
+                        className="btn btn-sm text-white px-3 py-1.5 fw-semibold shadow-sm d-flex align-items-center gap-1.5"
+                        style={{ backgroundColor: colors.darkBlue }}
+                      >
+                        <i className="fas fa-sign-in-alt"></i>
+                        <span>Sign In Now</span>
+                      </Link>
+                      <Link
+                        to="/register?redirect=/checkout"
+                        className="btn btn-sm btn-outline-secondary px-3 py-1.5 fw-medium"
+                      >
+                        Register Account
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handlePlaceOrder}>
               {/* Shipping Address */}
               <div className="card border-0 shadow-sm rounded-4 p-4 mb-4" style={{ backgroundColor: colors.white }}>
@@ -258,18 +332,30 @@ export default function CheckoutPage() {
                   ))}
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn text-white w-100 py-2 py-sm-3 fw-bold rounded-3 shadow-sm fs-6 fs-sm-5 mt-2"
-                  style={{ backgroundColor: colors.primary }}
-                >
-                  {submitting ? (
-                    <span><i className="fas fa-spinner fa-spin me-2"></i> Placing Order...</span>
-                  ) : (
-                    <span><i className="fas fa-lock me-2"></i> Confirm & Authorize Payment (₹{totals.total.toLocaleString()})</span>
-                  )}
-                </button>
+                {!currentUser ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAuthModal(true)}
+                    className="btn text-white w-100 py-2 py-sm-3 fw-bold rounded-3 shadow-sm fs-6 fs-sm-5 mt-2 d-flex align-items-center justify-content-center gap-2"
+                    style={{ backgroundColor: colors.darkBlue }}
+                  >
+                    <i className="fas fa-lock text-warning"></i>
+                    <span>Sign In to Authorize & Place Order ({formatPrice(totals.total)})</span>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="btn text-white w-100 py-2 py-sm-3 fw-bold rounded-3 shadow-sm fs-6 fs-sm-5 mt-2"
+                    style={{ backgroundColor: colors.primary }}
+                  >
+                    {submitting ? (
+                      <span><i className="fas fa-spinner fa-spin me-2"></i> Placing Order...</span>
+                    ) : (
+                      <span><i className="fas fa-lock me-2"></i> Confirm & Authorize Payment ({formatPrice(totals.total)})</span>
+                    )}
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -298,11 +384,11 @@ export default function CheckoutPage() {
                         {item.title}
                       </h6>
                       <div className="small text-muted">
-                        Qty: {item.quantity} × ₹{item.price.toLocaleString()}
+                        Qty: {item.quantity} × {formatPrice(item.price)}
                       </div>
                     </div>
                     <div className="fw-bold small text-dark">
-                      ₹{(item.price * item.quantity).toLocaleString()}
+                      {formatPrice(item.price * item.quantity)}
                     </div>
                   </div>
                 ))}
@@ -311,17 +397,17 @@ export default function CheckoutPage() {
               <div className="border-top pt-3 d-flex flex-column gap-2 small text-muted">
                 <div className="d-flex justify-content-between">
                   <span>Subtotal</span>
-                  <span className="fw-semibold text-dark">₹{totals.subtotal.toLocaleString()}</span>
+                  <span className="fw-semibold text-dark">{formatPrice(totals.subtotal)}</span>
                 </div>
                 <div className="d-flex justify-content-between">
                   <span>Shipping</span>
                   <span className="fw-semibold text-dark">
-                    {totals.shipping === 0 ? <span className="text-success fw-bold">FREE</span> : `₹${totals.shipping}`}
+                    {totals.shipping === 0 ? <span className="text-success fw-bold">FREE</span> : formatPrice(totals.shipping)}
                   </span>
                 </div>
                 <div className="d-flex justify-content-between">
                   <span>Tax (5%)</span>
-                  <span className="fw-semibold text-dark">₹{totals.tax.toLocaleString()}</span>
+                  <span className="fw-semibold text-dark">{formatPrice(totals.tax)}</span>
                 </div>
                 <div
                   className="d-flex justify-content-between align-items-center py-2 border-top border-bottom my-2"
@@ -329,7 +415,7 @@ export default function CheckoutPage() {
                 >
                   <span className="fw-bold text-dark fs-6">Grand Total</span>
                   <span className="fw-bold fs-4" style={{ color: colors.primary }}>
-                    ₹{totals.total.toLocaleString()}
+                    {formatPrice(totals.total)}
                   </span>
                 </div>
               </div>
@@ -344,6 +430,63 @@ export default function CheckoutPage() {
           </div>
         </div>
       </main>
+
+      {/* Guest Login Required Modal */}
+      <Modal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Sign In Required to Complete Order"
+        size="md"
+      >
+        <div className="text-center py-2">
+          <div
+            className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+            style={{ width: '64px', height: '64px', backgroundColor: '#fef3c7', color: '#b45309', fontSize: '28px' }}
+          >
+            <i className="fas fa-user-lock"></i>
+          </div>
+          <h5 className="fw-bold mb-2 text-dark">Please Sign In to Place Your Order</h5>
+          <p className="small text-muted mb-4" style={{ maxWidth: '380px', margin: '0 auto', lineHeight: '1.6' }}>
+            Guest users can browse products and add to cart, but an authenticated account is required to generate legal trade contracts, activate Escrow trade protection, and track your consignments.
+          </p>
+
+          <div className="d-flex flex-column gap-2 mb-3">
+            <Link
+              to="/login?redirect=/checkout"
+              className="btn text-white py-2.5 fw-semibold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2"
+              style={{ backgroundColor: colors.darkBlue }}
+            >
+              <i className="fas fa-sign-in-alt"></i>
+              <span>Sign In to Complete Order</span>
+            </Link>
+            <Link
+              to="/register?redirect=/checkout"
+              className="btn btn-outline-secondary py-2.5 fw-semibold rounded-3"
+            >
+              Create a New Account
+            </Link>
+          </div>
+
+          {/* Quick Demo Login Option */}
+          <div className="pt-3 border-top mt-3">
+            <div className="small text-muted fw-semibold mb-2" style={{ fontSize: '11px' }}>
+              <i className="fas fa-bolt text-warning me-1"></i> Quick Test: Instant 1-Click Login as Buyer:
+            </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-success px-3 py-1.5 fw-medium rounded-pill"
+              onClick={async () => {
+                const res = await login('buyer@goeazymart.com', 'Goeazy#Buyer2026');
+                if (res.success) {
+                  setShowAuthModal(false);
+                }
+              }}
+            >
+              <i className="fas fa-user-check me-1"></i> Login as Priya Sharma (Demo Buyer)
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Order Success Modal */}
       <Modal
@@ -372,7 +515,7 @@ export default function CheckoutPage() {
           </p>
           <div className="p-3 rounded-3 bg-light text-start mb-4 border small">
             <div><strong>Order ID:</strong> {successOrder?.id}</div>
-            <div><strong>Total Amount:</strong> ₹{successOrder?.amount?.toLocaleString()}</div>
+            <div><strong>Total Amount:</strong> {formatPrice(successOrder?.amount)}</div>
             <div><strong>Carrier Assigned:</strong> {successOrder?.carrier}</div>
             <div><strong>Consignment Tracking:</strong> {successOrder?.tracking}</div>
           </div>

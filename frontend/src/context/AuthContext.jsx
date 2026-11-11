@@ -56,13 +56,37 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('goeazy_user');
   };
 
+  const updateProfile = async (updatedData) => {
+    setLoading(true);
+    try {
+      const updatedUser = { ...currentUser, ...updatedData };
+      setCurrentUser(updatedUser);
+      localStorage.setItem('goeazy_user', JSON.stringify(updatedUser));
+
+      try {
+        const regUsers = JSON.parse(localStorage.getItem('gem_registered_users') || '[]');
+        const idx = regUsers.findIndex(u => u.id === updatedUser.id || u.email === updatedUser.email);
+        if (idx !== -1) {
+          regUsers[idx] = { ...regUsers[idx], ...updatedData };
+          localStorage.setItem('gem_registered_users', JSON.stringify(regUsers));
+        }
+      } catch (e) {
+        console.error('Storage sync error:', e);
+      }
+
+      return { success: true, user: updatedUser };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Quick switch for testing and demo purposes
   const switchRole = async (email, password) => {
     return login(email, password);
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, register, switchRole, loading }}>
+    <AuthContext.Provider value={{ currentUser, login, logout, register, updateProfile, switchRole, loading }}>
       {children}
     </AuthContext.Provider>
   );

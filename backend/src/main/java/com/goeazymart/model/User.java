@@ -1,12 +1,24 @@
 package com.goeazymart.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "users")
 public class User {
+
+    @Id
     private String id;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
     private String password;
     private String role;
     private String name;
+
+    @Column(columnDefinition = "TEXT")
     private String avatar;
+
     private String redirect;
     private String company;
     private String phone;

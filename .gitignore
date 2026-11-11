@@ -1,0 +1,29 @@
+# Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Java / Maven Backend
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+
+# Environment & Secrets (NEVER COMMIT)
+.env
+*.env
+backend/.env
+frontend/.env
+*.env.local
+
+# IDE & OS
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+

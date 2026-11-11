@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme/colors';
+import BrandLogo from '../components/common/BrandLogo';
 
 export default function RegisterPage() {
   const { register, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedRole, setSelectedRole] = useState('buyer');
@@ -32,6 +35,8 @@ export default function RegisterPage() {
   });
 
   const [errorMsg, setErrorMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -81,7 +86,7 @@ export default function RegisterPage() {
 
     const res = await register(payload);
     if (res.success && res.user) {
-      navigate(res.user.redirect || '/buyer-dashboard');
+      navigate(redirectUrl || res.user.redirect || '/buyer-dashboard');
     } else {
       setErrorMsg(res.message || 'Registration failed');
     }
@@ -92,26 +97,16 @@ export default function RegisterPage() {
       <div className="container" style={{ maxWidth: '960px' }}>
         {/* Top Header */}
         <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-          <Link to="/" className="text-decoration-none d-flex align-items-center gap-2">
-            <div
-              className="rounded-circle d-flex align-items-center justify-content-center"
-              style={{
-                width: '36px',
-                height: '36px',
-                backgroundColor: colors.primarySubtle,
-                color: colors.primary,
-                fontSize: '18px',
-              }}
-            >
-              <i className="fas fa-shopping-cart"></i>
-            </div>
-            <span className="fw-bold fs-5" style={{ color: colors.darkBlue }}>
-              GOEAZY<span style={{ color: colors.primary }}>MART</span>
-            </span>
+          <Link to="/" className="text-decoration-none d-flex align-items-center" title="Goeazymart - Anywhere & Anytime">
+            <BrandLogo surface="light" height="40px" />
           </Link>
           <div className="small text-muted">
             Already have an account?{' '}
-            <Link to="/login" className="fw-semibold text-decoration-none" style={{ color: colors.primary }}>
+            <Link
+              to={redirectUrl ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : '/login'}
+              className="fw-semibold text-decoration-none"
+              style={{ color: colors.primary }}
+            >
               Sign In
             </Link>
           </div>
@@ -321,29 +316,65 @@ export default function RegisterPage() {
               <div className="row g-3 mb-4">
                 <div className="col-12 col-sm-6">
                   <label className="form-label small fw-semibold">Password *</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    autoComplete="new-password"
-                    data-lpignore="true"
-                    required
-                  />
+                  <div className="position-relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="form-control pe-5 shadow-none"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      autoComplete="new-password"
+                      data-lpignore="true"
+                      placeholder="Enter strong password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-link text-decoration-none p-0 position-absolute end-0 top-50 translate-middle-y me-3 border-0 d-flex align-items-center"
+                      style={{
+                        color: showPassword ? colors.primary : '#94a3b8',
+                        fontSize: '15px',
+                        zIndex: 5,
+                        boxShadow: 'none',
+                      }}
+                      onClick={() => setShowPassword(!showPassword)}
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                    </button>
+                  </div>
                 </div>
                 <div className="col-12 col-sm-6">
                   <label className="form-label small fw-semibold">Confirm Password *</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    autoComplete="new-password"
-                    data-lpignore="true"
-                    required
-                  />
+                  <div className="position-relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      className="form-control pe-5 shadow-none"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      autoComplete="new-password"
+                      data-lpignore="true"
+                      placeholder="Confirm password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-link text-decoration-none p-0 position-absolute end-0 top-50 translate-middle-y me-3 border-0 d-flex align-items-center"
+                      style={{
+                        color: showConfirmPassword ? colors.primary : '#94a3b8',
+                        fontSize: '15px',
+                        zIndex: 5,
+                        boxShadow: 'none',
+                      }}
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      <i className={`fas ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                    </button>
+                  </div>
                 </div>
               </div>
 

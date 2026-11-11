@@ -3,11 +3,13 @@ import { useSearchParams, Link } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import ProductCard from '../components/common/ProductCard';
+import { useCurrency } from '../context/CurrencyContext';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { formatPrice } = useCurrency();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,6 +23,7 @@ export default function SearchPage() {
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('featured');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [desktopFiltersOpen, setDesktopFiltersOpen] = useState(true);
 
   useEffect(() => {
     setSelectedCategory(searchParams.get('cat') || 'all');
@@ -113,20 +116,31 @@ export default function SearchPage() {
       <div className="container py-4">
         <div className="row g-4">
           {/* Desktop Filter Sidebar */}
-          <aside className="col-12 col-lg-3 d-none d-lg-block">
-            <div className="card border-0 shadow-sm rounded-3 p-4" style={{ backgroundColor: colors.white }}>
-              <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                <h5 className="fw-bold mb-0" style={{ color: colors.darkBlue, fontSize: '16px' }}>
-                  <i className="fas fa-sliders-h me-2 text-success"></i> Filters
-                </h5>
-                <button
-                  type="button"
-                  onClick={resetFilters}
-                  className="btn btn-link text-decoration-none p-0 small text-danger"
-                >
-                  Reset All
-                </button>
-              </div>
+          {desktopFiltersOpen && (
+            <aside className="col-12 col-lg-3 d-none d-lg-block">
+              <div className="card border-0 shadow-sm rounded-3 p-4" style={{ backgroundColor: colors.white }}>
+                <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                  <h5 className="fw-bold mb-0" style={{ color: colors.darkBlue, fontSize: '16px' }}>
+                    <i className="fas fa-sliders-h me-2 text-success"></i> Filters
+                  </h5>
+                  <div className="d-flex align-items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={resetFilters}
+                      className="btn btn-link text-decoration-none p-0 small text-danger"
+                    >
+                      Reset All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDesktopFiltersOpen(false)}
+                      className="btn btn-sm btn-link text-muted p-0 text-decoration-none shadow-none ms-1"
+                      title="Hide Filters Sidebar"
+                    >
+                      <i className="fas fa-chevron-left"></i>
+                    </button>
+                  </div>
+                </div>
 
               {/* Categories */}
               <div className="mb-4">
@@ -166,7 +180,7 @@ export default function SearchPage() {
                     {selectedCategory === 'soft' || selectedCategory === 'hard' ? 'Max Target Budget' : 'Max Price'}
                   </h6>
                   <span className="small fw-bold" style={{ color: colors.primary }}>
-                    ₹{maxPrice.toLocaleString()}
+                    {formatPrice(maxPrice)}
                   </span>
                 </div>
                 <input
@@ -216,9 +230,10 @@ export default function SearchPage() {
               </div>
             </div>
           </aside>
+          )}
 
           {/* Main Products Grid */}
-          <main className="col-12 col-lg-9">
+          <main className={desktopFiltersOpen ? "col-12 col-lg-9" : "col-12"}>
             {/* Control Bar */}
             <div
               className="card border-0 shadow-sm rounded-3 p-3 mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3"
@@ -234,6 +249,17 @@ export default function SearchPage() {
               </div>
 
               <div className="d-flex align-items-center justify-content-between justify-content-sm-end w-100 w-sm-auto gap-2">
+                {/* Desktop Filter Toggle */}
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary d-none d-lg-flex align-items-center gap-1.5 btn-sm text-nowrap shadow-none"
+                  onClick={() => setDesktopFiltersOpen(!desktopFiltersOpen)}
+                  title={desktopFiltersOpen ? 'Hide Filters Sidebar' : 'Show Filters Sidebar'}
+                >
+                  <i className={`fas ${desktopFiltersOpen ? 'fa-sliders-h text-success' : 'fa-filter'}`}></i>
+                  <span>{desktopFiltersOpen ? 'Hide Filters' : 'Show Filters'}</span>
+                </button>
+
                 {/* Mobile Filter Toggle */}
                 <button
                   type="button"
@@ -293,7 +319,7 @@ export default function SearchPage() {
                   ))}
                 </div>
                 <div className="mb-2">
-                  <label className="small fw-semibold">Max Price: ₹{maxPrice.toLocaleString()}</label>
+                  <label className="small fw-semibold">Max Price: {formatPrice(maxPrice)}</label>
                   <input
                     type="range"
                     className="form-range"

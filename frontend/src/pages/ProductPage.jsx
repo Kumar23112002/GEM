@@ -5,6 +5,8 @@ import Footer from '../components/common/Footer';
 import Modal from '../components/common/Modal';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
 
@@ -14,6 +16,8 @@ export default function ProductPage() {
   const navigate = useNavigate();
   const { addToCart, showToast } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { currentUser } = useAuth();
+  const { formatPrice, currentCurrency } = useCurrency();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +31,12 @@ export default function ProductPage() {
   const [rfqUnit, setRfqUnit] = useState('Metric Tons');
   const [rfqTargetPrice, setRfqTargetPrice] = useState('');
   const [rfqNotes, setRfqNotes] = useState('');
+
+  // Direct Negotiation Modal state
+  const [negotiateModalOpen, setNegotiateModalOpen] = useState(false);
+  const [negTargetPrice, setNegTargetPrice] = useState('');
+  const [negQty, setNegQty] = useState('');
+  const [negNotes, setNegNotes] = useState('');
 
   useEffect(() => {
     async function loadProduct() {
@@ -92,19 +102,64 @@ export default function ProductPage() {
 
   const submitRfq = async (e) => {
     e.preventDefault();
+    if (!currentUser) {
+      showToast('Please sign in to submit a bulk commodity RFQ.', 'warning');
+      navigate(`/login?redirect=/product/${id}`);
+      return;
+    }
     await api.createRFQ({
       product: product.title,
       qty: `${rfqQty} ${rfqUnit}`,
-      yourTarget: rfqTargetPrice ? `₹${rfqTargetPrice}` : 'Market Best',
+      yourTarget: rfqTargetPrice ? `${currentCurrency?.symbol || '₹'}${rfqTargetPrice}` : 'Market Best',
       seller: product.seller || 'Punjab Agro Mills',
-      company: 'My Trading Co',
-      buyer: 'Me',
-      country: 'India',
+      company: currentUser.company || currentUser.name || 'My Trading Co',
+      buyer: currentUser.name || 'Me',
+      country: currentUser.country || 'India',
       notes: rfqNotes
     });
     setRfqModalOpen(false);
     showToast(`Bulk RFQ for ${rfqQty} ${rfqUnit} submitted successfully!`);
     navigate('/buyer-dashboard');
+  };
+
+  const handleOpenNegotiateModal = () => {
+    if (!currentUser) {
+      navigate(`/login?redirect=/product/${id}`);
+      return;
+    }
+    setNegQty(product.moq || '100 Metric Tons');
+    setNegTargetPrice(product.price ? `${currentCurrency?.symbol || '₹'}${product.price}` : '');
+    setNegNotes('');
+    setNegotiateModalOpen(true);
+  };
+
+  const submitDirectNegotiation = async (e) => {
+    e.preventDefault();
+    if (!currentUser) {
+      navigate(`/login?redirect=/product/${id}`);
+      return;
+    }
+
+    const created = await api.createNegotiation({
+      seller: product.seller || 'Punjab Agro Mills',
+      sellerAvatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+      company: `${product.seller || 'Supplier'} Enterprises`,
+      buyer: currentUser.name || 'Goeazymart Buyer',
+      buyerCompany: currentUser.company || 'Commercial Procurement',
+      country: currentUser.country || 'India',
+      product: product.title,
+      qty: negQty || product.moq || '100 Metric Tons',
+      currentOffer: product.price ? `${currentCurrency?.symbol || '₹'}${product.price}` : 'Market Best',
+      yourOffer: negTargetPrice || 'Market Best',
+      status: 'active',
+      online: true,
+      lastMessage: negNotes || `Initial counter-offer proposal: ${negTargetPrice} for ${negQty}`,
+      lastTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    });
+
+    setNegotiateModalOpen(false);
+    showToast(`Direct negotiation initiated with ${product.seller || 'Supplier'}!`);
+    navigate(`/buyer-dashboard?tab=negotiations&negId=${created.id}`);
   };
 
   return (
@@ -220,11 +275,11 @@ export default function ProductPage() {
               ) : (
                 <div className="d-flex align-items-baseline gap-3 mb-3">
                   <span className="fw-bold" style={{ fontSize: '32px', color: colors.primary }}>
-                    ₹{product.price.toLocaleString()}
+                    {formatPrice(product.price)}
                   </span>
                   {product.oldPrice && (
                     <span className="text-decoration-line-through text-muted" style={{ fontSize: '18px' }}>
-                      ₹{product.oldPrice.toLocaleString()}
+                      {formatPrice(product.oldPrice)}
                     </span>
                   )}
                   {discount > 0 && (
@@ -256,7 +311,7 @@ export default function ProductPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setRfqModalOpen(true)}
+                    onClick={handleOpenNegotiateModal}
                     className="btn btn-outline-success px-4 py-3 fw-semibold d-flex align-items-center justify-content-center gap-2 flex-grow-1 flex-sm-grow-0"
                     style={{ borderColor: colors.primary, color: colors.primary, borderRadius: '8px' }}
                   >
@@ -544,7 +599,7 @@ export default function ProductPage() {
           <div className="mb-3">
             <label className="form-label small fw-semibold">Your Target Price per Unit (Optional)</label>
             <div className="input-group">
-              <span className="input-group-text">₹</span>
+              <span className="input-group-text">{currentCurrency?.symbol || '₹'}</span>
               <input
                 type="text"
                 className="form-control"
@@ -581,6 +636,76 @@ export default function ProductPage() {
               style={{ backgroundColor: colors.primary }}
             >
               Submit Tender RFQ
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Direct Trade Negotiation Modal */}
+      <Modal
+        isOpen={negotiateModalOpen}
+        onClose={() => setNegotiateModalOpen(false)}
+        title={`Direct Trade Negotiation with ${product?.seller || 'Supplier'}`}
+        maxWidth="500px"
+      >
+        <form onSubmit={submitDirectNegotiation}>
+          <div className="p-3 bg-light rounded-3 mb-3 border">
+            <div className="small text-muted">Commodity</div>
+            <strong className="text-dark d-block">{product?.title}</strong>
+            <div className="small text-muted mt-1">Listed Reference Price: <strong className="text-success">{formatPrice(product?.price)}</strong></div>
+          </div>
+
+          <div className="row g-2 mb-3">
+            <div className="col-6">
+              <label className="form-label small fw-semibold">Target Volume *</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="e.g. 500 Metric Tons"
+                value={negQty}
+                onChange={(e) => setNegQty(e.target.value)}
+                required
+              />
+            </div>
+            <div className="col-6">
+              <label className="form-label small fw-semibold">Your Target Offer *</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="e.g. ₹1,620/MT"
+                value={negTargetPrice}
+                onChange={(e) => setNegTargetPrice(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="form-label small fw-semibold">Proposal Terms / Specifications *</label>
+            <textarea
+              className="form-control"
+              rows="3"
+              placeholder="State your payment terms (LC, Escrow), target destination port, and delivery schedule..."
+              value={negNotes}
+              onChange={(e) => setNegNotes(e.target.value)}
+              required
+            ></textarea>
+          </div>
+
+          <div className="d-flex justify-content-end gap-2 pt-2 border-top">
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={() => setNegotiateModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn text-white fw-semibold"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <i className="fas fa-comments-dollar me-1"></i> Initiate Live Negotiation
             </button>
           </div>
         </form>

@@ -4,7 +4,7 @@
    ============================================================ */
 
 :root {
-  /* Primary Green */
+  /* Primary Theme Accent */
   --gem-primary: #1f8a4c;
   --gem-primary-hover: #166a39;
   --gem-primary-dark: #0e4a25;
@@ -12,13 +12,16 @@
   --gem-primary-soft: #dcfce7;
   --gem-primary-subtle: #f0fdf4;
   --gem-primary-border: #86efac;
+  --gem-primary-rgb: 31, 138, 76;
+  --gem-primary-light-rgb: 74, 222, 128;
 
-  /* Dark Navy / Blue */
+  /* Dark Header / Sidebar Chrome */
   --gem-dark-blue: #122032;
   --gem-dark-blue-darker: #0a1526;
   --gem-dark-blue-light: #1f2937;
   --gem-dark-blue-muted: #334155;
   --gem-dark-blue-subtle: #e2e8f0;
+  --gem-dark-blue-rgb: 18, 32, 50;
 
   /* Surfaces & Backgrounds */
   --gem-light-bg: #f8f9fa;

@@ -1,12 +1,22 @@
 package com.goeazymart.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "disputes")
 public class Dispute {
+
+    @Id
     private String id;
+
     private String orderId;
     private String buyer;
     private String seller;
     private Double amount;
+
+    @Column(columnDefinition = "TEXT")
     private String reason;
+
     private String priority;
     private String status;
     private String opened;

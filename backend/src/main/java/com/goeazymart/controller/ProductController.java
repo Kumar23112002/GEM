@@ -19,13 +19,7 @@ public class ProductController {
 
     @GetMapping
     public List<Product> getProducts(@RequestParam(required = false) String category) {
-        List<Product> all = service.getAllProducts();
-        if (category != null && !category.isEmpty() && !category.equalsIgnoreCase("all")) {
-            return all.stream()
-                    .filter(p -> category.equalsIgnoreCase(p.getCategory()))
-                    .toList();
-        }
-        return all;
+        return service.getProductsByCategory(category);
     }
 
     @GetMapping("/{id}")

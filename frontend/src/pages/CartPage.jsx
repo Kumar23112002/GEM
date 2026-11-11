@@ -3,10 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { colors } from '../theme/colors';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, totals, showToast } = useCart();
+  const { currentUser } = useAuth();
+  const { formatPrice } = useCurrency();
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const navigate = useNavigate();
@@ -100,7 +104,7 @@ export default function CartPage() {
                             {item.title}
                           </Link>
                           <div className="small text-muted mb-1">
-                            Unit Price: <span className="fw-semibold text-dark">₹{item.price.toLocaleString()}</span>
+                            Unit Price: <span className="fw-semibold text-dark">{formatPrice(item.price)}</span>
                           </div>
                           <span className="badge bg-light text-muted border small">
                             {item.categoryName || 'Standard'}
@@ -136,7 +140,7 @@ export default function CartPage() {
 
                         {/* Line total */}
                         <div className="fw-bold text-end" style={{ minWidth: '90px', fontSize: '16px', color: colors.darkBlue }}>
-                          ₹{(item.price * item.quantity).toLocaleString()}
+                          {formatPrice(item.price * item.quantity)}
                         </div>
 
                         {/* Remove */}
@@ -173,7 +177,7 @@ export default function CartPage() {
 
                 <div className="d-flex justify-content-between mb-2 small text-muted">
                   <span>Items Subtotal</span>
-                  <span className="fw-semibold text-dark">₹{totals.subtotal.toLocaleString()}</span>
+                  <span className="fw-semibold text-dark">{formatPrice(totals.subtotal)}</span>
                 </div>
 
                 <div className="d-flex justify-content-between mb-2 small text-muted">
@@ -182,20 +186,20 @@ export default function CartPage() {
                     {totals.shipping === 0 ? (
                       <span className="text-success fw-bold">FREE</span>
                     ) : (
-                      `₹${totals.shipping}`
+                      formatPrice(totals.shipping)
                     )}
                   </span>
                 </div>
 
                 <div className="d-flex justify-content-between mb-3 small text-muted">
                   <span>GST / Tax (5%)</span>
-                  <span className="fw-semibold text-dark">₹{totals.tax.toLocaleString()}</span>
+                  <span className="fw-semibold text-dark">{formatPrice(totals.tax)}</span>
                 </div>
 
                 {promoApplied && (
                   <div className="d-flex justify-content-between mb-2 small text-success fw-bold">
                     <span>Discount (GEM10 10% OFF)</span>
-                    <span>-₹{Math.round(totals.total * 0.1).toLocaleString()}</span>
+                    <span>-{formatPrice(Math.round(totals.total * 0.1))}</span>
                   </div>
                 )}
 
@@ -207,7 +211,7 @@ export default function CartPage() {
                     Estimated Total
                   </span>
                   <span className="fw-bold fs-4" style={{ color: colors.primary }}>
-                    ₹{finalTotal.toLocaleString()}
+                    {formatPrice(finalTotal)}
                   </span>
                 </div>
 
@@ -236,6 +240,13 @@ export default function CartPage() {
                   <span>Proceed to Checkout</span>
                   <i className="fas fa-arrow-right"></i>
                 </Link>
+
+                {!currentUser && (
+                  <div className="small text-muted text-center mt-1 d-flex align-items-center justify-content-center gap-1.5" style={{ fontSize: '11.5px' }}>
+                    <i className="fas fa-user-lock text-warning"></i>
+                    <span>Guest user: Sign-in required at checkout to place order</span>
+                  </div>
+                )}
 
                 <div className="small text-muted text-center mt-2 d-flex align-items-center justify-content-center gap-2">
                   <i className="fas fa-shield-alt text-success"></i>

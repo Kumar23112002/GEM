@@ -2,11 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useCurrency } from '../../context/CurrencyContext';
 import { colors } from '../../theme/colors';
 
 export default function ProductCard({ product }) {
   const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { formatPrice } = useCurrency();
   const isWishlisted = isInWishlist(product.id);
 
   const cartItem = cart?.find((item) => item.id === product.id);
@@ -145,14 +147,14 @@ export default function ProductCard({ product }) {
         ) : (
           <div className="d-flex align-items-baseline gap-2 mb-3 mt-auto">
             <span className="fw-bold" style={{ color: colors.darkBlue, fontSize: '17px' }}>
-              ₹{product.price.toLocaleString()}
+              {formatPrice(product.price)}
             </span>
             {product.oldPrice && (
               <span
                 className="text-decoration-line-through"
                 style={{ color: colors.textMuted, fontSize: '12px' }}
               >
-                ₹{product.oldPrice.toLocaleString()}
+                {formatPrice(product.oldPrice)}
               </span>
             )}
             {discount > 0 && (

@@ -1,12 +1,22 @@
 package com.goeazymart.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "rfqs")
 public class Rfq {
+
+    @Id
     private String id;
+
     private String buyer;
     private String company;
     private String country;
     private String seller;
+
+    @Column(columnDefinition = "TEXT")
     private String product;
+
     private String qty;
     private String targetPrice;
     private String yourTarget;

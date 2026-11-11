@@ -8,12 +8,19 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useCMS } from '../../context/CMSContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { colors } from '../../theme/colors';
+import {
+  resolveSiteContacts,
+  toTelHref,
+  toWhatsappHref,
+  toMailHref,
+} from '../../utils/contactLinks';
 
 export default function Navbar() {
   const { currentUser, logout, updateProfile } = useAuth();
   const { cartCount, showToast } = useCart();
   const { wishlistCount } = useWishlist();
   const { cmsContent } = useCMS();
+  const siteContacts = resolveSiteContacts(cmsContent);
   const { currency, currentCurrency, changeCurrency, currencies } = useCurrency();
   const navigate = useNavigate();
   const location = useLocation();
@@ -145,15 +152,33 @@ export default function Navbar() {
         className="py-1 px-3 d-none d-md-block text-white"
         style={{ backgroundColor: colors.darkBlue, fontSize: '12px' }}
       >
-        <div className="container d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center gap-3">
+        <div className="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div className="d-flex align-items-center gap-3 flex-wrap">
             <span>
               <i className="fas fa-shield-alt text-success me-1"></i> {cmsContent?.topBar?.announcement || 'Verified Global B2B & Retail Marketplace'}
             </span>
             <span>|</span>
-            <span>
-              <i className="fas fa-phone-alt me-1"></i> 24/7 Trade Support: {cmsContent?.topBar?.phone || '+91 98765 43210'}
-            </span>
+            <a href={toTelHref(siteContacts.phone)} className="text-white text-decoration-none">
+              <i className="fas fa-phone-alt me-1"></i> {siteContacts.phone}
+            </a>
+            <span className="d-none d-lg-inline">|</span>
+            <a
+              href={toWhatsappHref(siteContacts.whatsapp, 'Hello Goeazymart Trade Support')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white text-decoration-none d-none d-lg-inline-flex align-items-center gap-1"
+            >
+              <i className="fab fa-whatsapp" style={{ color: '#4ade80' }}></i>
+              <span>WhatsApp: {siteContacts.whatsapp}</span>
+            </a>
+            <span className="d-none d-xl-inline">|</span>
+            <a
+              href={toMailHref(siteContacts.email)}
+              className="text-white text-decoration-none d-none d-xl-inline-flex align-items-center gap-1"
+            >
+              <i className="fas fa-envelope text-success"></i>
+              <span>{siteContacts.email}</span>
+            </a>
           </div>
           <div className="d-flex align-items-center gap-3">
             {/* Global Currency Selector Dropdown */}
@@ -679,6 +704,25 @@ export default function Navbar() {
             </Link>
           </div>
 
+          {/* Mobile Direct Contacts */}
+          <div className="py-2 border-top d-flex flex-wrap gap-2 small">
+            <a href={toTelHref(siteContacts.phone)} className="text-decoration-none fw-medium" style={{ color: colors.darkBlue }}>
+              <i className="fas fa-phone-alt text-success me-1"></i> {siteContacts.phone}
+            </a>
+            <a
+              href={toWhatsappHref(siteContacts.whatsapp, 'Hello Goeazymart Trade Support')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-decoration-none fw-medium"
+              style={{ color: colors.primaryDark }}
+            >
+              <i className="fab fa-whatsapp text-success me-1"></i> {siteContacts.whatsapp}
+            </a>
+            <a href={toMailHref(siteContacts.email)} className="text-decoration-none fw-medium" style={{ color: colors.darkBlue }}>
+              <i className="fas fa-envelope text-success me-1"></i> {siteContacts.email}
+            </a>
+          </div>
+
           {/* Mobile Currency Selector */}
           <div className="pt-2 border-top">
             <div className="small text-muted fw-semibold mb-1 d-flex align-items-center gap-1" style={{ fontSize: '11px' }}>
@@ -892,7 +936,7 @@ export default function Navbar() {
               <input
                 type="text"
                 className={`form-control form-control-sm ${!isEditingProfile ? 'bg-light text-muted' : 'bg-white text-dark'}`}
-                placeholder="+91 98765 43210"
+                placeholder="+971 541421313"
                 value={profileForm.phone}
                 onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                 readOnly={!isEditingProfile}

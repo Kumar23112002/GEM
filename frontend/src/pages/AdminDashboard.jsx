@@ -8,6 +8,7 @@ import { useCMS } from '../context/CMSContext';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
 import { WEBSITE_THEMES } from '../theme/themes';
+import { toTelHref, toWhatsappHref, toMailHref } from '../utils/contactLinks';
 
 export default function AdminDashboard() {
   const { currentUser } = useAuth();
@@ -20,14 +21,20 @@ export default function AdminDashboard() {
   const [disputes, setDisputes] = useState([]);
   const [orders, setOrders] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [clientLeads, setClientLeads] = useState([]);
 
   // Filters
   const [userRoleFilter, setUserRoleFilter] = useState('all');
+  const [leadStatusFilter, setLeadStatusFilter] = useState('all');
+  const [leadSearch, setLeadSearch] = useState('');
 
   // Modals
   const [reviewDispute, setReviewDispute] = useState(null);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: '', slug: '', desc: '', icon: 'fa-box' });
+  const [activeFollowUpLead, setActiveFollowUpLead] = useState(null);
+  const [followUpDraft, setFollowUpDraft] = useState({ status: 'contacted', followUpNote: '' });
+  const [savingLead, setSavingLead] = useState(false);
 
   // CMS Content State
   const { cmsContent, activeTheme, updateCMS, applyTheme, resetCMS, DEFAULT_CMS } = useCMS();
@@ -82,13 +89,14 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function loadData() {
-      const [st, u, c, d, o, a] = await Promise.all([
+      const [st, u, c, d, o, a, leads] = await Promise.all([
         api.getAdminStats(),
         api.getAdminUsers(),
         api.getCategories(),
         api.getDisputes(),
         api.getOrders(),
         api.getAuditLogs(),
+        api.getClientLeads(),
       ]);
       setStats(st);
       setUsers(u);
@@ -96,12 +104,57 @@ export default function AdminDashboard() {
       setDisputes(d);
       setOrders(o);
       setAuditLogs(a);
+      setClientLeads(Array.isArray(leads) ? leads : []);
     }
     loadData();
   }, []);
 
+  const refreshClientLeads = async () => {
+    const leads = await api.getClientLeads();
+    setClientLeads(Array.isArray(leads) ? leads : []);
+  };
+
+  const handleOpenFollowUpModal = (lead) => {
+    setActiveFollowUpLead(lead);
+    setFollowUpDraft({
+      status: lead.status || 'contacted',
+      followUpNote: lead.followUpNote || '',
+    });
+  };
+
+  const handleQuickLeadStatus = async (leadId, newStatus) => {
+    const updated = await api.updateClientLead(leadId, { status: newStatus });
+    if (updated) {
+      setClientLeads((prev) => prev.map((l) => (String(l.id) === String(leadId) ? updated : l)));
+      showToast(`Lead #${leadId} status updated to ${newStatus}.`);
+    }
+  };
+
+  const handleSaveFollowUp = async (e) => {
+    e.preventDefault();
+    if (!activeFollowUpLead) return;
+    setSavingLead(true);
+    try {
+      const updated = await api.updateClientLead(activeFollowUpLead.id, followUpDraft);
+      if (updated) {
+        setClientLeads((prev) => prev.map((l) => (String(l.id) === String(activeFollowUpLead.id) ? updated : l)));
+      }
+      setActiveFollowUpLead(null);
+      showToast('Client follow-up notes saved!');
+    } finally {
+      setSavingLead(false);
+    }
+  };
+
+  const handleDeleteLead = async (leadId) => {
+    await api.deleteClientLead(leadId);
+    setClientLeads((prev) => prev.filter((l) => String(l.id) !== String(leadId)));
+    showToast(`Lead #LD-${leadId} removed.`, 'info');
+  };
+
   const navItems = [
     { id: 'overview', label: 'Platform Pulse', icon: 'fas fa-chart-pie' },
+    { id: 'leads', label: 'Client Follow-Ups', icon: 'fas fa-headset', badge: clientLeads.filter((l) => l.status === 'new').length },
     { id: 'users', label: 'User Directory', icon: 'fas fa-users-cog', badge: users.filter((u) => u.status === 'pending').length },
     { id: 'categories', label: 'Commodity Sectors', icon: 'fas fa-folder-tree', badge: categories.length },
     { id: 'disputes', label: 'Escrow Disputes', icon: 'fas fa-gavel', badge: disputes.filter((d) => d.status === 'open').length },
@@ -202,6 +255,37 @@ export default function AdminDashboard() {
             </div>
           </div>
 
+          {/* Client Visitor Leads Summary Bar */}
+          <div
+            className="card border-0 shadow-sm rounded-4 p-3 px-4 mb-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3"
+            style={{ backgroundColor: colors.primarySubtle, border: `1px solid ${colors.primaryBorder}` }}
+          >
+            <div className="d-flex align-items-center gap-3">
+              <div
+                className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                style={{ width: '44px', height: '44px', backgroundColor: colors.primary, color: '#ffffff' }}
+              >
+                <i className="fas fa-headset"></i>
+              </div>
+              <div>
+                <div className="fw-bold" style={{ color: colors.darkBlue }}>
+                  Visitor & Client Follow-Up Queue ({clientLeads.filter((l) => l.status === 'new').length} New / {clientLeads.length} Total)
+                </div>
+                <div className="small text-muted">
+                  Review site visitor callback requests, Contact Page inquiries, and newsletter leads with 1-click Call, WhatsApp & Email follow-up.
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="btn text-white fw-semibold px-3 py-2 flex-shrink-0"
+              style={{ backgroundColor: colors.primary }}
+              onClick={() => setActiveTab('leads')}
+            >
+              Open Follow-Up CRM →
+            </button>
+          </div>
+
           <div className="row g-4">
             {/* Quick Disputes queue */}
             <div className="col-12 col-lg-8">
@@ -286,6 +370,217 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* CLIENT FOLLOW-UPS TAB */}
+      {activeTab === 'leads' && (() => {
+        const normalizedQuery = leadSearch.trim().toLowerCase();
+        const filteredLeads = clientLeads.filter((lead) => {
+          const matchesStatus = leadStatusFilter === 'all' || (lead.status || 'new').toLowerCase() === leadStatusFilter;
+          const matchesSearch =
+            !normalizedQuery ||
+            [lead.name, lead.email, lead.phone, lead.whatsapp, lead.company, lead.interest, lead.source]
+              .some((v) => String(v || '').toLowerCase().includes(normalizedQuery));
+          return matchesStatus && matchesSearch;
+        });
+
+        const statusBadgeMap = {
+          new: { bg: '#fef2f2', color: '#dc2626', label: 'New' },
+          contacted: { bg: '#eff6ff', color: '#1d4ed8', label: 'Contacted' },
+          qualified: { bg: '#fffbeb', color: '#d97706', label: 'Qualified' },
+          converted: { bg: '#dcfce7', color: '#15803d', label: 'Converted' },
+          closed: { bg: '#f1f5f9', color: '#475569', label: 'Closed' },
+        };
+
+        return (
+          <div className="card border-0 shadow-sm rounded-4 p-4" style={{ backgroundColor: colors.white }}>
+            <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+              <div>
+                <span
+                  className="badge rounded-pill px-3 py-1 mb-2 fw-semibold"
+                  style={{ backgroundColor: colors.primarySubtle, color: colors.primaryDark, border: `1px solid ${colors.primaryBorder}` }}
+                >
+                  <i className="fas fa-user-check me-1"></i> VISITOR LEAD CAPTURE & CRM
+                </span>
+                <h4 className="fw-bold mb-1 text-dark">Client Follow-Ups & Inquiries</h4>
+                <p className="small text-muted mb-0">
+                  Every client visiting the website who requests a callback, submits Contact Us, or joins market updates appears here for immediate follow-up.
+                </p>
+              </div>
+              <div className="d-flex gap-2 align-items-center flex-shrink-0">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary fw-semibold px-3 py-2 text-nowrap"
+                  onClick={refreshClientLeads}
+                >
+                  <i className="fas fa-rotate me-1"></i> Refresh Leads
+                </button>
+              </div>
+            </div>
+
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+              <div className="d-flex flex-wrap gap-2">
+                {['all', 'new', 'contacted', 'qualified', 'converted', 'closed'].map((st) => {
+                  const count = st === 'all'
+                    ? clientLeads.length
+                    : clientLeads.filter((l) => (l.status || 'new').toLowerCase() === st).length;
+                  return (
+                    <button
+                      key={st}
+                      type="button"
+                      className={`btn btn-sm rounded-pill px-3 ${leadStatusFilter === st ? 'btn-success text-white' : 'btn-light border'}`}
+                      onClick={() => setLeadStatusFilter(st)}
+                      style={{ textTransform: 'capitalize' }}
+                    >
+                      {st} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ minWidth: '250px' }}>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Search name, phone, email, company..."
+                  value={leadSearch}
+                  onChange={(e) => setLeadSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {filteredLeads.length === 0 ? (
+              <div className="text-center py-5 border rounded-4 bg-light">
+                <i className="fas fa-headset fs-1 mb-3" style={{ color: colors.primary }}></i>
+                <h6 className="fw-bold text-dark">No Visitor Leads Matching Filter</h6>
+                <p className="small text-muted mb-0">
+                  When a visitor submits their contact details from the storefront callback popup or Contact Page, they will show up here immediately.
+                </p>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table align-middle table-hover mb-0">
+                  <thead className="table-light small">
+                    <tr>
+                      <th>Lead</th>
+                      <th>Client & Company</th>
+                      <th>Direct Follow-Up Channels</th>
+                      <th>Interest & Requirement</th>
+                      <th>Source / Page</th>
+                      <th>Follow-Up Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="small">
+                    {filteredLeads.map((lead) => {
+                      const stKey = (lead.status || 'new').toLowerCase();
+                      const badge = statusBadgeMap[stKey] || statusBadgeMap.new;
+                      const whatsappNum = lead.whatsapp || lead.phone;
+
+                      return (
+                        <tr key={lead.id}>
+                          <td className="fw-bold">
+                            #LD-{lead.id}
+                            <div className="text-muted fw-normal" style={{ fontSize: '11px' }}>{lead.createdAt || 'Recent'}</div>
+                          </td>
+                          <td>
+                            <div className="fw-bold text-dark">{lead.name || 'Site Visitor'}</div>
+                            {(lead.company || lead.country) && (
+                              <div className="text-muted" style={{ fontSize: '11.5px' }}>
+                                {[lead.company, lead.country].filter(Boolean).join(' • ')}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            <div className="d-flex flex-column gap-1">
+                              {lead.phone && (
+                                <a href={toTelHref(lead.phone)} className="text-decoration-none fw-medium text-dark d-inline-flex align-items-center gap-1 text-nowrap">
+                                  <i className="fas fa-phone-alt text-success"></i> <span>{lead.phone}</span>
+                                </a>
+                              )}
+                              {whatsappNum && (
+                                <a
+                                  href={toWhatsappHref(whatsappNum, `Hello ${lead.name || 'there'}, following up on your Goeazymart inquiry (${lead.interest || 'Trade Desk'}).`)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-decoration-none fw-medium d-inline-flex align-items-center gap-1 text-nowrap"
+                                  style={{ color: '#15803d' }}
+                                >
+                                  <i className="fab fa-whatsapp"></i> <span>WhatsApp Chat</span>
+                                </a>
+                              )}
+                              {lead.email && (
+                                <a href={toMailHref(lead.email, 'Follow-up from Goeazymart Trade Desk')} className="text-decoration-none text-muted d-inline-flex align-items-center gap-1 text-nowrap">
+                                  <i className="fas fa-envelope text-primary"></i> <span>{lead.email}</span>
+                                </a>
+                              )}
+                            </div>
+                          </td>
+                          <td style={{ maxWidth: '240px' }}>
+                            <div className="fw-semibold text-dark">{lead.interest || 'General Inquiry'}</div>
+                            {lead.notes && (
+                              <div className="text-muted text-truncate" title={lead.notes} style={{ maxWidth: '230px' }}>
+                                {lead.notes}
+                              </div>
+                            )}
+                            {lead.followUpNote && (
+                              <div className="mt-1 px-2 py-1 rounded bg-light border text-dark" style={{ fontSize: '11px' }}>
+                                <strong>Note:</strong> {lead.followUpNote}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            <span className="badge bg-light text-dark border mb-1">{lead.source || 'Visitor Popup'}</span>
+                            {lead.pageUrl && (
+                              <div className="text-muted" style={{ fontSize: '11px' }}>{lead.pageUrl}</div>
+                            )}
+                          </td>
+                          <td>
+                            <select
+                              className="form-select form-select-sm fw-semibold"
+                              value={stKey}
+                              onChange={(e) => handleQuickLeadStatus(lead.id, e.target.value)}
+                              style={{
+                                backgroundColor: badge.bg,
+                                color: badge.color,
+                                borderColor: 'transparent',
+                                minWidth: '120px',
+                              }}
+                            >
+                              <option value="new">New</option>
+                              <option value="contacted">Contacted</option>
+                              <option value="qualified">Qualified</option>
+                              <option value="converted">Converted</option>
+                              <option value="closed">Closed</option>
+                            </select>
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center gap-1">
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-dark fw-semibold text-nowrap"
+                                onClick={() => handleOpenFollowUpModal(lead)}
+                              >
+                                <i className="fas fa-pen-to-square me-1"></i> Log Follow-Up
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger"
+                                title="Delete lead"
+                                onClick={() => handleDeleteLead(lead.id)}
+                              >
+                                <i className="fas fa-trash-alt"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* USERS TAB */}
       {activeTab === 'users' && (
@@ -703,13 +998,17 @@ export default function AdminDashboard() {
             {/* TOP BAR & CONTACT SUBTAB */}
             {cmsSubTab === 'topBar' && (
               <div>
-                <div className="p-3 mb-4 rounded-3 text-white small d-flex justify-content-between align-items-center"
+                <div className="p-3 mb-4 rounded-3 text-white small d-flex flex-wrap justify-content-between align-items-center gap-2"
                   style={{ backgroundColor: colors.darkBlue }}
                 >
-                  <div className="d-flex align-items-center gap-3">
+                  <div className="d-flex flex-wrap align-items-center gap-3">
                     <span><i className="fas fa-shield-alt text-success me-1"></i> {cmsForm?.topBar?.announcement}</span>
                     <span>|</span>
                     <span><i className="fas fa-phone-alt me-1"></i> {cmsForm?.topBar?.phone}</span>
+                    <span>|</span>
+                    <span><i className="fab fa-whatsapp text-success me-1"></i> {cmsForm?.topBar?.whatsapp || '+91 91767 60808'}</span>
+                    <span>|</span>
+                    <span><i className="fas fa-envelope me-1"></i> {cmsForm?.topBar?.supportEmail}</span>
                   </div>
                   <div>
                     <i className="fas fa-globe me-1"></i> {cmsForm?.topBar?.currency}
@@ -729,24 +1028,35 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="col-12 col-md-6">
-                    <label className="form-label small fw-semibold text-dark">24/7 Hotline Phone Number</label>
+                    <label className="form-label small fw-semibold text-dark">Contact Number</label>
                     <input
                       type="text"
                       className="form-control"
                       value={cmsForm?.topBar?.phone || ''}
                       onChange={(e) => handleCmsChange('topBar', 'phone', e.target.value)}
-                      placeholder="e.g. +91 98765 43210"
+                      placeholder="e.g. +971 541421313"
                     />
                   </div>
 
                   <div className="col-12 col-md-6">
-                    <label className="form-label small fw-semibold text-dark">Trade Desk Support Email</label>
+                    <label className="form-label small fw-semibold text-dark">WhatsApp Trade Support Number</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={cmsForm?.topBar?.whatsapp || ''}
+                      onChange={(e) => handleCmsChange('topBar', 'whatsapp', e.target.value)}
+                      placeholder="e.g. +91 91767 60808"
+                    />
+                  </div>
+
+                  <div className="col-12 col-md-6">
+                    <label className="form-label small fw-semibold text-dark">Trade Desk Email ID</label>
                     <input
                       type="email"
                       className="form-control"
                       value={cmsForm?.topBar?.supportEmail || ''}
                       onChange={(e) => handleCmsChange('topBar', 'supportEmail', e.target.value)}
-                      placeholder="e.g. support@goeazymart.com"
+                      placeholder="e.g. info@goeazymart.com"
                     />
                   </div>
 
@@ -1630,6 +1940,70 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* Client Lead Follow-Up Notes Modal */}
+      <Modal
+        isOpen={Boolean(activeFollowUpLead)}
+        onClose={() => setActiveFollowUpLead(null)}
+        title={`Follow Up: ${activeFollowUpLead?.name || 'Client Lead'}`}
+        maxWidth="520px"
+      >
+        <form onSubmit={handleSaveFollowUp}>
+          <div className="p-3 bg-light rounded-3 mb-3 small">
+            <div><strong>Client:</strong> {activeFollowUpLead?.name} {activeFollowUpLead?.company ? `(${activeFollowUpLead.company})` : ''}</div>
+            <div><strong>Phone:</strong> {activeFollowUpLead?.phone || '—'} | <strong>WhatsApp:</strong> {activeFollowUpLead?.whatsapp || activeFollowUpLead?.phone || '—'}</div>
+            <div><strong>Email:</strong> {activeFollowUpLead?.email || '—'}</div>
+            <div><strong>Interest:</strong> {activeFollowUpLead?.interest || 'General Inquiry'}</div>
+            {activeFollowUpLead?.notes && (
+              <div className="mt-2 pt-2 border-top"><strong>Client Message:</strong> {activeFollowUpLead.notes}</div>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label small fw-semibold">Follow-Up Stage *</label>
+            <select
+              className="form-select"
+              value={followUpDraft.status}
+              onChange={(e) => setFollowUpDraft({ ...followUpDraft, status: e.target.value })}
+            >
+              <option value="new">New (Uncontacted)</option>
+              <option value="contacted">Contacted / Spoke on Call/WhatsApp</option>
+              <option value="qualified">Qualified Lead / Quote Sent</option>
+              <option value="converted">Converted to Active Customer</option>
+              <option value="closed">Closed / Not Proceeding</option>
+            </select>
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label small fw-semibold">Sales Team Follow-Up Notes</label>
+            <textarea
+              className="form-control"
+              rows="3"
+              placeholder="Record call outcome, target pricing discussed, or next scheduled follow-up date..."
+              value={followUpDraft.followUpNote}
+              onChange={(e) => setFollowUpDraft({ ...followUpDraft, followUpNote: e.target.value })}
+            ></textarea>
+          </div>
+
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              className="btn btn-light border px-3"
+              onClick={() => setActiveFollowUpLead(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={savingLead}
+              className="btn text-white fw-semibold px-4"
+              style={{ backgroundColor: colors.primary }}
+            >
+              {savingLead ? 'Saving...' : 'Save Follow-Up Update'}
+            </button>
+          </div>
+        </form>
       </Modal>
     </DashboardLayout>
   );

@@ -3,11 +3,20 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { useCart } from '../context/CartContext';
 import { useCMS } from '../context/CMSContext';
+import { api } from '../services/api';
 import { colors } from '../theme/colors';
+import {
+  resolveSiteContacts,
+  toTelHref,
+  toWhatsappHref,
+  toMailHref,
+} from '../utils/contactLinks';
 
 export default function ContactPage() {
   const { showToast } = useCart();
   const { cmsContent } = useCMS();
+  const contacts = resolveSiteContacts(cmsContent);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,10 +25,27 @@ export default function ContactPage() {
     message: '',
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    showToast('Inquiry submitted! Our commodity trade desk will contact you within 2 business hours.');
-    setFormData({ name: '', email: '', phone: '', inquiryType: 'Bulk Sourcing', message: '' });
+    setSubmitting(true);
+    try {
+      await api.submitClientLead({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        whatsapp: formData.phone,
+        interest: formData.inquiryType,
+        notes: formData.message,
+        source: 'Contact Page',
+        pageUrl: '/contact',
+      });
+      showToast('Inquiry submitted! Our commodity trade desk will follow up with you shortly.');
+      setFormData({ name: '', email: '', phone: '', inquiryType: 'Bulk Sourcing', message: '' });
+    } catch (err) {
+      showToast(err?.message || 'Unable to send inquiry right now. Please try WhatsApp or Phone.', 'danger');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -115,10 +141,11 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
+                  disabled={submitting}
                   className="btn text-white px-4 py-3 fw-bold w-100"
                   style={{ backgroundColor: colors.primary }}
                 >
-                  <i className="fas fa-paper-plane me-2"></i> Submit Inquiry
+                  <i className="fas fa-paper-plane me-2"></i> {submitting ? 'Submitting Inquiry...' : 'Submit Inquiry'}
                 </button>
               </form>
             </div>
@@ -137,9 +164,33 @@ export default function ContactPage() {
                     <i className="fas fa-phone-alt"></i>
                   </div>
                   <div>
-                    <h6 className="fw-bold mb-0 text-dark">Institutional Desk</h6>
-                    <div className="small text-muted">{cmsContent?.topBar?.phone || '+91 98765 43210'}</div>
-                    <div className="small text-success">Mon - Sat: 9:00 AM - 7:00 PM IST</div>
+                    <h6 className="fw-bold mb-0 text-dark">Contact Number</h6>
+                    <a href={toTelHref(contacts.phone)} className="small fw-semibold text-decoration-none" style={{ color: colors.primaryDark }}>
+                      {contacts.phone}
+                    </a>
+                    <div className="small text-success">Mon - Sat: 9:00 AM - 7:00 PM GST / IST</div>
+                  </div>
+                </div>
+
+                <div className="d-flex align-items-start gap-3">
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                    style={{ width: '42px', height: '42px', backgroundColor: '#dcfce7', color: '#16a34a' }}
+                  >
+                    <i className="fab fa-whatsapp fs-5"></i>
+                  </div>
+                  <div>
+                    <h6 className="fw-bold mb-0 text-dark">WhatsApp Trade Desk</h6>
+                    <a
+                      href={toWhatsappHref(contacts.whatsapp, 'Hello Goeazymart Trade Desk, I have an inquiry.')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="small fw-semibold text-decoration-none d-block"
+                      style={{ color: '#15803d' }}
+                    >
+                      {contacts.whatsapp} <i className="fas fa-external-link-alt ms-1" style={{ fontSize: '10px' }}></i>
+                    </a>
+                    <div className="small text-muted">Instant quote & supplier coordination</div>
                   </div>
                 </div>
 
@@ -152,7 +203,9 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h6 className="fw-bold mb-0 text-dark">Email Inquiries</h6>
-                    <div className="small text-muted">{cmsContent?.topBar?.supportEmail || 'support@goeazymart.com'}</div>
+                    <a href={toMailHref(contacts.email)} className="small fw-semibold text-decoration-none" style={{ color: colors.darkBlue }}>
+                      {contacts.email}
+                    </a>
                   </div>
                 </div>
 
@@ -165,7 +218,9 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h6 className="fw-bold mb-0 text-dark">Escrow & Compliance</h6>
-                    <div className="small text-muted">escrow@goeazymart.com</div>
+                    <a href={toMailHref(contacts.email, 'Escrow & Compliance Inquiry')} className="small text-muted text-decoration-none">
+                      {contacts.email}
+                    </a>
                   </div>
                 </div>
               </div>

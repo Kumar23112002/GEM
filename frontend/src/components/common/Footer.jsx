@@ -1,11 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCMS } from '../../context/CMSContext';
+import { useCart } from '../../context/CartContext';
+import { api } from '../../services/api';
 import { colors } from '../../theme/colors';
+import {
+  resolveSiteContacts,
+  toTelHref,
+  toWhatsappHref,
+  toMailHref,
+} from '../../utils/contactLinks';
 import BrandLogo from './BrandLogo';
 
 export default function Footer() {
   const { cmsContent } = useCMS();
+  const { showToast } = useCart();
+  const contacts = resolveSiteContacts(cmsContent);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [subscribing, setSubscribing] = useState(false);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) return;
+    setSubscribing(true);
+    try {
+      await api.submitClientLead({
+        name: 'Newsletter Visitor',
+        email: newsletterEmail.trim(),
+        interest: 'Market Insights & Weekly Price Indices',
+        source: 'Footer Newsletter',
+        pageUrl: typeof window !== 'undefined' ? window.location.pathname : '/',
+      });
+      showToast?.('Subscribed! Our team has recorded your email for updates & follow-up.', 'success');
+      setNewsletterEmail('');
+    } catch {
+      showToast?.('Subscription saved locally.', 'info');
+    } finally {
+      setSubscribing(false);
+    }
+  };
   return (
     <footer style={{ backgroundColor: colors.darkBlueDarker, color: '#9ca3af', marginTop: '60px' }}>
       <div className="container py-5">
@@ -20,6 +53,25 @@ export default function Footer() {
             <p className="small mb-3" style={{ lineHeight: '1.6' }}>
               {cmsContent?.footer?.aboutText || 'A state-of-the-art global marketplace connecting verified buyers and suppliers for retail goods, agricultural soft commodities, and industrial raw materials.'}
             </p>
+            <div className="d-flex flex-column gap-1 small mb-3">
+              <a href={toTelHref(contacts.phone)} className="text-decoration-none text-light">
+                <i className="fas fa-phone-alt me-2" style={{ color: colors.primaryLight }}></i>
+                {contacts.phone}
+              </a>
+              <a
+                href={toWhatsappHref(contacts.whatsapp, 'Hello Goeazymart Trade Desk')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-decoration-none text-light"
+              >
+                <i className="fab fa-whatsapp me-2" style={{ color: '#4ade80' }}></i>
+                WhatsApp: {contacts.whatsapp}
+              </a>
+              <a href={toMailHref(contacts.email)} className="text-decoration-none text-light">
+                <i className="fas fa-envelope me-2" style={{ color: colors.primaryLight }}></i>
+                {contacts.email}
+              </a>
+            </div>
             <div className="d-flex gap-2">
               <a href="#linkedin" className="btn btn-sm btn-outline-secondary rounded-circle" style={{ width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <i className="fab fa-linkedin-in text-light"></i>
@@ -78,19 +130,22 @@ export default function Footer() {
             <p className="small mb-3">
               Subscribe to receive weekly commodity price indices, bulk trading updates, and industry reports.
             </p>
-            <form onSubmit={(e) => { e.preventDefault(); alert('Subscribed successfully!'); }} className="input-group">
+            <form onSubmit={handleSubscribe} className="input-group">
               <input
                 type="email"
                 className="form-control form-control-sm border-secondary text-white bg-dark shadow-none"
                 placeholder="Enter business email"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
                 required
               />
               <button
                 type="submit"
+                disabled={subscribing}
                 className="btn btn-sm text-white"
                 style={{ backgroundColor: colors.primary }}
               >
-                Join
+                {subscribing ? '...' : 'Join'}
               </button>
             </form>
           </div>

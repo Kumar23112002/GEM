@@ -507,5 +507,45 @@ export const api = {
       setStorage('cms_content', content);
       return content;
     });
+  },
+
+  async getClientLeads() {
+    return request('/leads', {}, () => getStorage('client_leads', []));
+  },
+
+  async submitClientLead(lead) {
+    const payload = {
+      ...lead,
+      source: lead?.source || 'Site Visitor Popup',
+      status: 'new',
+      createdAt: lead?.createdAt || new Date().toLocaleString(),
+    };
+    return request('/leads', { method: 'POST', body: JSON.stringify(payload) }, () => {
+      const leads = getStorage('client_leads', []);
+      const localLead = { id: Date.now(), ...payload };
+      setStorage('client_leads', [localLead, ...leads]);
+      return localLead;
+    });
+  },
+
+  async updateClientLead(id, updates) {
+    return request(`/leads/${id}`, { method: 'PUT', body: JSON.stringify(updates) }, () => {
+      const leads = getStorage('client_leads', []);
+      const updatedList = leads.map((item) =>
+        String(item.id) === String(id)
+          ? { ...item, ...updates, updatedAt: new Date().toLocaleString() }
+          : item
+      );
+      setStorage('client_leads', updatedList);
+      return updatedList.find((item) => String(item.id) === String(id)) || null;
+    });
+  },
+
+  async deleteClientLead(id) {
+    return request(`/leads/${id}`, { method: 'DELETE' }, () => {
+      const leads = getStorage('client_leads', []);
+      setStorage('client_leads', leads.filter((item) => String(item.id) !== String(id)));
+      return { deleted: id };
+    });
   }
 };

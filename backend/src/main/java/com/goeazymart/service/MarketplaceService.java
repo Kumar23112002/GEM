@@ -26,6 +26,7 @@ public class MarketplaceService {
     private final CmsContentRepository cmsContentRepository;
     private final AuditLogRepository auditLogRepository;
     private final WishlistItemRepository wishlistItemRepository;
+    private final ClientLeadRepository clientLeadRepository;
 
     public MarketplaceService(
             ProductRepository productRepository,
@@ -39,7 +40,8 @@ public class MarketplaceService {
             NegotiationRepository negotiationRepository,
             CmsContentRepository cmsContentRepository,
             AuditLogRepository auditLogRepository,
-            WishlistItemRepository wishlistItemRepository
+            WishlistItemRepository wishlistItemRepository,
+            ClientLeadRepository clientLeadRepository
     ) {
         this.productRepository = productRepository;
         this.userRepository = userRepository;
@@ -53,6 +55,7 @@ public class MarketplaceService {
         this.cmsContentRepository = cmsContentRepository;
         this.auditLogRepository = auditLogRepository;
         this.wishlistItemRepository = wishlistItemRepository;
+        this.clientLeadRepository = clientLeadRepository;
     }
 
     @PostConstruct
@@ -69,6 +72,7 @@ public class MarketplaceService {
             } else {
                 repairNegotiationsData();
             }
+            repairLegacyCmsContacts();
         } catch (Exception e) {
             // Log connection status
             System.err.println("[MarketplaceService] DB initialization notice: " + e.getMessage());
@@ -570,6 +574,105 @@ public class MarketplaceService {
         cms.setId("active");
         cms.setContent(content);
         return cmsContentRepository.save(cms);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void repairLegacyCmsContacts() {
+        CmsContent cms = getCmsContent();
+        if (cms == null || cms.getContent() == null || cms.getContent().isEmpty()) return;
+
+        Map<String, Object> root = new HashMap<>(cms.getContent());
+        boolean changed = false;
+
+        Object topBarObj = root.get("topBar");
+        if (topBarObj instanceof Map<?, ?>) {
+            Map<String, Object> topBar = new HashMap<>((Map<String, Object>) topBarObj);
+            if ("+91 98765 43210".equals(topBar.get("phone")) || topBar.get("phone") == null) {
+                topBar.put("phone", "+971 541421313");
+                changed = true;
+            }
+            if (topBar.get("whatsapp") == null || String.valueOf(topBar.get("whatsapp")).trim().isEmpty()) {
+                topBar.put("whatsapp", "+91 91767 60808");
+                changed = true;
+            }
+            if ("support@goeazymart.com".equals(topBar.get("supportEmail")) || topBar.get("supportEmail") == null) {
+                topBar.put("supportEmail", "info@goeazymart.com");
+                changed = true;
+            }
+            root.put("topBar", topBar);
+        }
+
+        if (changed) {
+            cms.setContent(root);
+            cmsContentRepository.save(cms);
+            System.out.println("[MarketplaceService] Upgraded legacy CMS contact channels.");
+        }
+    }
+
+    // ==================== CLIENT LEADS / FOLLOW-UP ====================
+    public List<ClientLead> getAllClientLeads() {
+        return clientLeadRepository.findAllByOrderByIdDesc();
+    }
+
+    public ClientLead createClientLead(ClientLead lead) {
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a"));
+        if (lead.getName() == null || lead.getName().trim().isEmpty()) {
+            lead.setName("Site Visitor");
+        } else {
+            lead.setName(lead.getName().trim());
+        }
+        if (lead.getPhone() != null) lead.setPhone(lead.getPhone().trim());
+        if (lead.getWhatsapp() == null || lead.getWhatsapp().trim().isEmpty()) {
+            lead.setWhatsapp(lead.getPhone());
+        } else {
+            lead.setWhatsapp(lead.getWhatsapp().trim());
+        }
+        if (lead.getEmail() != null) lead.setEmail(lead.getEmail().trim());
+        if (lead.getCompany() != null) lead.setCompany(lead.getCompany().trim());
+        if (lead.getCountry() != null) lead.setCountry(lead.getCountry().trim());
+        if (lead.getInterest() == null || lead.getInterest().trim().isEmpty()) {
+            lead.setInterest("General Trade Inquiry");
+        }
+        if (lead.getSource() == null || lead.getSource().trim().isEmpty()) {
+            lead.setSource("Site Visitor Popup");
+        }
+        if (lead.getStatus() == null || lead.getStatus().trim().isEmpty()) {
+            lead.setStatus("new");
+        }
+        lead.setCreatedAt(now);
+        lead.setUpdatedAt(now);
+        ClientLead saved = clientLeadRepository.save(lead);
+
+        AuditLog log = new AuditLog();
+        log.setAdmin(saved.getName());
+        log.setAction("Captured client visitor lead via " + saved.getSource());
+        log.setTarget("Lead #" + saved.getId() + " (" + (saved.getPhone() != null && !saved.getPhone().isEmpty() ? saved.getPhone() : saved.getEmail()) + ")");
+        log.setTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        log.setType("lead");
+        auditLogRepository.save(log);
+
+        return saved;
+    }
+
+    public ClientLead updateClientLead(Long id, Map<String, String> updates) {
+        return clientLeadRepository.findById(id).map(existing -> {
+            if (updates.containsKey("status") && updates.get("status") != null && !updates.get("status").trim().isEmpty()) {
+                existing.setStatus(updates.get("status").trim().toLowerCase());
+            }
+            if (updates.containsKey("followUpNote")) {
+                existing.setFollowUpNote(updates.get("followUpNote"));
+            }
+            existing.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a")));
+            return clientLeadRepository.save(existing);
+        }).orElse(null);
+    }
+
+    public boolean deleteClientLead(Long id) {
+        if (clientLeadRepository.existsById(id)) {
+            clientLeadRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     // ==================== SEED METHODS (ONLY PLATFORM ESSENTIALS) ====================

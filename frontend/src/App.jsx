@@ -6,6 +6,7 @@ import { WishlistProvider } from './context/WishlistContext';
 import { CMSProvider } from './context/CMSContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 import Toast from './components/common/Toast';
+import VisitorLeadCapture from './components/common/VisitorLeadCapture';
 
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -31,6 +32,7 @@ export default function App() {
             <WishlistProvider>
               <CMSProvider>
                 <Toast />
+                <VisitorLeadCapture />
                 <Routes>
                 {/* Public Storefront */}
                 <Route path="/" element={<HomePage />} />

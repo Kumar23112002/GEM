@@ -32,6 +32,7 @@ public class HomeController {
         endpoints.put("buyer_wishlist", "/api/buyer/wishlist");
         endpoints.put("negotiations", "/api/negotiations");
         endpoints.put("cms", "/api/cms");
+        endpoints.put("leads", "/api/leads");
         endpoints.put("admin_stats", "/api/admin/stats");
         endpoints.put("admin_users", "/api/admin/users");
         endpoints.put("admin_disputes", "/api/admin/disputes");

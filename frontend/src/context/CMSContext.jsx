@@ -8,9 +8,10 @@ export const DEFAULT_CMS = {
   theme: 'emerald',
   topBar: {
     announcement: 'Verified Global B2B & Retail Marketplace',
-    phone: '+91 98765 43210',
+    phone: '+971 541421313',
+    whatsapp: '+91 91767 60808',
     currency: 'Global / INR (₹)',
-    supportEmail: 'support@goeazymart.com',
+    supportEmail: 'info@goeazymart.com',
   },
   hero: {
     badge: 'Global Commodities & Retail Marketplace',
@@ -65,18 +66,44 @@ export const DEFAULT_CMS = {
 
 const CMSContext = createContext(null);
 
+function sanitizeCmsText(val) {
+  if (typeof val !== 'string') return val;
+  return val.replace(/â‚¹/g, '₹').replace(/Â©/g, '©');
+}
+
 function mergeCmsContent(parsed) {
   if (!parsed || typeof parsed !== 'object') return DEFAULT_CMS;
+  const rawTopBar = { ...DEFAULT_CMS.topBar, ...(parsed.topBar || {}) };
+  if (rawTopBar.phone === '+91 98765 43210' || !rawTopBar.phone) {
+    rawTopBar.phone = DEFAULT_CMS.topBar.phone;
+  }
+  if (!rawTopBar.whatsapp) {
+    rawTopBar.whatsapp = DEFAULT_CMS.topBar.whatsapp;
+  }
+  if (rawTopBar.supportEmail === 'support@goeazymart.com' || !rawTopBar.supportEmail) {
+    rawTopBar.supportEmail = DEFAULT_CMS.topBar.supportEmail;
+  }
+  rawTopBar.currency = sanitizeCmsText(rawTopBar.currency);
+
+  const rawHero = { ...DEFAULT_CMS.hero, ...(parsed.hero || {}) };
+  rawHero.stat4Value = sanitizeCmsText(rawHero.stat4Value);
+
+  const rawAbout = { ...DEFAULT_CMS.about, ...(parsed.about || {}) };
+  rawAbout.stat2Value = sanitizeCmsText(rawAbout.stat2Value);
+
+  const rawFooter = { ...DEFAULT_CMS.footer, ...(parsed.footer || {}) };
+  rawFooter.copyright = sanitizeCmsText(rawFooter.copyright);
+
   return {
     ...DEFAULT_CMS,
     ...parsed,
     theme: parsed.theme || DEFAULT_CMS.theme,
-    topBar: { ...DEFAULT_CMS.topBar, ...(parsed.topBar || {}) },
-    hero: { ...DEFAULT_CMS.hero, ...(parsed.hero || {}) },
+    topBar: rawTopBar,
+    hero: rawHero,
     features: { ...DEFAULT_CMS.features, ...(parsed.features || {}) },
     cta: { ...DEFAULT_CMS.cta, ...(parsed.cta || {}) },
-    about: { ...DEFAULT_CMS.about, ...(parsed.about || {}) },
-    footer: { ...DEFAULT_CMS.footer, ...(parsed.footer || {}) },
+    about: rawAbout,
+    footer: rawFooter,
   };
 }
 

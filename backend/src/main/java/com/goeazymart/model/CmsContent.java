@@ -25,8 +25,7 @@ public class CmsContent {
 
     public CmsContent(String id, Map<String, Object> content) {
         this.id = id;
-        this.content = content;
-        onSave();
+        setContent(content);
     }
 
     @PostLoad
@@ -43,9 +42,12 @@ public class CmsContent {
     @PrePersist
     @PreUpdate
     public void onSave() {
-        if (content != null && !content.isEmpty()) {
+        // Persist serialized contentJson as the authoritative field so detached em.merge()
+        // never clobbers contentJson with @PostLoad transient data on the merged target.
+        if ((this.contentJson == null || this.contentJson.isEmpty() || "{}".equals(this.contentJson))
+                && this.content != null && !this.content.isEmpty()) {
             try {
-                this.contentJson = mapper.writeValueAsString(content);
+                this.contentJson = mapper.writeValueAsString(this.content);
             } catch (Exception e) {
                 this.contentJson = "{}";
             }

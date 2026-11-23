@@ -26,6 +26,7 @@ public class User {
     private String city;
     private String status;
     private String joined;
+    private String kycStatus;
 
     public User() {}
 
@@ -43,6 +44,7 @@ public class User {
         this.city = city;
         this.status = status;
         this.joined = joined;
+        this.kycStatus = "seller".equalsIgnoreCase(role) ? "pending" : "verified";
     }
 
     public String getId() { return id; }
@@ -83,4 +85,7 @@ public class User {
 
     public String getJoined() { return joined; }
     public void setJoined(String joined) { this.joined = joined; }
+
+    public String getKycStatus() { return kycStatus; }
+    public void setKycStatus(String kycStatus) { this.kycStatus = kycStatus; }
 }

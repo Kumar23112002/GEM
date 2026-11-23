@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { useCurrency } from './CurrencyContext';
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
+  const { currentCurrency, convertPrice } = useCurrency();
   const [cart, setCart] = useState(() => {
     try {
       const saved = localStorage.getItem('goeazy_cart');
@@ -25,34 +27,42 @@ export function CartProvider({ children }) {
     }, 3000);
   };
 
-  const addToCart = (product, quantity = 1) => {
+  const addToCart = (product, quantity = 1, selectedPackSize = undefined) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find(
+        (item) => item.id === product.id && item.selectedPackSize === selectedPackSize
+      );
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+          item.id === product.id && item.selectedPackSize === selectedPackSize
+            ? { ...item, quantity: item.quantity + quantity, currency: product.currency || item.currency || 'AED' }
             : item
         );
       }
-      return [...prev, { ...product, quantity }];
+      return [...prev, { ...product, currency: product.currency || 'AED', quantity, selectedPackSize }];
     });
     showToast(`"${product.title}" added to cart!`);
   };
 
-  const removeFromCart = (productId) => {
-    setCart((prev) => prev.filter((item) => item.id !== productId));
+  const removeFromCart = (productId, selectedPackSize = undefined) => {
+    setCart((prev) =>
+      prev.filter(
+        (item) => !(item.id === productId && (selectedPackSize === undefined || item.selectedPackSize === selectedPackSize))
+      )
+    );
     showToast('Item removed from cart', 'info');
   };
 
-  const updateQuantity = (productId, quantity) => {
+  const updateQuantity = (productId, quantity, selectedPackSize = undefined) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, selectedPackSize);
       return;
     }
     setCart((prev) =>
       prev.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
+        item.id === productId && (selectedPackSize === undefined || item.selectedPackSize === selectedPackSize)
+          ? { ...item, quantity }
+          : item
       )
     );
   };
@@ -64,12 +74,19 @@ export function CartProvider({ children }) {
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const shipping = subtotal === 0 ? 0 : subtotal > 1000 ? 0 : 50;
-  const tax = Math.round(subtotal * 0.05);
+  const targetCode = currentCurrency?.code || 'AED';
+  const subtotal = useMemo(() => {
+    return cart.reduce((sum, item) => {
+      const itemCurrency = item.currency || 'AED';
+      const convertedUnit = convertPrice(item.price, itemCurrency, targetCode);
+      return sum + convertedUnit * item.quantity;
+    }, 0);
+  }, [cart, targetCode, convertPrice]);
+
+  const shippingThreshold = convertPrice(1000, 'INR', targetCode);
+  const shippingRate = convertPrice(50, 'INR', targetCode);
+  const shipping = subtotal === 0 ? 0 : subtotal > shippingThreshold ? 0 : Math.round(shippingRate * 100) / 100;
+  const tax = Math.round(subtotal * 0.05 * 100) / 100;
   const total = subtotal + shipping + tax;
 
   return (

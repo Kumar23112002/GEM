@@ -185,18 +185,25 @@ export default function DashboardLayout({ title, subtitle, navItems, activeTab, 
                   }`}
                   style={{
                     backgroundColor: isActive ? colors.primary : 'transparent',
-                    color: isActive ? colors.white : '#cbd5e1',
+                    color: isActive ? colors.white : item.locked ? '#94a3b8' : '#cbd5e1',
                     borderRadius: '8px',
                     fontSize: '13.5px',
                     transition: 'all 0.2s',
+                    opacity: item.locked ? 0.75 : 1,
                   }}
-                  title={item.label}
+                  title={item.locked ? `${item.label} (Locked - Contact Admin)` : item.label}
                 >
                   <div className={`d-flex align-items-center ${isCollapsed ? 'justify-content-center' : 'gap-3'}`}>
                     <i className={item.icon} style={{ width: '20px', textAlign: 'center', fontSize: isCollapsed ? '16px' : '14px' }}></i>
                     {!isCollapsed && <span>{item.label}</span>}
                   </div>
-                  {item.badge !== undefined && item.badge !== null && (
+                  {item.locked ? (
+                    <i
+                      className={`fas fa-lock text-warning ${isCollapsed ? 'position-absolute top-0 end-0' : 'ms-auto'}`}
+                      style={{ fontSize: isCollapsed ? '9px' : '11px', ...(isCollapsed ? { transform: 'translate(-4px, 4px)' } : {}) }}
+                      title="Locked - Suspended Account"
+                    ></i>
+                  ) : item.badge !== undefined && item.badge !== null && (
                     <span
                       className={isCollapsed ? 'position-absolute top-0 end-0 badge rounded-pill bg-danger' : 'badge rounded-pill'}
                       style={
@@ -329,16 +336,19 @@ export default function DashboardLayout({ title, subtitle, navItems, activeTab, 
                     className="nav-link text-start d-flex align-items-center justify-content-between px-3 py-2 border-0 fw-medium"
                     style={{
                       backgroundColor: isActive ? colors.primary : 'transparent',
-                      color: isActive ? colors.white : '#cbd5e1',
+                      color: isActive ? colors.white : item.locked ? '#94a3b8' : '#cbd5e1',
                       borderRadius: '8px',
                       fontSize: '13.5px',
+                      opacity: item.locked ? 0.75 : 1,
                     }}
                   >
                     <div className="d-flex align-items-center gap-3">
                       <i className={item.icon}></i>
                       <span>{item.label}</span>
                     </div>
-                    {item.badge !== undefined && item.badge !== null && (
+                    {item.locked ? (
+                      <i className="fas fa-lock text-warning" style={{ fontSize: '11px' }}></i>
+                    ) : item.badge !== undefined && item.badge !== null && (
                       <span className="badge rounded-pill bg-danger">{item.badge}</span>
                     )}
                   </button>
@@ -369,25 +379,6 @@ export default function DashboardLayout({ title, subtitle, navItems, activeTab, 
         {/* Top Header / Bar */}
         <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 gap-sm-3 mb-3 mb-md-4">
           <div className="d-flex align-items-center gap-2 gap-sm-3">
-            {/* Desktop Sidebar Collapse Toggle Button */}
-            <button
-              type="button"
-              className="btn btn-white shadow-sm border d-none d-lg-flex align-items-center justify-content-center"
-              onClick={toggleCollapse}
-              style={{
-                backgroundColor: colors.white,
-                borderColor: colors.border,
-                width: '38px',
-                height: '38px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-              }}
-              title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-              aria-label={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            >
-              <i className={`fas ${isCollapsed ? 'fa-indent text-success' : 'fa-outdent'}`} style={{ fontSize: '15px' }}></i>
-            </button>
-
             {/* Mobile Sidebar Toggle Button */}
             <button
               type="button"

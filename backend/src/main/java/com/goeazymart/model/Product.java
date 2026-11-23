@@ -23,9 +23,21 @@ public class Product {
     private String categoryName;
     private String sku;
     private String seller;
+
+    @Column(length = 100)
+    private String sellerId;
+
+    @Column(length = 150)
+    private String sellerEmail;
+
     private String location;
     private Integer stock;
     private String moq;
+    private String packSizes;
+    private Integer discount;
+
+    @Column(length = 10)
+    private String currency;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -83,6 +95,12 @@ public class Product {
     public String getSeller() { return seller; }
     public void setSeller(String seller) { this.seller = seller; }
 
+    public String getSellerId() { return sellerId; }
+    public void setSellerId(String sellerId) { this.sellerId = sellerId; }
+
+    public String getSellerEmail() { return sellerEmail; }
+    public void setSellerEmail(String sellerEmail) { this.sellerEmail = sellerEmail; }
+
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
 
@@ -91,6 +109,19 @@ public class Product {
 
     public String getMoq() { return moq; }
     public void setMoq(String moq) { this.moq = moq; }
+
+    public String getPackSizes() { return packSizes; }
+    public void setPackSizes(String packSizes) { this.packSizes = packSizes; }
+
+    public Integer getDiscount() { return discount; }
+    public void setDiscount(Integer discount) { this.discount = discount; }
+
+    public String getCurrency() {
+        return (currency != null && !currency.trim().isEmpty()) ? currency.trim().toUpperCase() : "AED";
+    }
+    public void setCurrency(String currency) {
+        this.currency = (currency != null && !currency.trim().isEmpty()) ? currency.trim().toUpperCase() : "AED";
+    }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }

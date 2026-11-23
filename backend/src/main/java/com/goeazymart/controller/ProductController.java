@@ -18,7 +18,16 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<Product> getProducts(@RequestParam(required = false) String category) {
+    public List<Product> getProducts(
+            @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "sellerId", required = false) String sellerId,
+            @RequestParam(name = "sellerEmail", required = false) String sellerEmail,
+            @RequestParam(name = "seller", required = false) String seller) {
+        if ((sellerId != null && !sellerId.trim().isEmpty()) ||
+            (sellerEmail != null && !sellerEmail.trim().isEmpty()) ||
+            (seller != null && !seller.trim().isEmpty())) {
+            return service.getProductsBySeller(sellerId, sellerEmail, seller);
+        }
         return service.getProductsByCategory(category);
     }
 

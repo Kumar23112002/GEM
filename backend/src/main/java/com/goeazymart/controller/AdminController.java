@@ -41,7 +41,7 @@ public class AdminController {
     }
 
     @PutMapping("/users/{id}/status")
-    public ResponseEntity<User> updateUserStatus(@PathVariable String id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<User> updateUserStatus(@PathVariable(name = "id") String id, @RequestBody Map<String, String> body) {
         String status = body.get("status");
         User updated = service.updateUserStatus(id, status);
         if (updated != null) return ResponseEntity.ok(updated);
@@ -54,7 +54,7 @@ public class AdminController {
     }
 
     @PutMapping("/disputes/{id}/status")
-    public ResponseEntity<Dispute> updateDisputeStatus(@PathVariable String id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Dispute> updateDisputeStatus(@PathVariable(name = "id") String id, @RequestBody Map<String, String> body) {
         String status = body.get("status");
         Dispute updated = service.updateDisputeStatus(id, status);
         if (updated != null) return ResponseEntity.ok(updated);

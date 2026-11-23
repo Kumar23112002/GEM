@@ -12,7 +12,7 @@ import { colors } from '../theme/colors';
 export default function CheckoutPage() {
   const { cart, totals, clearCart } = useCart();
   const { currentUser, login } = useAuth();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, convertPrice, currentCurrency } = useCurrency();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -65,29 +65,63 @@ export default function CheckoutPage() {
     setSubmitting(true);
 
     try {
-      const orderPayload = {
-        customer: `${formData.firstName} ${formData.lastName}`,
-        buyerCountry: formData.country,
-        seller: cart[0]?.seller || 'Punjab Agro Mills',
-        sellerCountry: 'India',
-        product: cart.map((i) => `${i.title} (${i.quantity}x)`).join(', '),
-        qty: cart.reduce((acc, i) => acc + i.quantity, 0),
-        amount: totals.total,
-        status: 'processing',
-        payment: formData.paymentMethod === 'cod' ? 'Pending' : 'Paid',
-        items: cart,
-        shippingAddress: {
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zip: formData.zip,
-          country: formData.country,
-        },
-      };
+      // Group items by seller so each seller receives their specific order
+      const sellerGroups = {};
+      cart.forEach((item) => {
+        const key = item.sellerId || item.sellerEmail || item.seller || 'U-1002';
+        if (!sellerGroups[key]) {
+          sellerGroups[key] = {
+            sellerId: item.sellerId || (key === 'U-1002' ? 'U-1002' : key),
+            sellerEmail: item.sellerEmail || (item.seller === 'Punjab Agro Mills' ? 'seller@goeazymart.com' : ''),
+            sellerName: item.seller || 'Punjab Agro Mills',
+            sellerCountry: item.location ? item.location.split(',').pop().trim() : 'India',
+            items: [],
+          };
+        }
+        sellerGroups[key].items.push(item);
+      });
 
-      const created = await api.createOrder(orderPayload);
+      let primaryCreatedOrder = null;
+      for (const group of Object.values(sellerGroups)) {
+        const groupItems = group.items;
+        const groupSubtotal = groupItems.reduce(
+          (sum, i) => sum + convertPrice(i.price * i.quantity, i.currency || 'AED', currentCurrency?.code || 'AED'),
+          0
+        );
+        const orderPayload = {
+          id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+          customer: `${formData.firstName} ${formData.lastName}`.trim() || currentUser?.name || 'Verified Buyer',
+          customerId: currentUser?.id ? String(currentUser.id) : 'U-1001',
+          customerEmail: formData.email || currentUser?.email || 'buyer@goeazymart.com',
+          buyerCountry: formData.country || 'India',
+          seller: group.sellerName,
+          sellerId: group.sellerId,
+          sellerEmail: group.sellerEmail,
+          sellerCountry: group.sellerCountry,
+          product: groupItems.map((i) => `${i.title} (${i.quantity}x)`).join(', '),
+          qty: groupItems.reduce((acc, i) => acc + i.quantity, 0),
+          amount: Math.round(groupSubtotal * 100) / 100,
+          status: 'processing',
+          payment: formData.paymentMethod === 'cod' ? 'Pending' : 'Paid',
+          date: new Date().toISOString().split('T')[0],
+          items: groupItems,
+          shippingAddress: {
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zip: formData.zip,
+            country: formData.country,
+          },
+        };
+
+        const created = await api.createOrder(orderPayload);
+        if (!primaryCreatedOrder) {
+          primaryCreatedOrder = created;
+        }
+      }
+
       clearCart();
-      setSuccessOrder(created);
+      setSuccessOrder(primaryCreatedOrder || { amount: totals.total, id: `ORD-${Date.now().toString().slice(-4)}` });
     } finally {
       setSubmitting(false);
     }
@@ -340,7 +374,7 @@ export default function CheckoutPage() {
                     style={{ backgroundColor: colors.darkBlue }}
                   >
                     <i className="fas fa-lock text-warning"></i>
-                    <span>Sign In to Authorize & Place Order ({formatPrice(totals.total)})</span>
+                    <span>Sign In to Authorize & Place Order ({formatPrice(totals.total, currentCurrency?.code)})</span>
                   </button>
                 ) : (
                   <button
@@ -352,7 +386,7 @@ export default function CheckoutPage() {
                     {submitting ? (
                       <span><i className="fas fa-spinner fa-spin me-2"></i> Placing Order...</span>
                     ) : (
-                      <span><i className="fas fa-lock me-2"></i> Confirm & Authorize Payment ({formatPrice(totals.total)})</span>
+                      <span><i className="fas fa-lock me-2"></i> Confirm & Authorize Payment ({formatPrice(totals.total, currentCurrency?.code)})</span>
                     )}
                   </button>
                 )}
@@ -383,12 +417,17 @@ export default function CheckoutPage() {
                       <h6 className="mb-0 fw-semibold text-truncate small" style={{ color: colors.darkBlue }}>
                         {item.title}
                       </h6>
-                      <div className="small text-muted">
-                        Qty: {item.quantity} × {formatPrice(item.price)}
+                      <div className="small text-muted d-flex align-items-center flex-wrap gap-1">
+                        <span>Qty: {item.quantity} × {formatPrice(item.price, item.currency)}</span>
+                        {item.selectedPackSize && (
+                          <span className="badge bg-success-subtle text-success border border-success-subtle py-0" style={{ fontSize: '10px' }}>
+                            {item.selectedPackSize}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="fw-bold small text-dark">
-                      {formatPrice(item.price * item.quantity)}
+                      {formatPrice(item.price * item.quantity, item.currency)}
                     </div>
                   </div>
                 ))}
@@ -397,17 +436,17 @@ export default function CheckoutPage() {
               <div className="border-top pt-3 d-flex flex-column gap-2 small text-muted">
                 <div className="d-flex justify-content-between">
                   <span>Subtotal</span>
-                  <span className="fw-semibold text-dark">{formatPrice(totals.subtotal)}</span>
+                  <span className="fw-semibold text-dark">{formatPrice(totals.subtotal, currentCurrency?.code)}</span>
                 </div>
                 <div className="d-flex justify-content-between">
                   <span>Shipping</span>
                   <span className="fw-semibold text-dark">
-                    {totals.shipping === 0 ? <span className="text-success fw-bold">FREE</span> : formatPrice(totals.shipping)}
+                    {totals.shipping === 0 ? <span className="text-success fw-bold">FREE</span> : formatPrice(totals.shipping, currentCurrency?.code)}
                   </span>
                 </div>
                 <div className="d-flex justify-content-between">
                   <span>Tax (5%)</span>
-                  <span className="fw-semibold text-dark">{formatPrice(totals.tax)}</span>
+                  <span className="fw-semibold text-dark">{formatPrice(totals.tax, currentCurrency?.code)}</span>
                 </div>
                 <div
                   className="d-flex justify-content-between align-items-center py-2 border-top border-bottom my-2"
@@ -415,7 +454,7 @@ export default function CheckoutPage() {
                 >
                   <span className="fw-bold text-dark fs-6">Grand Total</span>
                   <span className="fw-bold fs-4" style={{ color: colors.primary }}>
-                    {formatPrice(totals.total)}
+                    {formatPrice(totals.total, currentCurrency?.code)}
                   </span>
                 </div>
               </div>
@@ -515,7 +554,7 @@ export default function CheckoutPage() {
           </p>
           <div className="p-3 rounded-3 bg-light text-start mb-4 border small">
             <div><strong>Order ID:</strong> {successOrder?.id}</div>
-            <div><strong>Total Amount:</strong> {formatPrice(successOrder?.amount)}</div>
+            <div><strong>Total Amount:</strong> {formatPrice(successOrder?.amount, currentCurrency?.code)}</div>
             <div><strong>Carrier Assigned:</strong> {successOrder?.carrier}</div>
             <div><strong>Consignment Tracking:</strong> {successOrder?.tracking}</div>
           </div>

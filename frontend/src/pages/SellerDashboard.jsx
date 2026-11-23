@@ -6,15 +6,90 @@ import StatCard from '../components/dashboard/StatCard';
 import Modal from '../components/common/Modal';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useCurrency, CURRENCY_SYMBOLS } from '../context/CurrencyContext';
 import { api } from '../services/api';
 import { colors } from '../theme/colors';
 
+export function isProductOwnedBySeller(p, seller) {
+  if (!seller || !p) return false;
+  const sId = String(seller.id || '').trim();
+  const sEmail = String(seller.email || '').trim().toLowerCase();
+  const sName = String(seller.name || '').trim().toLowerCase();
+  const sComp = String(seller.company || '').trim().toLowerCase();
+
+  // If product explicitly matches sellerId
+  if (p.sellerId && sId && String(p.sellerId).trim() === sId) return true;
+  // If product explicitly matches sellerEmail
+  if (p.sellerEmail && sEmail && String(p.sellerEmail).trim().toLowerCase() === sEmail) return true;
+  // If product matches seller company / name
+  if (p.seller) {
+    const ps = String(p.seller).trim().toLowerCase();
+    if (sComp && ps === sComp) return true;
+    if (sName && ps === sName) return true;
+    if (ps.includes('punjab') && (sComp.includes('punjab') || sName.includes('punjab') || sEmail.includes('seller@goeazymart.com'))) {
+      return true;
+    }
+  }
+
+  // Fallback for default Punjab Agro Mills
+  const isDefaultMill = sEmail === 'seller@goeazymart.com' || sId === 'U-1002' || sName.includes('punjab') || sComp.includes('punjab');
+  if (isDefaultMill && (!p.sellerId && !p.sellerEmail && (!p.seller || p.seller.trim() === ''))) {
+    return true;
+  }
+
+  return false;
+}
+
+export function isOrderForSeller(order, seller) {
+  if (!seller || !order) return false;
+  const sId = String(seller.id || '').trim();
+  const sEmail = String(seller.email || '').trim().toLowerCase();
+  const sName = String(seller.name || '').trim().toLowerCase();
+  const sComp = String(seller.company || '').trim().toLowerCase();
+
+  if (order.sellerId && sId && String(order.sellerId).trim() === sId) return true;
+  if (order.sellerEmail && sEmail && String(order.sellerEmail).trim().toLowerCase() === sEmail) return true;
+  if (order.seller) {
+    const os = String(order.seller).trim().toLowerCase();
+    if (sComp && os === sComp) return true;
+    if (sName && os === sName) return true;
+    if (os.includes('punjab') && (sComp.includes('punjab') || sName.includes('punjab') || sEmail.includes('seller@goeazymart.com'))) {
+      return true;
+    }
+  }
+
+  if (Array.isArray(order.items) && order.items.length > 0) {
+    return order.items.some((item) => isProductOwnedBySeller(item, seller));
+  }
+
+  return false;
+}
+
 export default function SellerDashboard() {
-  const { currentUser } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
   const { showToast } = useCart();
   const [searchParams] = useSearchParams();
 
+  const isSuspended =
+    currentUser?.role === 'seller' &&
+    (currentUser?.status === 'suspended' ||
+      currentUser?.status === 'pending' ||
+      currentUser?.kycStatus === 'pending' ||
+      currentUser?.kycStatus === 'submitted' ||
+      (currentUser?.kycStatus && currentUser.kycStatus !== 'verified' && currentUser.status !== 'active'));
+
   const [activeTab, setActiveTab] = useState('overview');
+  const [showContactAdminModal, setShowContactAdminModal] = useState(false);
+  const [kycForm, setKycForm] = useState({
+    company: '',
+    name: '',
+    gstin: '',
+    pan: '',
+    address: '',
+    city: '',
+    phone: '',
+  });
+
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [rfqs, setRfqs] = useState([]);
@@ -28,8 +103,12 @@ export default function SellerDashboard() {
     title: '',
     category: 'soft',
     categoryName: 'Soft Commodities',
+    currency: 'AED',
     price: '',
     oldPrice: '',
+    mrp: '',
+    discountPercent: '',
+    packSizes: '',
     stock: '',
     sku: '',
     moq: '',
@@ -52,26 +131,92 @@ export default function SellerDashboard() {
   const [selectedMsgThread, setSelectedMsgThread] = useState('NEG-301');
 
   useEffect(() => {
+    if (currentUser) {
+      setKycForm({
+        company: currentUser.company || currentUser.name || 'Punjab Agro Mills Pvt Ltd',
+        name: currentUser.name || 'Gurpreet Singh',
+        gstin: currentUser.gstin || '03AABCP1234H1Z5',
+        pan: currentUser.pan || 'AABCP1234H',
+        address: currentUser.address || 'Plot 45, Industrial Focal Point Phase II',
+        city: currentUser.city || 'Ludhiana',
+        phone: currentUser.phone || '+91 98765 43210',
+      });
+    }
+  }, [currentUser]);
+
+  // Real-time listener for Admin activation
+  useEffect(() => {
+    const checkLiveStatus = async () => {
+      try {
+        const allUsers = await api.getAdminUsers();
+        const match = (allUsers || []).find(
+          (u) =>
+            (currentUser?.id && u.id === currentUser.id) ||
+            (currentUser?.email && u.email && u.email.toLowerCase() === currentUser.email.toLowerCase())
+        );
+        if (match && (match.status !== currentUser?.status || match.kycStatus !== currentUser?.kycStatus)) {
+          if (typeof updateProfile === 'function') {
+            updateProfile({ status: match.status, kycStatus: match.kycStatus });
+          }
+        }
+      } catch (e) {}
+    };
+
+    const handleUserUpdated = () => checkLiveStatus();
+    window.addEventListener('goeazy_user_updated', handleUserUpdated);
+    window.addEventListener('storage', handleUserUpdated);
+    return () => {
+      window.removeEventListener('goeazy_user_updated', handleUserUpdated);
+      window.removeEventListener('storage', handleUserUpdated);
+    };
+  }, [currentUser?.id, currentUser?.email, currentUser?.status, currentUser?.kycStatus, updateProfile]);
+
+  useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam) {
-      setActiveTab(tabParam === 'negotiations' ? 'messages' : tabParam);
+      const normalized = tabParam === 'negotiations' ? 'messages' : tabParam;
+      if (isSuspended && normalized !== 'overview' && normalized !== 'profile') {
+        setActiveTab('overview');
+        setShowContactAdminModal(true);
+      } else {
+        setActiveTab(normalized);
+      }
     }
     const negIdParam = searchParams.get('negId');
     if (negIdParam) {
       setSelectedMsgThread(negIdParam);
     }
-  }, [searchParams]);
+  }, [searchParams, isSuspended]);
+
+  // Restrict navigation if suspended
+  useEffect(() => {
+    if (isSuspended && activeTab !== 'overview' && activeTab !== 'profile') {
+      setActiveTab('overview');
+      setShowContactAdminModal(true);
+    }
+  }, [isSuspended, activeTab]);
+
+  const handleTabChange = (tabId) => {
+    if (isSuspended && tabId !== 'overview' && tabId !== 'profile') {
+      setShowContactAdminModal(true);
+      showToast('Account suspended / KYC review pending. Please contact admin to activate.', 'warning');
+      return;
+    }
+    setActiveTab(tabId);
+  };
 
   useEffect(() => {
     async function loadData() {
-      const [prods, ords, r, negs] = await Promise.all([
+      const [allProds, allOrds, r, negs] = await Promise.all([
         api.getProducts(),
         api.getOrders(),
         api.getRFQs(),
         api.getNegotiations(),
       ]);
-      setProducts(prods || []);
-      setOrders(ords || []);
+      const myProducts = (allProds || []).filter((p) => isProductOwnedBySeller(p, currentUser));
+      const myOrders = (allOrds || []).filter((o) => isOrderForSeller(o, currentUser));
+      setProducts(myProducts);
+      setOrders(myOrders);
       setRfqs(r || []);
       const negList = negs || [];
       setNegotiations(negList);
@@ -90,16 +235,50 @@ export default function SellerDashboard() {
       ]);
     }
     loadData();
-  }, []);
+  }, [currentUser]);
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: 'fas fa-th-large' },
-    { id: 'products', label: 'Catalog & Stock', icon: 'fas fa-boxes', badge: products.length },
-    { id: 'orders', label: 'Customer Orders', icon: 'fas fa-truck-loading', badge: orders.filter((o) => o.status === 'processing').length },
-    { id: 'rfqs', label: 'Tender RFQs', icon: 'fas fa-file-invoice-dollar', badge: rfqs.filter((r) => r.status === 'pending').length },
-    { id: 'messages', label: 'Buyer Inquiries', icon: 'fas fa-comments', badge: negotiations.filter((n) => (n.status || 'active') === 'active').length },
-    { id: 'payouts', label: 'Payouts & Banking', icon: 'fas fa-money-check-alt' },
-    { id: 'profile', label: 'Mill Profile & KYC', icon: 'fas fa-building' },
+    {
+      id: 'products',
+      label: 'Catalog & Stock',
+      icon: 'fas fa-boxes',
+      badge: isSuspended ? 'Locked' : products.length,
+      locked: isSuspended,
+    },
+    {
+      id: 'orders',
+      label: 'Customer Orders',
+      icon: 'fas fa-truck-loading',
+      badge: isSuspended ? 'Locked' : orders.filter((o) => o.status === 'processing').length,
+      locked: isSuspended,
+    },
+    {
+      id: 'rfqs',
+      label: 'Tender RFQs',
+      icon: 'fas fa-file-invoice-dollar',
+      badge: isSuspended ? 'Locked' : rfqs.filter((r) => r.status === 'pending').length,
+      locked: isSuspended,
+    },
+    {
+      id: 'messages',
+      label: 'Buyer Inquiries',
+      icon: 'fas fa-comments',
+      badge: isSuspended ? 'Locked' : negotiations.filter((n) => (n.status || 'active') === 'active').length,
+      locked: isSuspended,
+    },
+    {
+      id: 'payouts',
+      label: 'Payouts & Banking',
+      icon: 'fas fa-money-check-alt',
+      locked: isSuspended,
+    },
+    {
+      id: 'profile',
+      label: 'Mill Profile & KYC',
+      icon: 'fas fa-building',
+      badge: isSuspended ? 'Action Needed' : 'Verified',
+    },
   ];
 
   // Stats
@@ -140,13 +319,22 @@ export default function SellerDashboard() {
   };
 
   const handleOpenAddProduct = () => {
+    if (isSuspended) {
+      setShowContactAdminModal(true);
+      showToast('Action restricted: Seller account is suspended pending KYC verification. Please contact admin.', 'warning');
+      return;
+    }
     setEditingProduct(null);
     setProductForm({
       title: '',
       category: 'soft',
       categoryName: 'Soft Commodities',
+      currency: 'AED',
       price: '',
       oldPrice: '',
+      mrp: '',
+      discountPercent: '',
+      packSizes: '',
       stock: '',
       sku: '',
       moq: '',
@@ -161,7 +349,20 @@ export default function SellerDashboard() {
 
   const handleOpenEditProduct = (prod) => {
     setEditingProduct(prod);
-    setProductForm({ ...prod });
+    const isRetail = prod.category === 'retail' || String(prod.category || '').toLowerCase().includes('retail');
+    const initialMrp = prod.mrp ? String(prod.mrp) : (prod.oldPrice ? String(prod.oldPrice) : String(prod.price || ''));
+    const initialDiscount = prod.discount !== undefined && prod.discount !== null
+      ? String(prod.discount)
+      : (prod.oldPrice && prod.price && prod.oldPrice > prod.price
+          ? String(Math.round((1 - prod.price / prod.oldPrice) * 100))
+          : '');
+    setProductForm({
+      ...prod,
+      currency: prod.currency || 'AED',
+      mrp: isRetail ? initialMrp : '',
+      discountPercent: isRetail ? initialDiscount : '',
+      packSizes: prod.packSizes || '',
+    });
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -170,13 +371,38 @@ export default function SellerDashboard() {
 
   const handleSaveProduct = async (e) => {
     e.preventDefault();
+    const isRetail = productForm.category === 'retail' || String(productForm.category || '').toLowerCase().includes('retail');
+    let finalPrice = Number(productForm.price) || 0;
+    let finalOldPrice = productForm.oldPrice ? Number(productForm.oldPrice) : null;
+    let finalDiscount = productForm.discountPercent ? Number(productForm.discountPercent) : null;
+
+    if (isRetail) {
+      const mrpNum = Number(productForm.mrp || productForm.oldPrice || productForm.price) || 0;
+      const discNum = Number(productForm.discountPercent) || 0;
+      finalOldPrice = mrpNum > 0 ? mrpNum : null;
+      if (discNum > 0 && mrpNum > 0) {
+        finalPrice = Math.max(0, Math.round((mrpNum - (mrpNum * discNum / 100)) * 100) / 100);
+        finalDiscount = discNum;
+      } else {
+        finalPrice = mrpNum;
+        finalDiscount = null;
+      }
+    }
+
     const payload = {
       ...productForm,
-      price: Number(productForm.price) || 0,
-      oldPrice: productForm.oldPrice ? Number(productForm.oldPrice) : null,
+      seller: currentUser?.company || currentUser?.name || 'Punjab Agro Mills',
+      sellerId: currentUser?.id ? String(currentUser.id) : 'U-1002',
+      sellerEmail: currentUser?.email || 'seller@goeazymart.com',
+      currency: productForm.currency || 'AED',
+      price: finalPrice,
+      oldPrice: finalOldPrice,
+      discount: finalDiscount,
+      mrp: isRetail && productForm.mrp ? Number(productForm.mrp) : null,
+      packSizes: isRetail && productForm.packSizes ? productForm.packSizes.trim() : null,
       stock: Number(productForm.stock) || 0,
       sku: productForm.sku?.trim() || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
-      moq: productForm.moq?.trim() || (productForm.category === 'retail' ? '1 Unit' : '1 MT'),
+      moq: productForm.moq?.trim() || (isRetail ? '1 Unit' : '1 MT'),
       img: productForm.img?.trim() || 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80',
     };
     if (editingProduct) {
@@ -184,10 +410,10 @@ export default function SellerDashboard() {
       showToast('Product updated successfully!');
     } else {
       await api.addProduct(payload);
-      showToast('New commodity listing created!');
+      showToast(isRetail ? 'New retail product listing published!' : 'New commodity listing created!');
     }
     const updated = await api.getProducts();
-    setProducts(updated);
+    setProducts((updated || []).filter((p) => isProductOwnedBySeller(p, currentUser)));
     setProductModalOpen(false);
   };
 
@@ -199,7 +425,7 @@ export default function SellerDashboard() {
     if (!deleteConfirmProductId) return;
     await api.deleteProduct(deleteConfirmProductId);
     const updated = await api.getProducts();
-    setProducts(updated);
+    setProducts((updated || []).filter((p) => isProductOwnedBySeller(p, currentUser)));
     setDeleteConfirmProductId(null);
     showToast('Product successfully removed from catalog.', 'info');
   };
@@ -207,6 +433,7 @@ export default function SellerDashboard() {
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     await api.updateOrderStatus(orderId, newStatus);
     const updated = await api.getOrders();
+    setOrders((updated || []).filter((o) => isOrderForSeller(o, currentUser)));
     setOrders(updated);
     showToast(`Order ${orderId} status changed to ${newStatus}`);
   };
@@ -247,14 +474,60 @@ export default function SellerDashboard() {
   return (
     <DashboardLayout
       title="Producer & Seller Central"
-      subtitle="Punjab Agro Mills Pvt Ltd • Ludhiana, Punjab (Verified Mill)"
+      subtitle={`${currentUser?.company || currentUser?.name || 'Producer Central'} • ${currentUser?.city || 'Ludhiana'}, ${currentUser?.country || 'India'} (${isSuspended ? 'Suspended • Verification Pending' : 'Verified Seller'})`}
       navItems={navItems}
       activeTab={activeTab}
-      onTabChange={setActiveTab}
+      onTabChange={handleTabChange}
     >
       {/* OVERVIEW TAB */}
       {activeTab === 'overview' && (
         <div>
+          {/* Suspended Alert Banner */}
+          {isSuspended && (
+            <div
+              className="p-3 p-md-4 rounded-4 mb-4 shadow-sm d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3"
+              style={{ backgroundColor: '#fff7ed', border: '1px solid #fdba74' }}
+            >
+              <div className="d-flex align-items-start gap-3">
+                <div
+                  className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                  style={{ width: '44px', height: '44px', backgroundColor: '#fed7aa', color: '#c2410c' }}
+                >
+                  <i className="fas fa-exclamation-triangle fa-lg"></i>
+                </div>
+                <div>
+                  <div className="d-flex align-items-center gap-2 mb-1">
+                    <h6 className="fw-bold mb-0" style={{ color: '#9a3412' }}>
+                      Seller Account Suspended — KYC Verification Pending
+                    </h6>
+                    <span className="badge bg-danger text-white">SUSPENDED</span>
+                  </div>
+                  <p className="small mb-0" style={{ color: '#7c2d12' }}>
+                    Your seller account is currently under compliance review by Admin. Only <strong>Overview</strong> and{' '}
+                    <strong>Mill Profile & KYC</strong> are accessible. Catalog listings, incoming orders, RFQs, and payouts will remain locked until an Administrator activates your account.
+                  </p>
+                </div>
+              </div>
+              <div className="d-flex align-items-center gap-2 flex-shrink-0 w-100 w-md-auto justify-content-end">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-warning text-dark fw-semibold"
+                  onClick={() => setActiveTab('profile')}
+                >
+                  <i className="fas fa-file-contract me-1"></i> Mill Profile & KYC
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm text-white fw-semibold"
+                  style={{ backgroundColor: '#ea580c' }}
+                  onClick={() => setShowContactAdminModal(true)}
+                >
+                  <i className="fas fa-headset me-1"></i> Contact Admin
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="row g-3 mb-4">
             <div className="col-12 col-sm-6 col-xl-3">
               <StatCard
@@ -303,7 +576,7 @@ export default function SellerDashboard() {
                   <h5 className="fw-bold mb-0 text-dark">Recent Sourcing Consignments</h5>
                   <button
                     type="button"
-                    onClick={() => setActiveTab('orders')}
+                    onClick={() => handleTabChange('orders')}
                     className="btn btn-sm btn-link text-decoration-none fw-semibold p-0 text-success"
                   >
                     Manage Orders →
@@ -409,7 +682,9 @@ export default function SellerDashboard() {
                 </tr>
               </thead>
               <tbody className="small">
-                {products.map((p) => (
+                {products.map((p) => {
+                  const isItemRetail = p.category === 'retail' || String(p.category || '').toLowerCase().includes('retail');
+                  return (
                   <tr key={p.id}>
                     <td>
                       <div className="d-flex align-items-center gap-2">
@@ -419,9 +694,16 @@ export default function SellerDashboard() {
                           className="rounded border object-fit-contain"
                           style={{ width: '40px', height: '40px' }}
                         />
-                        <span className="fw-semibold text-truncate" style={{ maxWidth: '200px' }}>
-                          {p.title}
-                        </span>
+                        <div>
+                          <span className="fw-semibold text-truncate d-block" style={{ maxWidth: '200px' }}>
+                            {p.title}
+                          </span>
+                          {p.packSizes && (
+                            <span className="text-muted d-block" style={{ fontSize: '11px' }}>
+                              Sizes: {p.packSizes}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td>
@@ -430,13 +712,30 @@ export default function SellerDashboard() {
                       </span>
                     </td>
                     <td className="font-monospace small">{p.sku || 'SKU-001'}</td>
-                    <td className="fw-bold">₹{p.price.toLocaleString()}</td>
+                    <td>
+                      <div className="fw-bold d-flex align-items-center gap-1">
+                        <span>{CURRENCY_SYMBOLS[(p.currency || 'AED').toUpperCase()] || 'AED '}{Number(p.price || 0).toLocaleString()}</span>
+                        <span className="badge bg-light text-secondary border py-0 px-1" style={{ fontSize: '9.5px', fontWeight: '600' }}>
+                          {p.currency || 'AED'}
+                        </span>
+                      </div>
+                      {p.oldPrice && p.oldPrice > p.price && (
+                        <div className="text-decoration-line-through text-muted" style={{ fontSize: '11px' }}>
+                          {CURRENCY_SYMBOLS[(p.currency || 'AED').toUpperCase()] || 'AED '}{Number(p.oldPrice).toLocaleString()}
+                        </div>
+                      )}
+                      {p.discount ? (
+                        <span className="badge bg-danger rounded-pill px-1.5 py-0" style={{ fontSize: '10px' }}>
+                          {p.discount}% OFF
+                        </span>
+                      ) : null}
+                    </td>
                     <td>
                       <span className={`badge ${p.stock < 50 ? 'bg-danger' : 'bg-success'}`}>
-                        {p.stock} units
+                        {p.stock} {isItemRetail ? 'units' : 'MT'}
                       </span>
                     </td>
-                    <td>{p.moq || '1 Unit'}</td>
+                    <td>{p.moq || (isItemRetail ? '1 Unit' : '1 MT')}</td>
                     <td>
                       <button
                         type="button"
@@ -454,7 +753,8 @@ export default function SellerDashboard() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -844,144 +1144,374 @@ export default function SellerDashboard() {
       {/* PROFILE TAB */}
       {activeTab === 'profile' && (
         <div className="card border-0 shadow-sm rounded-4 p-4" style={{ backgroundColor: colors.white }}>
-          <div className="d-flex align-items-center gap-2 mb-4">
-            <h4 className="fw-bold mb-0 text-dark">Mill & Manufacturing Profile</h4>
-            <span className="badge bg-success-subtle text-success ms-2">
-              <i className="fas fa-check-circle me-1"></i> KYC Approved
-            </span>
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+            <div className="d-flex align-items-center gap-2">
+              <h4 className="fw-bold mb-0 text-dark">Mill & Business Profile (KYC)</h4>
+              {isSuspended ? (
+                <span className="badge bg-danger-subtle text-danger border border-danger ms-2 py-1.5 px-2.5">
+                  <i className="fas fa-clock me-1"></i> Under Review (Suspended)
+                </span>
+              ) : (
+                <span className="badge bg-success-subtle text-success border border-success ms-2 py-1.5 px-2.5">
+                  <i className="fas fa-check-circle me-1"></i> KYC Approved & Active
+                </span>
+              )}
+            </div>
+            {isSuspended && (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger fw-semibold"
+                onClick={() => setShowContactAdminModal(true)}
+              >
+                <i className="fas fa-headset me-1"></i> Contact Admin to Activate
+              </button>
+            )}
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); showToast('Mill profile updated successfully!'); }}>
+          {isSuspended && (
+            <div className="alert alert-warning border-warning small mb-4 d-flex align-items-center gap-2">
+              <i className="fas fa-info-circle text-warning fs-5"></i>
+              <div>
+                <strong>Notice:</strong> Your seller account is suspended awaiting Admin verification. You can view or update your KYC details below. To expedite approval, contact Admin at <strong>info@goeazymart.com</strong> or WhatsApp <strong>+91 91767 60808</strong>.
+              </div>
+            </div>
+          )}
+
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (typeof updateProfile === 'function') {
+                await updateProfile(kycForm);
+              }
+              showToast(
+                isSuspended
+                  ? 'KYC details submitted! Please contact Admin for immediate account activation.'
+                  : 'Profile & KYC details updated successfully!',
+                'success'
+              );
+            }}
+          >
             <div className="row g-3 mb-3">
               <div className="col-12 col-sm-6">
-                <label className="form-label small fw-semibold">Commercial Business Name</label>
-                <input type="text" className="form-control" defaultValue="Punjab Agro Mills Pvt Ltd" />
+                <label className="form-label small fw-semibold">Commercial Business Name *</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={kycForm.company}
+                  onChange={(e) => setKycForm({ ...kycForm, company: e.target.value })}
+                  required
+                />
               </div>
               <div className="col-12 col-sm-6">
-                <label className="form-label small fw-semibold">Managing Director / Owner</label>
-                <input type="text" className="form-control" defaultValue="Gurpreet Singh" />
+                <label className="form-label small fw-semibold">Managing Director / Owner *</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={kycForm.name}
+                  onChange={(e) => setKycForm({ ...kycForm, name: e.target.value })}
+                  required
+                />
               </div>
             </div>
 
             <div className="row g-3 mb-3">
               <div className="col-12 col-sm-6">
-                <label className="form-label small fw-semibold">GSTIN</label>
-                <input type="text" className="form-control text-uppercase" defaultValue="03AABCP1234H1Z5" disabled />
+                <label className="form-label small fw-semibold">GSTIN / Tax ID *</label>
+                <input
+                  type="text"
+                  className="form-control text-uppercase"
+                  value={kycForm.gstin}
+                  onChange={(e) => setKycForm({ ...kycForm, gstin: e.target.value })}
+                  placeholder="e.g. 27AABCP1234H1Z5"
+                  required
+                />
               </div>
               <div className="col-12 col-sm-6">
-                <label className="form-label small fw-semibold">Corporate PAN</label>
-                <input type="text" className="form-control text-uppercase" defaultValue="AABCP1234H" disabled />
+                <label className="form-label small fw-semibold">Corporate PAN / Reg No *</label>
+                <input
+                  type="text"
+                  className="form-control text-uppercase"
+                  value={kycForm.pan}
+                  onChange={(e) => setKycForm({ ...kycForm, pan: e.target.value })}
+                  placeholder="e.g. AABCP1234H"
+                  required
+                />
               </div>
             </div>
 
-            <div className="mb-3">
-              <label className="form-label small fw-semibold">Warehouse / Plant Address</label>
-              <input type="text" className="form-control" defaultValue="Plot 45, Industrial Focal Point Phase II, Ludhiana, Punjab" />
+            <div className="row g-3 mb-3">
+              <div className="col-12 col-sm-6">
+                <label className="form-label small fw-semibold">Contact Phone Number *</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={kycForm.phone}
+                  onChange={(e) => setKycForm({ ...kycForm, phone: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-12 col-sm-6">
+                <label className="form-label small fw-semibold">City / Hub *</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={kycForm.city}
+                  onChange={(e) => setKycForm({ ...kycForm, city: e.target.value })}
+                  required
+                />
+              </div>
             </div>
 
-            <button type="submit" className="btn text-white px-4 py-2 fw-semibold" style={{ backgroundColor: colors.primary }}>
-              Update Profile Information
-            </button>
+            <div className="mb-4">
+              <label className="form-label small fw-semibold">Warehouse / Plant Address *</label>
+              <input
+                type="text"
+                className="form-control"
+                value={kycForm.address}
+                onChange={(e) => setKycForm({ ...kycForm, address: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="d-flex align-items-center gap-2">
+              <button type="submit" className="btn text-white px-4 py-2 fw-semibold" style={{ backgroundColor: colors.primary }}>
+                {isSuspended ? 'Submit / Update KYC Details' : 'Update Profile Information'}
+              </button>
+              {isSuspended && (
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary px-3 py-2 fw-medium"
+                  onClick={() => setShowContactAdminModal(true)}
+                >
+                  <i className="fas fa-headset me-1"></i> Contact Admin
+                </button>
+              )}
+            </div>
           </form>
         </div>
       )}
 
       {/* Add / Edit Product Modal */}
-      <Modal
-        isOpen={productModalOpen}
-        onClose={() => setProductModalOpen(false)}
-        title={editingProduct ? 'Edit Product Listing' : 'Publish New Commodity Listing'}
-      >
-        <form onSubmit={handleSaveProduct}>
-          <div className="mb-3">
-            <label className="form-label small fw-semibold">Product Title *</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="e.g. Premium Export Quality Basmati Rice 25kg"
-              value={productForm.title || ''}
-              onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
-              required
-            />
-          </div>
+      {(() => {
+        const isRetailModal = productForm.category === 'retail' || String(productForm.category || '').toLowerCase().includes('retail');
+        const calculatedRetailPrice = productForm.discountPercent && Number(productForm.discountPercent) > 0
+          ? Math.max(0, Math.round((Number(productForm.mrp) - (Number(productForm.mrp) * Number(productForm.discountPercent) / 100)) * 100) / 100)
+          : Number(productForm.mrp || 0);
+        const modalCurrCode = (productForm.currency || 'AED').toUpperCase();
+        const modalCurrSymbol = CURRENCY_SYMBOLS[modalCurrCode] || `${modalCurrCode} `;
 
-          <div className="row g-2 mb-3">
-            <div className="col-12 col-sm-6">
-              <label className="form-label small fw-semibold">Category *</label>
-              <select
-                className="form-select"
-                value={productForm.category}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const catName = val === 'soft' ? 'Soft Commodities' : val === 'hard' ? 'Hard Commodities' : 'Retail Products';
-                  setProductForm({ ...productForm, category: val, categoryName: catName });
-                }}
-              >
-                <option value="soft">Soft Commodities</option>
-                <option value="retail">Retail Products</option>
-                <option value="hard">Hard Commodities</option>
-              </select>
-            </div>
-            <div className="col-12 col-sm-6">
-              <label className="form-label small fw-semibold">SKU Code</label>
-              <input
-                type="text"
-                className="form-control text-uppercase"
-                placeholder="e.g. SKU-1045"
-                value={productForm.sku || ''}
-                onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
-              />
-            </div>
-          </div>
+        return (
+          <Modal
+            isOpen={productModalOpen}
+            onClose={() => setProductModalOpen(false)}
+            title={editingProduct ? 'Edit Product Listing' : (isRetailModal ? 'Publish New Retail Product' : 'Publish New Commodity Listing')}
+          >
+            <form onSubmit={handleSaveProduct}>
+              <div className="mb-3">
+                <label className="form-label small fw-semibold">Product Title *</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g. Premium Export Quality Basmati Rice 25kg"
+                  value={productForm.title || ''}
+                  onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
+                  required
+                />
+              </div>
 
-          <div className="row g-2 mb-3">
-            <div className="col-12 col-sm-6">
-              <label className="form-label small fw-semibold">Wholesale Price (₹) *</label>
-              <input
-                type="number"
-                className="form-control"
-                placeholder="e.g. 2450"
-                value={productForm.price || ''}
-                onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-12 col-sm-6">
-              <label className="form-label small fw-semibold">Old Price / MSRP (₹)</label>
-              <input
-                type="number"
-                className="form-control"
-                placeholder="e.g. 2800"
-                value={productForm.oldPrice || ''}
-                onChange={(e) => setProductForm({ ...productForm, oldPrice: e.target.value })}
-              />
-            </div>
-          </div>
+              <div className="row g-2 mb-3">
+                <div className="col-12 col-sm-4">
+                  <label className="form-label small fw-semibold">Category *</label>
+                  <select
+                    className="form-select"
+                    value={productForm.category}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const catName = val === 'soft' ? 'Soft Commodities' : val === 'hard' ? 'Hard Commodities' : 'Retail Products';
+                      setProductForm((prev) => ({
+                        ...prev,
+                        category: val,
+                        categoryName: catName,
+                        mrp: prev.mrp || (val === 'retail' ? prev.price : ''),
+                      }));
+                    }}
+                  >
+                    <option value="soft">Soft Commodities</option>
+                    <option value="retail">Retail Products</option>
+                    <option value="hard">Hard Commodities</option>
+                  </select>
+                </div>
+                <div className="col-12 col-sm-4">
+                  <label className="form-label small fw-semibold">Base Currency *</label>
+                  <select
+                    className="form-select"
+                    value={productForm.currency || 'AED'}
+                    onChange={(e) => setProductForm({ ...productForm, currency: e.target.value })}
+                    required
+                  >
+                    <option value="AED">🇦🇪 AED (د.إ) [Base]</option>
+                    <option value="USD">🇺🇸 USD ($)</option>
+                    <option value="EUR">🇪🇺 EUR (€)</option>
+                    <option value="GBP">🇬🇧 GBP (£)</option>
+                    <option value="INR">🇮🇳 INR (₹)</option>
+                    <option value="SAR">🇸🇦 SAR (﷼)</option>
+                  </select>
+                </div>
+                <div className="col-12 col-sm-4">
+                  <label className="form-label small fw-semibold">SKU Code</label>
+                  <input
+                    type="text"
+                    className="form-control text-uppercase"
+                    placeholder="e.g. SKU-1045"
+                    value={productForm.sku || ''}
+                    onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
+                  />
+                </div>
+              </div>
 
-          <div className="row g-2 mb-3">
-            <div className="col-12 col-sm-6">
-              <label className="form-label small fw-semibold">Available Stock Units *</label>
-              <input
-                type="number"
-                className="form-control"
-                placeholder="e.g. 500"
-                value={productForm.stock || ''}
-                onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-12 col-sm-6">
-              <label className="form-label small fw-semibold">MOQ *</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="e.g. 1 MT, 25 Bags, 50 Units"
-                value={productForm.moq || ''}
-                onChange={(e) => setProductForm({ ...productForm, moq: e.target.value })}
-                required
-              />
-            </div>
-          </div>
+              {isRetailModal ? (
+                <>
+                  <div className="row g-2 mb-3">
+                    <div className="col-12 col-sm-6">
+                      <label className="form-label small fw-semibold">MRP ({modalCurrSymbol.trim()}) *</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="e.g. 100"
+                        value={productForm.mrp || ''}
+                        onChange={(e) => setProductForm({ ...productForm, mrp: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-12 col-sm-6">
+                      <label className="form-label small fw-semibold">Discount Percentage (%) *</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        className="form-control"
+                        placeholder="e.g. 10"
+                        value={productForm.discountPercent || ''}
+                        onChange={(e) => setProductForm({ ...productForm, discountPercent: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Live calculated price preview if MRP is entered */}
+                  {productForm.mrp && Number(productForm.mrp) > 0 && (
+                    <div className="alert alert-light border py-2 px-3 mb-3 d-flex align-items-center justify-content-between rounded-3" style={{ fontSize: '13px', backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }}>
+                      <div>
+                        <span className="text-muted">Live Customer Price: </span>
+                        <span className="fw-bold text-success fs-6">
+                          {modalCurrSymbol}{calculatedRetailPrice.toLocaleString()}
+                        </span>
+                        {productForm.discountPercent && Number(productForm.discountPercent) > 0 && (
+                          <span className="text-decoration-line-through text-muted ms-2">
+                            {modalCurrSymbol}{Number(productForm.mrp).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      {productForm.discountPercent && Number(productForm.discountPercent) > 0 && (
+                        <span className="badge bg-danger rounded-pill px-2 py-1">
+                          {productForm.discountPercent}% OFF
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Customized Pack Sizes for Retail */}
+                  <div className="mb-3">
+                    <label className="form-label small fw-semibold">Customized Pack Sizes</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g. 1kg, 2kg, 5kg or 5 kg, 10kg"
+                      value={productForm.packSizes || ''}
+                      onChange={(e) => setProductForm({ ...productForm, packSizes: e.target.value })}
+                    />
+                    <div className="form-text text-muted" style={{ fontSize: '11px' }}>
+                      Enter pack sizes separated by commas (e.g. 1kg, 2kg, 5kg). Buyers can select their preferred size.
+                    </div>
+                  </div>
+
+                  <div className="row g-2 mb-3">
+                    <div className="col-12 col-sm-6">
+                      <label className="form-label small fw-semibold">Available Stock Units *</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="e.g. 500"
+                        value={productForm.stock || ''}
+                        onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-12 col-sm-6">
+                      <label className="form-label small fw-semibold">MOQ (Optional)</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="e.g. 1 Unit (Optional)"
+                        value={productForm.moq || ''}
+                        onChange={(e) => setProductForm({ ...productForm, moq: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="row g-2 mb-3">
+                    <div className="col-12 col-sm-6">
+                      <label className="form-label small fw-semibold">Wholesale Price ({modalCurrSymbol.trim()}) *</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="e.g. 2450"
+                        value={productForm.price || ''}
+                        onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-12 col-sm-6">
+                      <label className="form-label small fw-semibold">Old Price / MSRP ({modalCurrSymbol.trim()})</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="e.g. 2800"
+                        value={productForm.oldPrice || ''}
+                        onChange={(e) => setProductForm({ ...productForm, oldPrice: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="row g-2 mb-3">
+                    <div className="col-12 col-sm-6">
+                      <label className="form-label small fw-semibold">Available Stock in MT *</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="e.g. 500"
+                        value={productForm.stock || ''}
+                        onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-12 col-sm-6">
+                      <label className="form-label small fw-semibold">MOQ *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="e.g. 1 MT, 25 Bags, 50 Units"
+                        value={productForm.moq || ''}
+                        onChange={(e) => setProductForm({ ...productForm, moq: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
           <div className="mb-3">
             <div className="d-flex justify-content-between align-items-center mb-1">
@@ -1080,6 +1610,8 @@ export default function SellerDashboard() {
           </div>
         </form>
       </Modal>
+        );
+      })()}
 
       {/* Quote Tender Modal */}
       <Modal
@@ -1198,6 +1730,85 @@ export default function SellerDashboard() {
             >
               Confirm Delete
             </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Contact Admin Modal for Suspended / Under Review Sellers */}
+      <Modal
+        isOpen={showContactAdminModal}
+        onClose={() => setShowContactAdminModal(false)}
+        title="Seller Account Suspended • Verification Pending"
+        maxWidth="500px"
+      >
+        <div className="p-3 text-center">
+          <div
+            className="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+            style={{ width: '64px', height: '64px', backgroundColor: '#fef2f2', color: '#dc2626', fontSize: '28px' }}
+          >
+            <i className="fas fa-user-lock"></i>
+          </div>
+          <h5 className="fw-bold mb-2" style={{ color: colors.darkBlue }}>
+            Account Under KYC Review
+          </h5>
+          <p className="text-muted small mb-4">
+            Your seller account is currently in <strong>SUSPENDED</strong> status awaiting compliance verification by Goeazymart Admin.
+            <br />
+            Only <strong>Overview</strong> and <strong>Mill Profile & KYC</strong> are accessible. All other sections (Catalog, Orders, RFQs, Messages, Payouts) remain locked until an Admin activates your profile.
+          </p>
+
+          <div className="p-3 rounded-3 text-start mb-4" style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <div className="small fw-bold text-dark mb-2">
+              <i className="fas fa-headset text-primary me-2"></i>Contact Admin for Immediate Activation:
+            </div>
+            <div className="d-flex align-items-center justify-content-between py-1.5 small border-bottom">
+              <span className="text-muted"><i className="fas fa-envelope text-primary me-2"></i>Email Support:</span>
+              <a href="mailto:info@goeazymart.com" className="fw-semibold text-decoration-none text-dark">info@goeazymart.com</a>
+            </div>
+            <div className="d-flex align-items-center justify-content-between py-1.5 small border-bottom">
+              <span className="text-muted"><i className="fas fa-phone-alt text-success me-2"></i>Support Line:</span>
+              <a href="tel:+971541421313" className="fw-semibold text-decoration-none text-dark">+971 541421313</a>
+            </div>
+            <div className="d-flex align-items-center justify-content-between py-1.5 small">
+              <span className="text-muted"><i className="fab fa-whatsapp text-success me-2"></i>Direct WhatsApp:</span>
+              <a
+                href="https://wa.me/919176760808?text=Hello%20Goeazymart%20Admin,%20please%20review%20and%20activate%20my%20seller%20account"
+                target="_blank"
+                rel="noreferrer"
+                className="fw-semibold text-success text-decoration-none"
+              >
+                +91 91767 60808
+              </a>
+            </div>
+          </div>
+
+          <div className="d-flex flex-column flex-sm-row justify-content-center gap-2">
+            <button
+              type="button"
+              className="btn btn-outline-secondary px-3 py-2 small fw-medium"
+              onClick={() => setShowContactAdminModal(false)}
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              className="btn text-white px-3 py-2 small fw-semibold"
+              style={{ backgroundColor: colors.primary }}
+              onClick={() => {
+                setShowContactAdminModal(false);
+                setActiveTab('profile');
+              }}
+            >
+              <i className="fas fa-file-contract me-1"></i> View Mill Profile & KYC
+            </button>
+            <a
+              href="https://wa.me/919176760808?text=Hello%20Goeazymart%20Admin,%20please%20review%20and%20activate%20my%20seller%20account"
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-success px-3 py-2 small fw-semibold"
+            >
+              <i className="fab fa-whatsapp me-1"></i> WhatsApp Admin
+            </a>
           </div>
         </div>
       </Modal>

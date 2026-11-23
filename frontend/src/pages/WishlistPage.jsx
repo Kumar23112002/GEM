@@ -179,11 +179,11 @@ export default function WishlistPage() {
                         <div className="mb-3 mt-auto">
                           <div className="d-flex align-items-baseline gap-2">
                             <span className="fw-bold" style={{ color: colors.primary, fontSize: '16px' }}>
-                              {formatPrice(item.price)}
+                              {formatPrice(item.price, item.currency)}
                             </span>
                             {item.oldPrice && (
                               <span className="text-decoration-line-through text-muted small">
-                                {formatPrice(item.oldPrice)}
+                                {formatPrice(item.oldPrice, item.currency)}
                               </span>
                             )}
                             {discount > 0 && (

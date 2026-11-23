@@ -10,7 +10,7 @@ import { colors } from '../theme/colors';
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, totals, showToast } = useCart();
   const { currentUser } = useAuth();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currentCurrency } = useCurrency();
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const navigate = useNavigate();
@@ -104,11 +104,18 @@ export default function CartPage() {
                             {item.title}
                           </Link>
                           <div className="small text-muted mb-1">
-                            Unit Price: <span className="fw-semibold text-dark">{formatPrice(item.price)}</span>
+                            Unit Price: <span className="fw-semibold text-dark">{formatPrice(item.price, item.currency)}</span>
                           </div>
-                          <span className="badge bg-light text-muted border small">
-                            {item.categoryName || 'Standard'}
-                          </span>
+                          <div className="d-flex align-items-center gap-1 flex-wrap">
+                            <span className="badge bg-light text-muted border small">
+                              {item.categoryName || 'Standard'}
+                            </span>
+                            {item.selectedPackSize && (
+                              <span className="badge bg-success-subtle text-success border border-success-subtle small fw-semibold">
+                                Size: {item.selectedPackSize}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -119,7 +126,7 @@ export default function CartPage() {
                           <button
                             type="button"
                             className="btn btn-sm btn-outline-secondary"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedPackSize)}
                           >
                             −
                           </button>
@@ -132,7 +139,7 @@ export default function CartPage() {
                           <button
                             type="button"
                             className="btn btn-sm btn-outline-secondary"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedPackSize)}
                           >
                             +
                           </button>
@@ -140,14 +147,14 @@ export default function CartPage() {
 
                         {/* Line total */}
                         <div className="fw-bold text-end" style={{ minWidth: '90px', fontSize: '16px', color: colors.darkBlue }}>
-                          {formatPrice(item.price * item.quantity)}
+                          {formatPrice(item.price * item.quantity, item.currency)}
                         </div>
 
                         {/* Remove */}
                         <button
                           type="button"
                           className="btn btn-link text-danger p-0"
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.id, item.selectedPackSize)}
                           title="Remove item"
                         >
                           <i className="fas fa-trash-alt"></i>
@@ -177,7 +184,7 @@ export default function CartPage() {
 
                 <div className="d-flex justify-content-between mb-2 small text-muted">
                   <span>Items Subtotal</span>
-                  <span className="fw-semibold text-dark">{formatPrice(totals.subtotal)}</span>
+                  <span className="fw-semibold text-dark">{formatPrice(totals.subtotal, currentCurrency?.code)}</span>
                 </div>
 
                 <div className="d-flex justify-content-between mb-2 small text-muted">
@@ -186,20 +193,20 @@ export default function CartPage() {
                     {totals.shipping === 0 ? (
                       <span className="text-success fw-bold">FREE</span>
                     ) : (
-                      formatPrice(totals.shipping)
+                      formatPrice(totals.shipping, currentCurrency?.code)
                     )}
                   </span>
                 </div>
 
                 <div className="d-flex justify-content-between mb-3 small text-muted">
                   <span>GST / Tax (5%)</span>
-                  <span className="fw-semibold text-dark">{formatPrice(totals.tax)}</span>
+                  <span className="fw-semibold text-dark">{formatPrice(totals.tax, currentCurrency?.code)}</span>
                 </div>
 
                 {promoApplied && (
                   <div className="d-flex justify-content-between mb-2 small text-success fw-bold">
                     <span>Discount (GEM10 10% OFF)</span>
-                    <span>-{formatPrice(Math.round(totals.total * 0.1))}</span>
+                    <span>-{formatPrice(Math.round(totals.total * 0.1), currentCurrency?.code)}</span>
                   </div>
                 )}
 
@@ -211,7 +218,7 @@ export default function CartPage() {
                     Estimated Total
                   </span>
                   <span className="fw-bold fs-4" style={{ color: colors.primary }}>
-                    {formatPrice(finalTotal)}
+                    {formatPrice(finalTotal, currentCurrency?.code)}
                   </span>
                 </div>
 

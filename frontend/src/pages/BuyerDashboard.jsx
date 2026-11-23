@@ -77,7 +77,14 @@ export default function BuyerDashboard() {
         api.getAddresses(),
         api.getPayments(),
       ]);
-      setOrders(ord || []);
+      const myOrders = (ord || []).filter((o) => {
+        if (!currentUser) return true;
+        if (o.customerId && String(o.customerId) === String(currentUser.id)) return true;
+        if (o.customerEmail && currentUser.email && o.customerEmail.toLowerCase() === currentUser.email.toLowerCase()) return true;
+        if (o.customer && currentUser.name && o.customer.toLowerCase().includes(currentUser.name.toLowerCase())) return true;
+        return !o.customerId && !o.customerEmail;
+      });
+      setOrders(myOrders);
       setRfqs(r || []);
       const negList = neg || [];
       setNegotiations(negList);
@@ -92,7 +99,7 @@ export default function BuyerDashboard() {
       setPayments(p || []);
     }
     loadData();
-  }, []);
+  }, [currentUser]);
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: 'fas fa-th-large' },

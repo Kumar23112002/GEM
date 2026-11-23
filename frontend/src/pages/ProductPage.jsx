@@ -22,6 +22,7 @@ export default function ProductPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImg, setSelectedImg] = useState('');
+  const [selectedPackSize, setSelectedPackSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('desc');
 
@@ -45,6 +46,12 @@ export default function ProductPage() {
         if (p) {
           setProduct(p);
           setSelectedImg(p.img);
+          if (p.packSizes) {
+            const sizes = p.packSizes.split(',').map((s) => s.trim()).filter(Boolean);
+            if (sizes.length > 0) {
+              setSelectedPackSize(sizes[0]);
+            }
+          }
         }
       } finally {
         setLoading(false);
@@ -88,15 +95,25 @@ export default function ProductPage() {
     );
   }
 
-  const discount = product?.oldPrice ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
-  const isCommodity = product?.category === 'soft' || product?.category === 'hard';
+  const isCommodity =
+    product?.category === 'soft' ||
+    product?.category === 'hard' ||
+    String(product?.category || '').toLowerCase().includes('soft') ||
+    String(product?.category || '').toLowerCase().includes('hard');
+
+  const discount =
+    product?.discount !== undefined && product?.discount !== null
+      ? product.discount
+      : (product?.oldPrice && product?.oldPrice > product?.price
+          ? Math.round((1 - product.price / product.oldPrice) * 100)
+          : 0);
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
+    addToCart(product, quantity, selectedPackSize || undefined);
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity);
+    addToCart(product, quantity, selectedPackSize || undefined);
     navigate('/cart');
   };
 
@@ -188,9 +205,26 @@ export default function ProductPage() {
             {/* Gallery Column */}
             <div className="col-12 col-md-5">
               <div
-                className="d-flex align-items-center justify-content-center p-3 rounded-4 mb-3"
+                className="position-relative d-flex align-items-center justify-content-center p-3 rounded-4 mb-3"
                 style={{ backgroundColor: '#f8fafc', height: 'clamp(260px, 45vw, 360px)', border: `1px solid ${colors.border}` }}
               >
+                {!isCommodity && discount > 0 && (
+                  <span
+                    className="position-absolute badge rounded-pill px-3 py-2 shadow-sm"
+                    style={{
+                      top: '16px',
+                      left: '16px',
+                      backgroundColor: '#ef4444',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      zIndex: 2,
+                      letterSpacing: '0.4px',
+                    }}
+                  >
+                    {discount}% OFF
+                  </span>
+                )}
                 <img
                   src={selectedImg || product.img}
                   alt={product.title}
@@ -275,11 +309,11 @@ export default function ProductPage() {
               ) : (
                 <div className="d-flex align-items-baseline gap-3 mb-3">
                   <span className="fw-bold" style={{ fontSize: '32px', color: colors.primary }}>
-                    {formatPrice(product.price)}
+                    {formatPrice(product.price, product.currency)}
                   </span>
-                  {product.oldPrice && (
+                  {product.oldPrice && product.oldPrice > product.price && (
                     <span className="text-decoration-line-through text-muted" style={{ fontSize: '18px' }}>
-                      {formatPrice(product.oldPrice)}
+                      {formatPrice(product.oldPrice, product.currency)}
                     </span>
                   )}
                   {discount > 0 && (
@@ -296,6 +330,43 @@ export default function ProductPage() {
               <p className="text-muted small mb-4" style={{ lineHeight: '1.6' }}>
                 {product.description || 'Premium quality export-grade product sourced directly from verified mills and authorized stockists. Fully compliant with international quality standards.'}
               </p>
+
+              {/* Customized Pack Sizes Selector for Retail */}
+              {!isCommodity && product.packSizes && (
+                <div className="mb-4 p-3 bg-light rounded-3 border">
+                  <div className="d-flex align-items-center justify-content-between mb-2">
+                    <span className="small fw-bold text-dark">
+                      Select Pack Size: <span className="text-success fw-bold ms-1">{selectedPackSize}</span>
+                    </span>
+                    <span className="badge bg-white text-muted border small">Custom Sizes</span>
+                  </div>
+                  <div className="d-flex flex-wrap gap-2">
+                    {product.packSizes.split(',').map((sizeStr, idx) => {
+                      const size = sizeStr.trim();
+                      if (!size) return null;
+                      const isSelected = selectedPackSize === size;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSelectedPackSize(size)}
+                          className={`btn btn-sm ${isSelected ? 'btn-success text-white fw-bold shadow-sm' : 'btn-outline-secondary'}`}
+                          style={{
+                            padding: '6px 14px',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            borderColor: isSelected ? colors.primary : '#d1d5db',
+                            backgroundColor: isSelected ? colors.primary : '#ffffff',
+                          }}
+                        >
+                          {isSelected && <i className="fas fa-check-circle me-1 small"></i>}
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Actions: RFQ for commodities, Add to Cart for retail */}
               {isCommodity ? (
@@ -652,7 +723,7 @@ export default function ProductPage() {
           <div className="p-3 bg-light rounded-3 mb-3 border">
             <div className="small text-muted">Commodity</div>
             <strong className="text-dark d-block">{product?.title}</strong>
-            <div className="small text-muted mt-1">Listed Reference Price: <strong className="text-success">{formatPrice(product?.price)}</strong></div>
+            <div className="small text-muted mt-1">Listed Reference Price: <strong className="text-success">{formatPrice(product?.price, product?.currency)}</strong></div>
           </div>
 
           <div className="row g-2 mb-3">

@@ -639,43 +639,41 @@ export default function AdminDashboard() {
                     <td>{u.country || 'India'}</td>
                     <td>{u.joined}</td>
                     <td>
-                      <span
-                        className={`badge ${
-                          u.status === 'active'
-                            ? 'bg-success-subtle text-success'
-                            : u.status === 'pending'
-                            ? 'bg-warning-subtle text-warning'
-                            : 'bg-danger-subtle text-danger'
-                        }`}
-                      >
-                        {u.status.toUpperCase()}
-                      </span>
+                      <div className="d-flex flex-column gap-1">
+                        <span
+                          className={`badge ${
+                            u.status === 'active'
+                              ? 'bg-success-subtle text-success border border-success'
+                              : u.status === 'pending'
+                              ? 'bg-warning-subtle text-warning border border-warning'
+                              : 'bg-danger-subtle text-danger border border-danger'
+                          }`}
+                        >
+                          {u.status.toUpperCase()}
+                        </span>
+                        <span className="badge bg-light text-muted border" style={{ fontSize: '10.5px' }}>
+                          KYC: {(u.kycStatus || (u.status === 'active' ? 'verified' : 'pending')).toUpperCase()}
+                        </span>
+                      </div>
                     </td>
                     <td>
-                      {u.status === 'pending' && (
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-success me-1 py-1"
-                          onClick={() => handleUpdateUserStatus(u.id, 'active')}
-                        >
-                          Approve KYC
-                        </button>
-                      )}
                       {u.status === 'active' ? (
                         <button
                           type="button"
-                          className="btn btn-sm btn-outline-danger py-1"
+                          className="btn btn-sm btn-outline-danger py-1 px-2 fw-semibold"
                           onClick={() => handleUpdateUserStatus(u.id, 'suspended')}
+                          title="Suspend User Account"
                         >
-                          Suspend
+                          <i className="fas fa-ban me-1"></i> Suspend
                         </button>
                       ) : (
                         <button
                           type="button"
-                          className="btn btn-sm btn-outline-success py-1"
+                          className="btn btn-sm btn-success py-1 px-2 fw-bold text-white shadow-sm"
                           onClick={() => handleUpdateUserStatus(u.id, 'active')}
+                          title="Approve KYC and Activate Seller"
                         >
-                          Activate
+                          <i className="fas fa-check-circle me-1"></i> Activate Seller
                         </button>
                       )}
                     </td>

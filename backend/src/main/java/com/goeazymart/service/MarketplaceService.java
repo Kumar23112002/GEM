@@ -73,6 +73,8 @@ public class MarketplaceService {
                 repairNegotiationsData();
             }
             repairLegacyCmsContacts();
+            repairProductCurrencies();
+            repairProductSellers();
         } catch (Exception e) {
             // Log connection status
             System.err.println("[MarketplaceService] DB initialization notice: " + e.getMessage());
@@ -99,6 +101,18 @@ public class MarketplaceService {
         if (p.getId() == null) {
             p.setId(System.currentTimeMillis());
         }
+        if (p.getCurrency() == null || p.getCurrency().trim().isEmpty()) {
+            p.setCurrency("AED");
+        }
+        if (p.getSeller() == null || p.getSeller().trim().isEmpty()) {
+            p.setSeller("Punjab Agro Mills");
+        }
+        if (p.getSellerId() == null || p.getSellerId().trim().isEmpty()) {
+            p.setSellerId("U-1002");
+        }
+        if (p.getSellerEmail() == null || p.getSellerEmail().trim().isEmpty()) {
+            p.setSellerEmail("seller@goeazymart.com");
+        }
         if (p.getRating() == null) p.setRating(5.0);
         if (p.getReviews() == null) p.setReviews(0);
         return productRepository.save(p);
@@ -115,8 +129,15 @@ public class MarketplaceService {
             if (updates.getSku() != null) existing.setSku(updates.getSku());
             if (updates.getStock() != null) existing.setStock(updates.getStock());
             if (updates.getMoq() != null) existing.setMoq(updates.getMoq());
+            if (updates.getPackSizes() != null) existing.setPackSizes(updates.getPackSizes());
+            if (updates.getDiscount() != null) existing.setDiscount(updates.getDiscount());
+            if (updates.getCurrency() != null && !updates.getCurrency().trim().isEmpty()) {
+                existing.setCurrency(updates.getCurrency().trim().toUpperCase());
+            }
             if (updates.getDescription() != null) existing.setDescription(updates.getDescription());
             if (updates.getSeller() != null) existing.setSeller(updates.getSeller());
+            if (updates.getSellerId() != null) existing.setSellerId(updates.getSellerId());
+            if (updates.getSellerEmail() != null) existing.setSellerEmail(updates.getSellerEmail());
             if (updates.getLocation() != null) existing.setLocation(updates.getLocation());
             return productRepository.save(existing);
         }).orElse(null);
@@ -153,7 +174,13 @@ public class MarketplaceService {
         if (u.getEmail() != null) {
             u.setEmail(u.getEmail().trim().toLowerCase());
         }
-        if (u.getStatus() == null) u.setStatus("active");
+        boolean isSeller = u.getRole() != null && "seller".equalsIgnoreCase(u.getRole().trim());
+        if (u.getStatus() == null) {
+            u.setStatus(isSeller ? "suspended" : "active");
+        }
+        if (u.getKycStatus() == null) {
+            u.setKycStatus(isSeller ? "pending" : "verified");
+        }
         if (u.getJoined() == null) u.setJoined(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         return userRepository.save(u);
     }
@@ -165,6 +192,11 @@ public class MarketplaceService {
     public User updateUserStatus(String userId, String status) {
         return userRepository.findById(userId).map(u -> {
             u.setStatus(status);
+            if ("active".equalsIgnoreCase(status)) {
+                u.setKycStatus("verified");
+            } else if ("suspended".equalsIgnoreCase(status)) {
+                u.setKycStatus("pending");
+            }
             return userRepository.save(u);
         }).orElse(null);
     }
@@ -607,6 +639,64 @@ public class MarketplaceService {
             cmsContentRepository.save(cms);
             System.out.println("[MarketplaceService] Upgraded legacy CMS contact channels.");
         }
+    }
+
+    private void repairProductCurrencies() {
+        try {
+            List<Product> products = productRepository.findAll();
+            boolean changed = false;
+            for (Product p : products) {
+                if (p.getCurrency() == null || p.getCurrency().trim().isEmpty()) {
+                    p.setCurrency("AED");
+                    productRepository.save(p);
+                    changed = true;
+                }
+            }
+            if (changed) {
+                System.out.println("[MarketplaceService] Defaulted unassigned product currencies to AED.");
+            }
+        } catch (Exception e) {
+            System.err.println("[MarketplaceService] repairProductCurrencies warning: " + e.getMessage());
+        }
+    }
+
+    private void repairProductSellers() {
+        try {
+            List<Product> products = productRepository.findAll();
+            boolean changed = false;
+            for (Product p : products) {
+                if (p.getSeller() == null || p.getSeller().trim().isEmpty()) {
+                    p.setSeller("Punjab Agro Mills");
+                    p.setSellerId("U-1002");
+                    p.setSellerEmail("seller@goeazymart.com");
+                    productRepository.save(p);
+                    changed = true;
+                }
+            }
+            if (changed) {
+                System.out.println("[MarketplaceService] Defaulted unassigned products to seller Punjab Agro Mills.");
+            }
+        } catch (Exception e) {
+            System.err.println("[MarketplaceService] repairProductSellers warning: " + e.getMessage());
+        }
+    }
+
+    public List<Product> getProductsBySeller(String sellerId, String sellerEmail, String seller) {
+        return productRepository.findAll().stream().filter(p -> {
+            if (sellerId != null && !sellerId.trim().isEmpty() && sellerId.equalsIgnoreCase(p.getSellerId())) return true;
+            if (sellerEmail != null && !sellerEmail.trim().isEmpty() && sellerEmail.equalsIgnoreCase(p.getSellerEmail())) return true;
+            if (seller != null && !seller.trim().isEmpty() && p.getSeller() != null && p.getSeller().equalsIgnoreCase(seller.trim())) return true;
+            return false;
+        }).toList();
+    }
+
+    public List<Order> getOrdersBySeller(String sellerId, String sellerEmail, String seller) {
+        return orderRepository.findAll().stream().filter(o -> {
+            if (sellerId != null && !sellerId.trim().isEmpty() && sellerId.equalsIgnoreCase(o.getSellerId())) return true;
+            if (sellerEmail != null && !sellerEmail.trim().isEmpty() && sellerEmail.equalsIgnoreCase(o.getSellerEmail())) return true;
+            if (seller != null && !seller.trim().isEmpty() && o.getSeller() != null && o.getSeller().equalsIgnoreCase(seller.trim())) return true;
+            return false;
+        }).toList();
     }
 
     // ==================== CLIENT LEADS / FOLLOW-UP ====================

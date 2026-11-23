@@ -10,8 +10,22 @@ public class Order {
     private String id;
 
     private String customer;
+
+    @Column(length = 100)
+    private String customerId;
+
+    @Column(length = 150)
+    private String customerEmail;
+
     private String buyerCountry;
     private String seller;
+
+    @Column(length = 100)
+    private String sellerId;
+
+    @Column(length = 150)
+    private String sellerEmail;
+
     private String sellerCountry;
 
     @Column(columnDefinition = "TEXT")
@@ -53,11 +67,23 @@ public class Order {
     public String getCustomer() { return customer; }
     public void setCustomer(String customer) { this.customer = customer; }
 
+    public String getCustomerId() { return customerId; }
+    public void setCustomerId(String customerId) { this.customerId = customerId; }
+
+    public String getCustomerEmail() { return customerEmail; }
+    public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
+
     public String getBuyerCountry() { return buyerCountry; }
     public void setBuyerCountry(String buyerCountry) { this.buyerCountry = buyerCountry; }
 
     public String getSeller() { return seller; }
     public void setSeller(String seller) { this.seller = seller; }
+
+    public String getSellerId() { return sellerId; }
+    public void setSellerId(String sellerId) { this.sellerId = sellerId; }
+
+    public String getSellerEmail() { return sellerEmail; }
+    public void setSellerEmail(String sellerEmail) { this.sellerEmail = sellerEmail; }
 
     public String getSellerCountry() { return sellerCountry; }
     public void setSellerCountry(String sellerCountry) { this.sellerCountry = sellerCountry; }

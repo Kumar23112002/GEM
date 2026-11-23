@@ -19,7 +19,15 @@ public class OrderController {
     }
 
     @GetMapping
-    public List<Order> getOrders() {
+    public List<Order> getOrders(
+            @RequestParam(name = "sellerId", required = false) String sellerId,
+            @RequestParam(name = "sellerEmail", required = false) String sellerEmail,
+            @RequestParam(name = "seller", required = false) String seller) {
+        if ((sellerId != null && !sellerId.trim().isEmpty()) ||
+            (sellerEmail != null && !sellerEmail.trim().isEmpty()) ||
+            (seller != null && !seller.trim().isEmpty())) {
+            return service.getOrdersBySeller(sellerId, sellerEmail, seller);
+        }
         return service.getAllOrders();
     }
 

@@ -75,8 +75,10 @@ async function request(endpoint, options = {}, localFallback) {
 
 export const api = {
   // PRODUCTS
-  async getProducts() {
-    return request('/products', {}, () => getStorage('products', INITIAL_PRODUCTS));
+  async getProducts(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    const endpoint = query ? `/products?${query}` : '/products';
+    return request(endpoint, {}, () => getStorage('products', INITIAL_PRODUCTS));
   },
 
   async getProductById(id) {
@@ -146,32 +148,83 @@ export const api = {
   },
 
   async register(userData) {
-    return request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }, () => {
+    const isSeller = (userData.role || '').toLowerCase() === 'seller';
+    const computedName = userData.name || userData.companyName || userData.shopName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'Valued Trader';
+    const computedCompany = userData.company || userData.companyName || userData.shopName || 'Independent';
+    const payload = {
+      ...userData,
+      name: computedName,
+      company: computedCompany,
+      status: isSeller ? 'suspended' : 'active',
+      kycStatus: isSeller ? 'pending' : 'verified',
+    };
+    return request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }, () => {
       const registered = getStorage('registered_users', []);
       const newUser = {
+        id: `U-${Date.now()}`,
         email: userData.email,
         password: userData.password,
         role: userData.role || 'buyer',
-        name: userData.companyName || userData.shopName || `${userData.firstName} ${userData.lastName}`.trim(),
+        name: userData.companyName || userData.shopName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'Valued Trader',
         avatar: `https://randomuser.me/api/portraits/${userData.gender === 'female' ? 'women' : 'men'}/${Math.floor(Math.random() * 80) + 10}.jpg`,
-        redirect: userData.role === 'seller' ? '/seller-dashboard' : userData.role === 'admin' ? '/admin-dashboard' : '/buyer-dashboard',
+        redirect: isSeller ? '/seller-dashboard' : userData.role === 'admin' ? '/admin-dashboard' : '/buyer-dashboard',
         company: userData.companyName || userData.shopName || 'Independent',
-        phone: userData.phone,
+        phone: userData.phone || '',
         country: userData.country || 'India',
         city: userData.city || 'Mumbai',
         registeredAt: new Date().toISOString(),
-        kycStatus: 'verified'
+        joined: new Date().toISOString().split('T')[0],
+        status: isSeller ? 'suspended' : 'active',
+        kycStatus: isSeller ? 'pending' : 'verified',
+        gstin: userData.gstin || '',
+        pan: userData.pan || '',
+        address: userData.address || '',
       };
       registered.push(newUser);
       setStorage('registered_users', registered);
+
+      const allUsers = getStorage('users', INITIAL_ADMIN_USERS);
+      const existingIdx = allUsers.findIndex(u => (u.email && newUser.email && u.email.toLowerCase() === newUser.email.toLowerCase()) || u.id === newUser.id);
+      if (existingIdx !== -1) {
+        allUsers[existingIdx] = { ...allUsers[existingIdx], ...newUser };
+      } else {
+        allUsers.push(newUser);
+      }
+      setStorage('users', allUsers);
+
       localStorage.setItem('goeazy_user', JSON.stringify(newUser));
       return { success: true, user: newUser };
+    }).then(res => {
+      if (res && res.user) {
+        const u = res.user;
+        const normalized = {
+          ...u,
+          status: u.status || (isSeller ? 'suspended' : 'active'),
+          kycStatus: u.kycStatus || (isSeller ? 'pending' : 'verified'),
+          redirect: isSeller ? '/seller-dashboard' : u.role === 'admin' ? '/admin-dashboard' : '/buyer-dashboard',
+        };
+        localStorage.setItem('goeazy_user', JSON.stringify(normalized));
+
+        const allUsers = getStorage('users', INITIAL_ADMIN_USERS);
+        const existingIdx = allUsers.findIndex(x => (x.email && u.email && x.email.toLowerCase() === u.email.toLowerCase()) || x.id === u.id);
+        if (existingIdx !== -1) {
+          allUsers[existingIdx] = { ...allUsers[existingIdx], ...normalized };
+        } else {
+          allUsers.push(normalized);
+        }
+        setStorage('users', allUsers);
+
+        return { ...res, user: normalized };
+      }
+      return res;
     });
   },
 
   // ORDERS
-  async getOrders() {
-    return request('/orders', {}, () => getStorage('orders', INITIAL_ORDERS));
+  async getOrders(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    const endpoint = query ? `/orders?${query}` : '/orders';
+    return request(endpoint, {}, () => getStorage('orders', INITIAL_ORDERS));
   },
 
   async updateOrderStatus(id, status) {
@@ -458,18 +511,63 @@ export const api = {
   },
 
   async getAdminUsers() {
-    return request('/admin/users', {}, () => getStorage('users', INITIAL_ADMIN_USERS));
+    return request('/admin/users', {}, () => {
+      const users = getStorage('users', INITIAL_ADMIN_USERS);
+      const registered = getStorage('registered_users', []);
+      registered.forEach(ru => {
+        const idx = users.findIndex(u => (u.email && ru.email && u.email.toLowerCase() === ru.email.toLowerCase()) || u.id === ru.id);
+        if (idx === -1) {
+          users.push(ru);
+        } else {
+          users[idx] = { ...users[idx], ...ru };
+        }
+      });
+      setStorage('users', users);
+      return users;
+    });
   },
 
   async updateUserStatus(userId, status) {
-    return request(`/admin/users/${userId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }, () => {
+    const syncLocal = () => {
       const users = getStorage('users', INITIAL_ADMIN_USERS);
-      const u = users.find(x => x.id === userId);
+      const u = users.find(x => x.id === userId || (x.email && String(x.email).toLowerCase() === String(userId).toLowerCase()));
       if (u) {
         u.status = status;
+        if (status === 'active') u.kycStatus = 'verified';
+        else if (status === 'suspended') u.kycStatus = 'pending';
         setStorage('users', users);
       }
+      const registered = getStorage('registered_users', []);
+      const regUser = registered.find(x => x.id === userId || (x.email && String(x.email).toLowerCase() === String(userId).toLowerCase()));
+      if (regUser) {
+        regUser.status = status;
+        if (status === 'active') regUser.kycStatus = 'verified';
+        else if (status === 'suspended') regUser.kycStatus = 'pending';
+        setStorage('registered_users', registered);
+      }
+      try {
+        const current = JSON.parse(localStorage.getItem('goeazy_user') || 'null');
+        if (
+          current &&
+          (current.id === userId ||
+            (current.email && String(current.email).toLowerCase() === String(userId).toLowerCase()) ||
+            (u && current.email && u.email && current.email.toLowerCase() === u.email.toLowerCase()))
+        ) {
+          current.status = status;
+          if (status === 'active') current.kycStatus = 'verified';
+          else if (status === 'suspended') current.kycStatus = 'pending';
+          localStorage.setItem('goeazy_user', JSON.stringify(current));
+          window.dispatchEvent(new Event('goeazy_user_updated'));
+        }
+      } catch (e) {}
       return u;
+    };
+
+    return request(`/admin/users/${userId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }, () => {
+      return syncLocal();
+    }).then(res => {
+      syncLocal();
+      return res;
     });
   },
 
@@ -549,3 +647,7 @@ export const api = {
     });
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.gemApi = api;
+}

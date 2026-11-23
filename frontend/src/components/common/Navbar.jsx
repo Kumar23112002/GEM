@@ -192,7 +192,7 @@ export default function Navbar() {
                 title="Change display currency"
               >
                 <i className="fas fa-globe text-success"></i>
-                <span className="fw-medium">{currentCurrency ? currentCurrency.label : (cmsContent?.topBar?.currency || 'Global / INR (₹)')}</span>
+                <span className="fw-medium">{currentCurrency ? currentCurrency.label : 'Global / AED (د.إ)'}</span>
                 <i className={`fas fa-chevron-down ms-1 ${currencyDropdownOpen ? 'fa-rotate-180' : ''}`} style={{ fontSize: '10px', transition: 'transform 0.2s ease' }}></i>
               </button>
 
@@ -235,6 +235,11 @@ export default function Navbar() {
                         <span className="d-flex align-items-center gap-2">
                           <span style={{ fontSize: '15px' }}>{curr.flag}</span>
                           <span>{curr.name}</span>
+                          {curr.isBase && (
+                            <span className="badge bg-success-subtle text-success border border-success-subtle py-0" style={{ fontSize: '9px', fontWeight: '700' }}>
+                              BASE
+                            </span>
+                          )}
                         </span>
                         <span
                           className="badge rounded-pill"
@@ -245,11 +250,18 @@ export default function Navbar() {
                             fontWeight: '600',
                           }}
                         >
-                          {curr.symbol} {curr.code}
+                          {curr.code === 'AED' ? 'AED' : `${curr.symbol} ${curr.code}`}
                         </span>
                       </button>
                     );
                   })}
+                  <div className="px-3 pt-2 pb-1 border-top text-muted d-flex align-items-center justify-content-between" style={{ fontSize: '10px' }}>
+                    <span className="d-flex align-items-center gap-1">
+                      <i className="fas fa-bolt text-warning"></i>
+                      <span>Live via Frankfurter API</span>
+                    </span>
+                    <span className="text-success fw-bold">Base: AED</span>
+                  </div>
                 </div>
               )}
             </div>

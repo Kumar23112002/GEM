@@ -14,9 +14,18 @@ export default function ProductCard({ product }) {
   const cartItem = cart?.find((item) => item.id === product.id);
   const cartQty = cartItem ? cartItem.quantity : 0;
 
-  const isCommodity = product.category === 'soft' || product.category === 'hard';
+  const isCommodity =
+    product.category === 'soft' ||
+    product.category === 'hard' ||
+    String(product.category || '').toLowerCase().includes('soft') ||
+    String(product.category || '').toLowerCase().includes('hard');
 
-  const discount = Math.round((1 - product.price / product.oldPrice) * 100);
+  const discount =
+    product.discount !== undefined && product.discount !== null
+      ? product.discount
+      : (product.oldPrice && product.oldPrice > product.price
+          ? Math.round((1 - product.price / product.oldPrice) * 100)
+          : 0);
 
   const renderStars = (rating) => {
     const stars = [];
@@ -43,6 +52,26 @@ export default function ProductCard({ product }) {
         flexDirection: 'column',
       }}
     >
+      {/* Retail Discount Badge on Product Image */}
+      {!isCommodity && discount > 0 && (
+        <span
+          className="badge rounded-pill position-absolute shadow-sm"
+          style={{
+            top: '12px',
+            left: '12px',
+            backgroundColor: '#ef4444',
+            color: '#ffffff',
+            fontSize: '11px',
+            fontWeight: '700',
+            zIndex: 2,
+            letterSpacing: '0.3px',
+            padding: '5px 9px',
+          }}
+        >
+          {discount}% OFF
+        </span>
+      )}
+
       {/* Wishlist Button */}
       <button
         type="button"
@@ -124,6 +153,21 @@ export default function ProductCard({ product }) {
           </span>
         </div>
 
+        {/* Customized Pack Sizes for Retail */}
+        {!isCommodity && product.packSizes && (
+          <div className="d-flex flex-wrap gap-1 mb-2">
+            {product.packSizes.split(',').map((size, idx) => (
+              <span
+                key={idx}
+                className="badge bg-light text-secondary border px-1.5 py-0.5"
+                style={{ fontSize: '10px', fontWeight: '500' }}
+              >
+                {size.trim()}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Price Row or RFQ Indicator */}
         {isCommodity ? (
           <div className="d-flex flex-column gap-1 mb-3 mt-auto">
@@ -147,14 +191,14 @@ export default function ProductCard({ product }) {
         ) : (
           <div className="d-flex align-items-baseline gap-2 mb-3 mt-auto">
             <span className="fw-bold" style={{ color: colors.darkBlue, fontSize: '17px' }}>
-              {formatPrice(product.price)}
+              {formatPrice(product.price, product.currency)}
             </span>
-            {product.oldPrice && (
+            {product.oldPrice && product.oldPrice > product.price && (
               <span
                 className="text-decoration-line-through"
                 style={{ color: colors.textMuted, fontSize: '12px' }}
               >
-                {formatPrice(product.oldPrice)}
+                {formatPrice(product.oldPrice, product.currency)}
               </span>
             )}
             {discount > 0 && (

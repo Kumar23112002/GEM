@@ -276,15 +276,16 @@ export default function Navbar() {
       </div>
 
       {/* Main Top Header */}
-      <div className="border-bottom py-3" style={{ borderColor: colors.border }}>
-        <div className="container d-flex align-items-center justify-content-between gap-3">
+      <div className="border-bottom py-2 py-sm-3" style={{ borderColor: colors.border }}>
+        <div className="container d-flex align-items-center justify-content-between gap-2 gap-sm-3">
           {/* Logo */}
           <Link
             to="/"
             className="d-flex align-items-center text-decoration-none flex-shrink-0"
+            style={{ maxWidth: 'clamp(120px, 38vw, 180px)' }}
             title="Goeazymart - Anywhere & Anytime"
           >
-            <BrandLogo surface="light" height="clamp(32px, 4vw, 44px)" />
+            <BrandLogo surface="light" height="clamp(28px, 4vw, 42px)" />
           </Link>
 
           {/* Desktop Search Bar */}
@@ -319,17 +320,17 @@ export default function Navbar() {
           </form>
 
           {/* Right Action Icons & Auth */}
-          <div className="d-flex align-items-center gap-3">
+          <div className="nav-actions-container flex-shrink-0">
             {/* Wishlist Link */}
             <Link
               to="/wishlist"
-              className="btn btn-light position-relative d-flex align-items-center justify-content-center rounded-3 p-2"
+              className="btn btn-light position-relative d-flex align-items-center justify-content-center rounded-3 p-0"
               style={{
                 backgroundColor: colors.surfaceBg,
                 color: wishlistCount > 0 ? colors.danger : colors.darkBlue,
                 border: `1px solid ${colors.border}`,
-                width: '42px',
-                height: '42px',
+                width: 'clamp(36px, 9vw, 42px)',
+                height: 'clamp(36px, 9vw, 42px)',
               }}
               title="My Wishlist"
             >
@@ -339,7 +340,7 @@ export default function Navbar() {
                   className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                   style={{
                     fontSize: '10px',
-                    padding: '4px 6px',
+                    padding: '3px 5px',
                   }}
                 >
                   {wishlistCount}
@@ -350,13 +351,13 @@ export default function Navbar() {
             {/* Cart Link */}
             <Link
               to="/cart"
-              className="btn btn-light position-relative d-flex align-items-center justify-content-center rounded-3 p-2"
+              className="btn btn-light position-relative d-flex align-items-center justify-content-center rounded-3 p-0"
               style={{
                 backgroundColor: colors.surfaceBg,
                 color: colors.darkBlue,
                 border: `1px solid ${colors.border}`,
-                width: '42px',
-                height: '42px',
+                width: 'clamp(36px, 9vw, 42px)',
+                height: 'clamp(36px, 9vw, 42px)',
               }}
               title="Shopping Cart"
             >
@@ -368,7 +369,7 @@ export default function Navbar() {
                     backgroundColor: colors.primary,
                     color: colors.white,
                     fontSize: '10px',
-                    padding: '4px 6px',
+                    padding: '3px 5px',
                   }}
                 >
                   {cartCount}
@@ -380,7 +381,7 @@ export default function Navbar() {
             {currentUser ? (
               <div className="dropdown">
                 <button
-                  className="btn btn-outline-secondary d-flex align-items-center gap-2 p-1 pe-3 rounded-pill dropdown-toggle shadow-none"
+                  className="btn btn-outline-secondary d-flex align-items-center gap-2 p-1 pe-2 pe-sm-3 rounded-pill dropdown-toggle shadow-none"
                   type="button"
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
@@ -390,7 +391,7 @@ export default function Navbar() {
                     src={currentUser.avatar || 'https://randomuser.me/api/portraits/men/32.jpg'}
                     alt={currentUser.name}
                     className="rounded-circle"
-                    style={{ width: '32px', height: '32px', objectFit: 'cover' }}
+                    style={{ width: '30px', height: '30px', objectFit: 'cover' }}
                   />
                   <div className="text-start d-none d-sm-block">
                     <div className="fw-semibold text-truncate" style={{ maxWidth: '110px', fontSize: '13px', color: colors.darkBlue }}>
@@ -475,10 +476,10 @@ export default function Navbar() {
                 </ul>
               </div>
             ) : (
-              <div className="d-flex align-items-center gap-2">
+              <div className="d-none d-sm-flex align-items-center gap-2">
                 <Link
                   to="/login"
-                  className="btn btn-outline-secondary px-3 py-2 fw-medium d-none d-sm-inline-block"
+                  className="btn btn-outline-secondary px-3 py-2 fw-medium"
                   style={{
                     borderColor: colors.border,
                     color: colors.darkBlue,
@@ -506,9 +507,15 @@ export default function Navbar() {
             {/* Mobile Hamburger Button */}
             <button
               type="button"
-              className="btn btn-light d-lg-none p-2 border"
+              className="btn btn-light d-lg-none p-0 border flex-shrink-0 d-inline-flex align-items-center justify-content-center"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{ backgroundColor: colors.surfaceBg, borderColor: colors.border }}
+              style={{
+                width: 'clamp(36px, 9vw, 40px)',
+                height: 'clamp(36px, 9vw, 40px)',
+                backgroundColor: colors.surfaceBg,
+                borderColor: colors.border,
+                fontSize: '15px',
+              }}
               aria-label="Toggle Navigation"
             >
               <i className={`fas ${mobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>

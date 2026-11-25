@@ -124,20 +124,12 @@ export default function VisitorLeadCapture() {
   return (
     <>
       {/* Persistent Floating Direct Trade Support & Lead Trigger */}
-      <div
-        className="d-flex align-items-center gap-2"
-        style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          zIndex: 1035,
-        }}
-      >
+      <div className="floating-trade-support">
         <a
           href={toWhatsappHref(contacts.whatsapp, 'Hello Goeazymart Trade Desk, I am visiting your website and need assistance.')}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn rounded-circle shadow-lg d-flex align-items-center justify-content-center text-white"
+          className="btn rounded-circle shadow-lg d-flex align-items-center justify-content-center text-white flex-shrink-0"
           style={{
             width: '46px',
             height: '46px',
@@ -154,14 +146,16 @@ export default function VisitorLeadCapture() {
           type="button"
           data-visitor-lead-trigger="true"
           onClick={handleOpenManual}
-          className="btn text-white shadow-lg rounded-pill px-3 py-2 d-flex align-items-center gap-2 fw-semibold"
+          className="btn text-white shadow-lg floating-callback-btn gap-2 fw-semibold flex-shrink-0"
           style={{
             backgroundColor: colors.primary,
             border: '2px solid #ffffff',
             fontSize: '13.5px',
           }}
+          title="Request Trade Callback"
+          aria-label="Request Trade Callback"
         >
-          <i className="fas fa-headset"></i>
+          <i className="fas fa-headset fs-6"></i>
           <span className="d-none d-sm-inline">Request Callback</span>
         </button>
       </div>

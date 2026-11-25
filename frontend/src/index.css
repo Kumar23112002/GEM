@@ -240,3 +240,61 @@ a {
   border-color: var(--gem-primary-border);
   box-shadow: 0 0 0 0.2rem rgba(var(--gem-primary-rgb), 0.18);
 }
+
+/* ============================================================
+   Floating WhatsApp & Callback Trade Support Widget
+   Stacked vertically on mobile (pina kinda), side-by-side on desktop
+   ============================================================ */
+.floating-trade-support {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1035;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+@media (min-width: 576px) {
+  .floating-trade-support {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+.floating-callback-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+}
+
+@media (min-width: 576px) {
+  .floating-callback-btn {
+    width: auto !important;
+    height: auto !important;
+    border-radius: 50rem !important;
+    padding: 8px 16px !important;
+  }
+}
+
+/* ============================================================
+   Navbar Right Action Icons & Toggle Spacing
+   Gives balanced breathing room on mobile and desktop
+   ============================================================ */
+.nav-actions-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (min-width: 768px) {
+  .nav-actions-container {
+    gap: 14px;
+  }
+}

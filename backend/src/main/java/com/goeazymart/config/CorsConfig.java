@@ -19,6 +19,9 @@ public class CorsConfig {
                                 "http://127.0.0.1:[*]",
                                 "http://localhost:*",
                                 "https://*.goeazymart.com",
+                                "https://*.vercel.app",
+                                "https://*.netlify.app",
+                                "https://*.onrender.com",
                                 "*"
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")

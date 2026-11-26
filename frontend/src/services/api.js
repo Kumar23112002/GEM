@@ -13,7 +13,8 @@ import {
   INITIAL_ADMIN_USERS
 } from './mockData';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const rawApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8080/api').trim();
+const API_BASE_URL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/+$/, '')}/api`;
 
 // Helper for local storage persistence
 function getStorage(key, fallback) {

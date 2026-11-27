@@ -9,6 +9,9 @@ import App from './App.jsx';
 
 // Prevent native browser popup alerts; route seamlessly to website-themed alerts
 if (typeof window !== 'undefined') {
+  if ('scrollRestoration' in window.history) {
+    window.history.scrollRestoration = 'manual';
+  }
   window.alert = function (message) {
     window.dispatchEvent(
       new CustomEvent('gem_custom_toast', {

@@ -7,6 +7,7 @@ import { CMSProvider } from './context/CMSContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 import Toast from './components/common/Toast';
 import VisitorLeadCapture from './components/common/VisitorLeadCapture';
+import ScrollToTop from './components/common/ScrollToTop';
 
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -26,6 +27,7 @@ import AdminDashboard from './pages/AdminDashboard';
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <CurrencyProvider>
           <CartProvider>
